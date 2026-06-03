@@ -13,10 +13,12 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProfileSetup from "./pages/ProfileSetup";
 import ProfileSettings from "./pages/ProfileSettings";
+import TrialExpired from "./pages/TrialExpired";
 import PublicBooking from "./pages/PublicBooking";
 import { collection, getDocs, addDoc, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "./services/firebase";
 import { useAuth } from "./contexts/AuthContext";
+import { isTrialActive } from "./utils/trial";
 
 export default function App() {
   const { user, profile, loading: authLoading, profileLoading } = useAuth();
@@ -227,6 +229,7 @@ export default function App() {
     if (authLoading || profileLoading) return <div className="flex-1 p-6">Carregando...</div>;
     if (!user) return <Navigate to="/login" replace />;
     if (user && profile && !profile.profileComplete) return <Navigate to="/setup-profile" replace />;
+    if (user && profile && !isTrialActive(profile)) return <TrialExpired />;
     return children;
   }
 

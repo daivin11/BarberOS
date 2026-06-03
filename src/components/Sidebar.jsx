@@ -58,7 +58,7 @@ export default function Sidebar() {
             <span className="text-2xl">💈</span>
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Trimly</h1>
+            <h1 className="text-3xl font-bold">BarberOS</h1>
             <p className="text-gray-400">Gestão premium</p>
           </div>
         </div>

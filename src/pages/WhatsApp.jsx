@@ -5,7 +5,7 @@ const templates = [
     id: "reminder",
     label: "Lembrete de agendamento",
     message:
-      "Oi {clientName}, aqui é da barbearia Trimly! Lembrete rápido: seu horário está marcado para {date} às {time}. Confirma pra gente? 💈",
+      "Oi {clientName}, aqui é da barbearia BarberOS! Lembrete rápido: seu horário está marcado para {date} às {time}. Confirma pra gente? 💈",
   },
   {
     id: "comeback",

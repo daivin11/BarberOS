@@ -1,6 +1,6 @@
-# Trimly - Gestão para Barbearias
+# BarberOS - Gestão para Barbearias
 
-Sistema de gestão completo para barbearias com dashboard, agenda, clientes, serviços e financeiro.
+BarberOS é um sistema SaaS de gestão para barbearias com dashboard, agenda, clientes, serviços, equipe multi-barbeiro, página pública de agendamento e financeiro.
 
 # Screenshots
 
@@ -18,7 +18,7 @@ Sistema de gestão completo para barbearias com dashboard, agenda, clientes, ser
 
 ## Demo Online
 
-https://trimly-inky.vercel.app?_vercel_share=4uejeKgWheeEdHEhmCmUOUDL5iI2feZc
+Demo online do BarberOS em breve.
 
 ## Tecnologias
 

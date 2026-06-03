@@ -37,10 +37,10 @@ export default function Register() {
               <div className="bg-white/10 rounded-full p-3 shadow-md">
                 <span className="text-2xl">💈</span>
               </div>
-              <h2 className="text-3xl font-bold">Trimly</h2>
+              <h2 className="text-3xl font-bold">BarberOS</h2>
             </div>
 
-            <h3 className="text-4xl font-extrabold leading-tight mb-4">Bem-vindo ao Trimly</h3>
+            <h3 className="text-4xl font-extrabold leading-tight mb-4">Bem-vindo ao BarberOS</h3>
             <p className="text-gray-300 mb-6">Crie sua conta e comece a gerenciar sua barbearia com uma interface limpa e profissional.</p>
 
             <ul className="space-y-3 text-gray-300">
@@ -66,7 +66,7 @@ export default function Register() {
             <div className="bg-gray-900/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-800 shadow-xl transform transition-all duration-200 hover:scale-[1.01]">
               <div className="mb-6">
                 <h1 className="text-2xl font-bold">Criar nova conta</h1>
-                <p className="text-gray-400 mt-2">Abra sua conta Trimly e gerencie sua barbearia em poucos passos.</p>
+                <p className="text-gray-400 mt-2">Abra sua conta BarberOS e gerencie sua barbearia em poucos passos.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -105,7 +105,7 @@ export default function Register() {
             </div>
 
             <div className="mt-6 text-center text-xs text-gray-500">
-              <p>© {new Date().getFullYear()} Trimly — Design premium</p>
+              <p>© {new Date().getFullYear()} BarberOS — Design premium</p>
             </div>
           </div>
         </div>

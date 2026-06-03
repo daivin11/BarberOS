@@ -187,7 +187,7 @@ export default function ProfileSetup() {
             <div className="bg-gray-900/80 backdrop-blur-sm rounded-3xl border border-gray-800 p-10 shadow-xl">
               <div className="mb-8">
                 <p className="text-sm uppercase tracking-[0.3em] text-indigo-400">Configuração de perfil</p>
-                <h1 className="mt-3 text-3xl font-bold">Complete seu perfil Trimly</h1>
+                <h1 className="mt-3 text-3xl font-bold">Complete seu perfil BarberOS</h1>
                 <p className="text-gray-400 mt-3 max-w-2xl">
                   Configure sua barbearia para começar a receber agendamentos públicos.
                 </p>
@@ -219,7 +219,7 @@ export default function ProfileSetup() {
                 <label className="group">
                   <span className="text-sm text-gray-300">URL pública</span>
                   <div className="mt-2 flex items-center gap-3 rounded-3xl border border-gray-800 bg-gray-950 px-4 py-3">
-                    <span className="text-gray-500">trimly.com/</span>
+                    <span className="text-gray-500">barberos.app/</span>
                     <input
                       value={slug}
                       onChange={(e) => setSlug(e.target.value)}

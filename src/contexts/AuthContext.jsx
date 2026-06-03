@@ -17,6 +17,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
+import { createTrialEndDate } from "../utils/trial";
 
 const AuthContext = createContext();
 
@@ -74,6 +75,8 @@ export function AuthProvider({ children }) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const slug = generateSlug(email, userCredential.user.uid);
     const displayName = email.split("@")[0].replace(/[._-]+/g, " ");
+    const createdAt = new Date();
+    const trialEndsAt = createTrialEndDate(createdAt);
 
     try {
       await setDoc(doc(db, "users", userCredential.user.uid), {
@@ -81,7 +84,8 @@ export function AuthProvider({ children }) {
         slug,
         displayName,
         profileComplete: false,
-        createdAt: new Date(),
+        trialEndsAt,
+        createdAt,
       });
       setProfile({
         id: userCredential.user.uid,
@@ -89,7 +93,8 @@ export function AuthProvider({ children }) {
         slug,
         displayName,
         profileComplete: false,
-        createdAt: new Date(),
+        trialEndsAt,
+        createdAt,
       });
     } catch (err) {
       console.error("Error creating user profile:", err);

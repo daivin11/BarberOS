@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import DashboardCards from "../components/DashboardCards";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getTrialDaysRemaining } from "../utils/trial";
 
 export default function Dashboard({
   totalRevenue,
@@ -24,6 +25,7 @@ export default function Dashboard({
   const currentSlug = profile?.slug || "";
   const publicPath = currentSlug ? `/${currentSlug}` : null;
   const publicUrl = publicPath ? `${window.location.origin}${publicPath}` : "";
+  const trialDaysRemaining = getTrialDaysRemaining(profile);
 
   useEffect(() => {
     setSlugInput(profile?.slug || "");
@@ -139,6 +141,22 @@ export default function Dashboard({
           </Link>
         </div>
 
+        {trialDaysRemaining !== null && (
+          <div className="rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5 shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-indigo-300">Teste gratuito</p>
+                <p className="mt-2 text-lg font-semibold">
+                  {trialDaysRemaining} {trialDaysRemaining === 1 ? "dia restante" : "dias restantes"}
+                </p>
+              </div>
+              <span className="w-fit rounded-full bg-white/10 px-4 py-2 text-sm text-indigo-100">
+                Plano trial de 30 dias
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
           <div className="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-sm">
             <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Bem-vindo de volta</p>
@@ -189,7 +207,7 @@ export default function Dashboard({
                   <label className="block">
                     <span className="text-sm text-gray-300">Editar URL</span>
                     <div className="mt-2 flex rounded-2xl border border-gray-800 bg-gray-900 p-3">
-                      <span className="text-gray-500">trimly.com/</span>
+                      <span className="text-gray-500">barberos.app/</span>
                       <input
                         value={slugInput}
                         onChange={(e) => setSlugInput(e.target.value)}

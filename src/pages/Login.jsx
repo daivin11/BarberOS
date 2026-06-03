@@ -32,7 +32,7 @@ export default function Login() {
               <div className="bg-white/10 rounded-full p-3 shadow-md">
                 <span className="text-2xl">💈</span>
               </div>
-              <h2 className="text-3xl font-bold">Trimly</h2>
+              <h2 className="text-3xl font-bold">BarberOS</h2>
             </div>
 
             <h3 className="text-4xl font-extrabold leading-tight mb-4">Gestão simples para barbearias</h3>
@@ -61,7 +61,7 @@ export default function Login() {
             <div className="bg-gray-900/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-800 shadow-xl">
               <div className="mb-6">
                 <h1 className="text-2xl font-bold">Entrar na sua conta</h1>
-                <p className="text-gray-400 mt-2">Acesse sua conta Trimly para gerenciar sua barbearia.</p>
+                <p className="text-gray-400 mt-2">Acesse sua conta BarberOS para gerenciar sua barbearia.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -93,7 +93,7 @@ export default function Login() {
             </div>
 
             <div className="mt-6 text-center text-xs text-gray-500">
-              <p>© {new Date().getFullYear()} Trimly — Design premium</p>
+              <p>© {new Date().getFullYear()} BarberOS — Design premium</p>
             </div>
           </div>
         </div>
