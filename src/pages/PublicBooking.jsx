@@ -37,6 +37,7 @@ export default function PublicBooking() {
 
     return appointments
       .filter((apt) => {
+        if (apt.status === "cancelled") return false;
         if (apt.date !== date) return false;
         if (apt.barberId) {
           return apt.barberId === selectedBarber.id;

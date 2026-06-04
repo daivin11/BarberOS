@@ -120,6 +120,7 @@ export default function Dashboard({
     }
   };
 
+  const activeAppointments = appointments.filter((appointment) => appointment.status !== "cancelled");
   const hasData = appointments.length > 0 || clients.length > 0 || services.length > 0;
 
   return (
@@ -263,7 +264,7 @@ export default function Dashboard({
 
           <DashboardCards
             totalRevenue={totalRevenue}
-            appointmentsCount={appointments.length}
+            appointmentsCount={activeAppointments.length}
             clientsCount={clients.length}
             servicesCount={services.length}
           />
@@ -281,7 +282,7 @@ export default function Dashboard({
             </p>
           </div>
           <div className="rounded-2xl border border-gray-800 bg-gray-950 p-4 text-sm text-gray-400">
-            {appointments.length === 0 && <p>Agenda vazia</p>}
+            {activeAppointments.length === 0 && <p>Agenda ativa vazia</p>}
             {clients.length === 0 && <p>Clientes não cadastrados</p>}
             {services.length === 0 && <p>Serviços não cadastrado</p>}
             {hasData && <p>Tudo funcionando normalmente.</p>}

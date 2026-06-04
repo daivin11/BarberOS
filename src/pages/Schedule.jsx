@@ -20,6 +20,7 @@ export default function Schedule({
   updateAppointmentStatus,
 }) {
   const needsData = clients.length === 0 || services.length === 0 || barbers.length === 0;
+  const activeAppointments = appointments.filter((appointment) => appointment.status !== "cancelled");
   const assignedAppointments = appointments.filter(
     (appointment) => appointment.barberId || appointment.barberName
   ).length;
@@ -43,8 +44,8 @@ export default function Schedule({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-3xl border border-gray-800 bg-gray-900 p-5 text-center">
-              <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Agendamentos</p>
-              <p className="mt-3 text-3xl font-bold">{appointments.length}</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Ativos</p>
+              <p className="mt-3 text-3xl font-bold">{activeAppointments.length}</p>
             </div>
             <div className="rounded-3xl border border-gray-800 bg-gray-900 p-5 text-center">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Barbeiros</p>
@@ -142,7 +143,10 @@ export default function Schedule({
             </div>
             <div className="flex flex-wrap gap-2 text-sm">
               <span className="rounded-full bg-white/5 px-3 py-2 text-gray-300">
-                {appointments.length} registros
+                {activeAppointments.length} ativos
+              </span>
+              <span className="rounded-full bg-white/5 px-3 py-2 text-gray-400">
+                {appointments.length} total
               </span>
               {unassignedAppointments > 0 && (
                 <span className="rounded-full border border-yellow-700 bg-yellow-900/30 px-3 py-2 text-yellow-300">

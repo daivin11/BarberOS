@@ -101,7 +101,7 @@ export default function Sidebar() {
 
       <div className="flex min-h-0 flex-1 flex-col justify-between gap-6">
         <nav className="flex flex-col gap-3 text-gray-300">
-          {navItem("/", "📊 Dashboard")}
+          {navItem("/dashboard", "📊 Dashboard")}
           {navItem("/agenda", "📅 Agenda")}
           {navItem("/clientes", "👤 Clientes")}
           {navItem("/servicos", "✂️ Serviços")}
@@ -123,3 +123,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+

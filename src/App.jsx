@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
+import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import Services from "./pages/Services";
@@ -209,18 +210,19 @@ export default function App() {
   };
 
   const updateAppointmentStatus = async (appointmentId, newStatus) => {
+    const previousAppointments = appointments;
+    setAppointments((currentAppointments) =>
+      currentAppointments.map((apt) =>
+        apt.id === appointmentId ? { ...apt, status: newStatus } : apt
+      )
+    );
+
     try {
       const appointmentRef = doc(db, "appointments", appointmentId);
       await updateDoc(appointmentRef, { status: newStatus });
-
-      // Update local state
-      setAppointments(
-        appointments.map((apt) =>
-          apt.id === appointmentId ? { ...apt, status: newStatus } : apt
-        )
-      );
     } catch (error) {
       console.error("Error updating appointment status:", error);
+      setAppointments(previousAppointments);
       alert("Erro ao atualizar status do agendamento. Tente novamente.");
     }
   };
@@ -236,19 +238,19 @@ export default function App() {
   function SetupRoute({ children }) {
     if (authLoading || profileLoading) return <div className="flex-1 p-6">Carregando...</div>;
     if (!user) return <Navigate to="/login" replace />;
-    if (user && profile && profile.profileComplete) return <Navigate to="/" replace />;
+    if (user && profile && profile.profileComplete) return <Navigate to="/dashboard" replace />;
     return children;
   }
 
   function LoginWrapper() {
     if (authLoading || profileLoading) return <div className="flex-1 p-6">Carregando...</div>;
-    if (user) return <Navigate to={profile?.profileComplete ? "/" : "/setup-profile"} replace />;
+    if (user) return <Navigate to={profile?.profileComplete ? "/dashboard" : "/setup-profile"} replace />;
     return <Login />;
   }
 
   function RegisterWrapper() {
     if (authLoading || profileLoading) return <div className="flex-1 p-6">Carregando...</div>;
-    if (user) return <Navigate to={profile?.profileComplete ? "/" : "/setup-profile"} replace />;
+    if (user) return <Navigate to={profile?.profileComplete ? "/dashboard" : "/setup-profile"} replace />;
     return <Register />;
   }
 
@@ -281,10 +283,9 @@ export default function App() {
   
   // Detect if current route is a public booking page (/:slug)
   // Admin routes that should show sidebar
-  const adminRoutes = ["/", "/clientes", "/servicos", "/barbeiros", "/financeiro", "/agenda", "/whatsapp", "/perfil", "/setup-profile"];
+  const adminRoutes = ["/dashboard", "/clientes", "/servicos", "/barbeiros", "/financeiro", "/agenda", "/whatsapp", "/perfil", "/setup-profile"];
   const isAdminRoute = adminRoutes.some(route => location.pathname === route);
-  const isPublicBookingPage = user && !isAdminRoute && location.pathname !== "/login" && location.pathname !== "/register";
-  const shouldShowSidebar = user && !isPublicBookingPage;
+  const shouldShowSidebar = user && isAdminRoute;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col md:flex-row">
@@ -292,12 +293,13 @@ export default function App() {
 
       <Routes>
         {/* Public routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginWrapper />} />
         <Route path="/register" element={<RegisterWrapper />} />
 
         {/* Protected routes */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard
@@ -414,7 +416,7 @@ export default function App() {
         <Route path="/:slug" element={<PublicBooking />} />
 
         {/* Fallback: redirect to login if not authenticated */}
-        <Route path="*" element={user ? <Navigate to="/" /> : <Navigate to="/login" />} />
+        <Route path="*" element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
       </Routes>
     </div>
   );

@@ -132,7 +132,7 @@ export default function ProfileSetup() {
       });
       setSaveSuccess("Perfil salvo com sucesso!");
       // small delay so user can see success message
-      setTimeout(() => navigate("/"), 900);
+      setTimeout(() => navigate("/dashboard"), 900);
     } catch (err) {
       console.error(err);
       setSaveError("Erro ao salvar o perfil. Tente novamente.");
