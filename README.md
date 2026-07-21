@@ -1,24 +1,37 @@
-# BarberOS - Gestão para Barbearias
+# BarberOS 💈
 
-BarberOS é um sistema SaaS de gestão para barbearias com dashboard, agenda, clientes, serviços, equipe multi-barbeiro, página pública de agendamento e financeiro.
+Sistema SaaS de gestão para barbearias, criado para centralizar agendamentos, clientes, serviços, equipe e controle financeiro em uma experiência simples e responsiva.
 
-# Screenshots
+🔗 **[Acessar demonstração online](https://trimly-inky.vercel.app)**
 
-## Dashboard
-![Dashboard](./public/screenshots/dashboard.png)
+## Funcionalidades
 
-## Página pública
-![Booking](./public/screenshots/agendamento.png)
+- Dashboard com métricas do negócio
+- Agenda e gerenciamento de agendamentos
+- Cadastro de clientes e serviços
+- Suporte a equipes com múltiplos barbeiros
+- Página pública de agendamento
+- Controle financeiro
+- Templates de mensagens para WhatsApp
+- Interface responsiva
 
-## Configuraçao
-![MultiBarber](./public/screenshots/config.png)
+## Screenshots
 
-## Login
-![Login](./public/screenshots/login.png)
+### Dashboard
 
-## Demo Online
+![Dashboard do BarberOS](./public/screenshots/dashboard.png)
 
-Demo online do BarberOS em breve.
+### Agendamento público
+
+![Página pública de agendamento](./public/screenshots/agendamento.png)
+
+### Configurações
+
+![Configurações da equipe](./public/screenshots/config.png)
+
+### Login
+
+![Tela de login](./public/screenshots/login.png)
 
 ## Tecnologias
 
@@ -26,42 +39,39 @@ Demo online do BarberOS em breve.
 - Vite
 - Tailwind CSS
 - React Router
-- Firebase (Firestore)
+- Firebase e Firestore
 
-## Instalação
+## Como executar
 
-1. Clone o repositório
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
+### Pré-requisitos
 
-3. Configure o Firebase:
-   - Crie um projeto no [Firebase Console](https://console.firebase.google.com/)
-   - Ative o Firestore Database
-   - Copie o arquivo `.env.example` para `.env`
-   - Preencha as variáveis de ambiente com suas configurações do Firebase
+- Node.js 18 ou superior
+- Um projeto no Firebase
 
-4. Execute o projeto:
-   ```bash
-   npm run dev
-   ```
+### Instalação
 
-## Estrutura do Projeto
+1. Clone o projeto: git clone https://github.com/daivin11/BarberOS.git
+2. Entre na pasta: cd BarberOS
+3. Instale as dependências: npm install
+4. Copie .env.example para .env
+5. Preencha as credenciais do Firebase
+6. Execute npm run dev
 
-```
-src/
-├── components/     # Componentes reutilizáveis
-├── pages/         # Páginas da aplicação
-├── services/      # Configurações de serviços externos
-└── App.jsx        # Componente principal
-```
+## Estrutura principal
 
-## Funcionalidades
+- src/components: componentes reutilizáveis
+- src/pages: páginas da aplicação
+- src/services: integrações e serviços externos
+- src/App.jsx: componente principal
 
-- 📊 Dashboard com métricas gerais
-- 👤 Gestão de clientes
-- ✂️ Cadastro de serviços
-- 📅 Agenda de agendamentos
-- 💰 Controle financeiro
-- 💬 Templates de WhatsApp
+## Próximas melhorias
+
+- [ ] Testes automatizados
+- [ ] Relatórios financeiros
+- [ ] Notificações de agendamento
+- [ ] Melhorias de acessibilidade
+- [ ] Painel de indicadores avançados
+
+## Autor
+
+Desenvolvido por [David Soares](https://github.com/daivin11).
