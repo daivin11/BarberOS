@@ -1,5 +1,7 @@
 # BarberOS 💈
 
+[![CI](https://github.com/daivin11/BarberOS/actions/workflows/ci.yml/badge.svg)](https://github.com/daivin11/BarberOS/actions/workflows/ci.yml)
+
 Sistema SaaS de gestão para barbearias, criado para centralizar agendamentos, clientes, serviços, equipe e controle financeiro em uma experiência simples e responsiva.
 
 🔗 **[Acessar demonstração online](https://trimly-inky.vercel.app)**
@@ -45,24 +47,32 @@ Sistema SaaS de gestão para barbearias, criado para centralizar agendamentos, c
 
 ### Pré-requisitos
 
-- Node.js 18 ou superior
+- Node.js 22 ou superior
 - Um projeto no Firebase
 
 ### Instalação
 
-1. Clone o projeto: git clone https://github.com/daivin11/BarberOS.git
-2. Entre na pasta: cd BarberOS
-3. Instale as dependências: npm install
-4. Copie .env.example para .env
+1. Clone o projeto: `git clone https://github.com/daivin11/BarberOS.git`
+2. Entre na pasta: `cd BarberOS`
+3. Instale as dependências: `npm install`
+4. Copie `.env.example` para `.env`
 5. Preencha as credenciais do Firebase
-6. Execute npm run dev
+6. Execute `npm run dev`
+
+## Qualidade e integração contínua
+
+A cada push ou pull request para a branch principal, o GitHub Actions executa automaticamente:
+
+- Instalação reproduzível com `npm ci`
+- Análise de código com `npm run lint`
+- Validação do build de produção com `npm run build`
 
 ## Estrutura principal
 
-- src/components: componentes reutilizáveis
-- src/pages: páginas da aplicação
-- src/services: integrações e serviços externos
-- src/App.jsx: componente principal
+- `src/components`: componentes reutilizáveis
+- `src/pages`: páginas da aplicação
+- `src/services`: integrações e serviços externos
+- `src/App.jsx`: componente principal
 
 ## Próximas melhorias
 
