@@ -54,8 +54,9 @@ export default function ProfileSetup() {
         console.error(err);
         setSlugError("Erro ao verificar disponibilidade.");
       } finally {
-        if (!mounted) return;
-        setSlugChecking(false);
+        if (mounted) {
+          setSlugChecking(false);
+        }
       }
     }, 600);
 
