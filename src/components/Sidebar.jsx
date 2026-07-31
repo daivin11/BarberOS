@@ -1,23 +1,50 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { getActivationState } from "../utils/onboarding";
+import { reportError, trackEvent } from "../utils/telemetry";
 
-export default function Sidebar() {
+const navItems = [
+  { to: "/dashboard", label: "Dashboard", initials: "DB" },
+  { to: "/agenda", label: "Agenda", initials: "AG" },
+  { to: "/clientes", label: "Clientes", initials: "CL" },
+  { to: "/servicos", label: "Servicos", initials: "SV" },
+  { to: "/barbeiros", label: "Equipe", initials: "EQ" },
+  { to: "/financeiro", label: "Financeiro", initials: "FN" },
+  { to: "/whatsapp", label: "WhatsApp", initials: "WA" },
+  { to: "/perfil", label: "Perfil", initials: "PF" },
+];
+
+export default function Sidebar({
+  clientsCount = 0,
+  servicesCount = 0,
+  barbersCount = 0,
+  appointmentsCount = 0,
+}) {
   const { profile, logout } = useAuth();
   const navigate = useNavigate();
   const [copyMessage, setCopyMessage] = useState("");
   const [logoutLoading, setLogoutLoading] = useState(false);
   const publicPath = profile?.slug ? `/${profile.slug}` : "";
   const publicUrl = publicPath ? `${window.location.origin}${publicPath}` : "";
+  const businessName = profile?.barbershopName || profile?.displayName || "Sua barbearia";
+  const activation = getActivationState({
+    profile,
+    servicesCount,
+    barbersCount,
+    clientsCount,
+    appointmentsCount,
+  });
 
   const copyPublicLink = async () => {
     if (!publicUrl) return;
     try {
       await navigator.clipboard.writeText(publicUrl);
-      setCopyMessage("Link copiado!");
+      setCopyMessage("Link copiado");
+      trackEvent("public_link_copied", { source: "sidebar", action: "copy-public-link" });
       window.setTimeout(() => setCopyMessage(""), 2000);
     } catch (error) {
-      console.error(error);
+      reportError(error, { source: "sidebar", action: "copy-public-link" });
       setCopyMessage("Erro ao copiar");
     }
   };
@@ -28,94 +55,168 @@ export default function Sidebar() {
       await logout();
       navigate("/login", { replace: true });
     } catch (error) {
-      console.error(error);
+      reportError(error, { source: "sidebar", action: "logout" });
       setCopyMessage("Erro ao sair");
     } finally {
       setLogoutLoading(false);
     }
   };
 
-  const navItem = (to, label) => (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `block rounded-2xl px-4 py-3 transition-all duration-200 ${
-          isActive
-            ? "bg-gray-800 text-white shadow-sm"
-            : "text-gray-300 hover:text-white hover:bg-gray-800"
-        }`
-      }
-    >
-      {label}
-    </NavLink>
-  );
-
   return (
-    <aside className="w-full md:w-72 bg-gray-900 p-6 border-b border-gray-800 md:border-b-0 md:border-r">
-      <div className="mb-8">
-        <div className="flex items-center gap-3">
-          <div className="bg-white/10 rounded-full p-3 shadow-sm">
-            <span className="text-2xl">💈</span>
+    <aside className="w-full border-b border-gray-800 bg-gray-950/95 p-4 text-white lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:border-b-0 lg:border-r lg:p-6">
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-500 text-lg font-black shadow-lg shadow-indigo-950/40">
+              B
+            </div>
+            <div className="min-w-0">
+              <h1 className="truncate text-2xl font-black tracking-tight">BarberOS</h1>
+              <p className="truncate text-xs uppercase tracking-[0.25em] text-gray-500">Studio suite</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold">BarberOS</h1>
-            <p className="text-gray-400">Gestão premium</p>
-          </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={logoutLoading}
+            className="shrink-0 rounded-2xl border border-gray-800 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-300 transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60 lg:hidden"
+          >
+            {logoutLoading ? "..." : "Sair"}
+          </button>
         </div>
 
-        <div className="mt-6 rounded-3xl border border-gray-800 bg-gray-950 p-4">
-          <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Barbearia</p>
-          <p className="mt-2 text-lg font-semibold text-white">
-            {profile?.barbershopName || profile?.displayName || "Seu espaço"}
-          </p>
+        <div className="mt-4 hidden rounded-2xl border border-gray-800 bg-gray-900 p-4 lg:mt-6 lg:block">
+          <p className="text-xs uppercase tracking-[0.25em] text-gray-500">Barbearia</p>
+          <p className="mt-2 truncate text-base font-semibold">{businessName}</p>
+
+          {!activation.isActivated && (
+            <div className="mt-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 p-3">
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="font-semibold uppercase tracking-[0.2em] text-indigo-200">
+                  Ativacao
+                </span>
+                <span className="text-gray-300">{activation.completedCount}/{activation.totalCount}</span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-950">
+                <div
+                  className="h-full rounded-full bg-indigo-400 transition-all"
+                  style={{ width: `${activation.progress}%` }}
+                />
+              </div>
+              <p className="mt-3 text-sm text-gray-300">
+                Proximo: <span className="font-semibold text-white">{activation.nextItem?.label}</span>
+              </p>
+              {activation.nextItem && (
+                <Link
+                  to={activation.nextItem.to}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-black transition hover:bg-gray-200"
+                >
+                  {activation.nextItem.actionLabel}
+                </Link>
+              )}
+            </div>
+          )}
+
           {profile?.slug ? (
             <div className="mt-4 space-y-3">
-              <p className="text-sm text-gray-400">Link público</p>
-              <div className="rounded-2xl border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-indigo-300 break-words">
-                {publicPath}
+              <div className="rounded-2xl border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-indigo-300">
+                <p className="truncate">{publicPath}</p>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={copyPublicLink}
-                  className="w-full rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+                  className="rounded-2xl bg-white/10 px-3 py-2 text-sm font-semibold transition hover:bg-white/20"
                 >
-                  Copiar link público
+                  Copiar
                 </button>
                 <a
                   href={publicPath}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-95"
+                  className="inline-flex items-center justify-center rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-black transition hover:bg-gray-200"
                 >
-                  Abrir página
+                  Abrir
                 </a>
               </div>
               {copyMessage && <p className="text-xs text-green-300">{copyMessage}</p>}
             </div>
           ) : (
-            <p className="mt-4 text-sm text-gray-400">Complete seu perfil para ativar o link público.</p>
+            <p className="mt-4 text-sm text-gray-400">
+              Complete o perfil para ativar seu link publico.
+            </p>
           )}
         </div>
-      </div>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-between gap-6">
-        <nav className="flex flex-col gap-3 text-gray-300">
-          {navItem("/dashboard", "📊 Dashboard")}
-          {navItem("/agenda", "📅 Agenda")}
-          {navItem("/clientes", "👤 Clientes")}
-          {navItem("/servicos", "✂️ Serviços")}
-          {navItem("/barbeiros", "💈 Equipe")}
-          {navItem("/financeiro", "💰 Financeiro")}
-          {navItem("/whatsapp", "💬 WhatsApp")}
-          {navItem("/perfil", "⚙️ Perfil")}
+        <div className="mt-3 grid gap-2 lg:hidden">
+          {!activation.isActivated && (
+            <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/10 p-3">
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="font-semibold uppercase tracking-[0.2em] text-indigo-200">
+                  Ativacao
+                </span>
+                <span className="text-gray-300">{activation.completedCount}/{activation.totalCount}</span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-950">
+                <div
+                  className="h-full rounded-full bg-indigo-400 transition-all"
+                  style={{ width: `${activation.progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {profile?.slug && (
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded-2xl border border-gray-800 bg-gray-900 p-2">
+              <span className="truncate px-2 text-sm text-indigo-300">{publicPath}</span>
+              <button
+                type="button"
+                onClick={copyPublicLink}
+                className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold transition hover:bg-white/20"
+              >
+                Copiar
+              </button>
+              <a
+                href={publicPath}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-black transition hover:bg-gray-200"
+              >
+                Abrir
+              </a>
+            </div>
+          )}
+
+          {copyMessage && <p className="text-xs text-green-300">{copyMessage}</p>}
+        </div>
+
+        <nav className="scrollbar-hidden mt-4 flex gap-2 overflow-x-auto pb-1 lg:mt-6 lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-y-auto lg:pb-0">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex shrink-0 items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition lg:shrink ${
+                  isActive
+                    ? "bg-white text-black shadow-sm"
+                    : "text-gray-300 hover:bg-gray-900 hover:text-white"
+                }`
+              }
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-current/10 bg-current/5 text-[11px] font-black">
+                {item.initials}
+              </span>
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
         </nav>
 
         <button
           type="button"
           onClick={handleLogout}
           disabled={logoutLoading}
-          className="w-full rounded-2xl border border-gray-800 bg-gray-950 px-4 py-3 text-left text-sm font-semibold text-gray-300 transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-4 hidden w-full rounded-2xl border border-gray-800 bg-gray-900 px-4 py-3 text-left text-sm font-semibold text-gray-300 transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60 lg:mt-6 lg:block"
         >
           {logoutLoading ? "Saindo..." : "Sair"}
         </button>
@@ -123,4 +224,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-

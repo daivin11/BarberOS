@@ -1,0 +1,533 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function hasOnly(keys) {
+      return request.resource.data.keys().hasOnly(keys);
+    }
+
+    function validSlug(slug) {
+      return slug is string
+        && slug.size() >= 3
+        && slug.size() <= 60
+        && slug.matches('^[a-z0-9]+(-[a-z0-9]+)*$');
+    }
+
+    function validText(value, min, max) {
+      return value is string
+        && value.size() >= min
+        && value.size() <= max;
+    }
+
+    function validOptionalText(value, max) {
+      return value is string
+        && value.size() <= max;
+    }
+
+    function validOptionalUrl(url) {
+      return url is string
+        && url.size() <= 500
+        && (url.size() == 0 || url.matches('^https?://.{1,490}$'));
+    }
+
+    function validPhone(phone) {
+      return phone is string
+        && phone.size() >= 10
+        && phone.size() <= 20;
+    }
+
+    function validPlan(plan) {
+      return plan in ['trial', 'starter', 'studio', 'pro'];
+    }
+
+    function validSubscriptionStatus(status) {
+      return status in ['trialing', 'active', 'past_due', 'cancelled'];
+    }
+
+    function validAccountStatus(status) {
+      return status in ['trial_expired', 'past_due', 'cancelled'];
+    }
+
+    function validDateString(date) {
+      return date is string
+        && date.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function validTimeString(time) {
+      return time is string
+        && time.matches('^([01]\\d|2[0-3]):[0-5]\\d$');
+    }
+
+    function validBusinessHours(hours) {
+      return hours is map
+        && hours.keys().hasOnly(['start', 'end', 'slotInterval'])
+        && validTimeString(hours.start)
+        && validTimeString(hours.end)
+        && hours.start < hours.end
+        && hours.slotInterval in [15, 30, 45, 60];
+    }
+
+    function validBlockedDates(dates) {
+      return dates is list
+        && dates.size() <= 120;
+    }
+
+    function validArchiveFields() {
+      return (!('isArchived' in request.resource.data) || request.resource.data.isArchived is bool)
+        && (!('archivedAt' in request.resource.data) || request.resource.data.archivedAt is timestamp)
+        && (!('archivedAt' in request.resource.data) || request.resource.data.isArchived == true);
+    }
+
+    function validClientSnapshot(client) {
+      return client is map
+        && client.keys().hasOnly(['id', 'name', 'phone', 'phoneNormalized', 'createdAt', 'updatedAt', 'userId', 'barberSlug'])
+        && client.id is string
+        && validText(client.name, 2, 80)
+        && client.phone is string
+        && client.phone.size() >= 10
+        && client.phone.size() <= 13
+        && (!('phoneNormalized' in client) || client.phoneNormalized == client.phone)
+        && (!('userId' in client) || client.userId is string)
+        && (!('barberSlug' in client) || client.barberSlug is string);
+    }
+
+    function validServiceSnapshot(serviceData) {
+      return serviceData is map
+        && serviceData.keys().hasOnly(['id', 'name', 'price', 'duration', 'createdAt', 'updatedAt', 'userId'])
+        && (!('id' in serviceData) || serviceData.id is string)
+        && validText(serviceData.name, 2, 80)
+        && serviceData.price is number
+        && serviceData.price >= 0
+        && serviceData.price <= 100000
+        && serviceData.duration is number
+        && serviceData.duration >= 15
+        && serviceData.duration <= 240
+        && (!('userId' in serviceData) || serviceData.userId is string);
+    }
+
+    function validAppointmentTiming() {
+      return request.resource.data.duration is number
+        && request.resource.data.duration >= 15
+        && request.resource.data.duration <= 240
+        && request.resource.data.startMinutes is number
+        && request.resource.data.endMinutes is number
+        && request.resource.data.startMinutes >= 0
+        && request.resource.data.startMinutes < 1440
+        && request.resource.data.endMinutes > request.resource.data.startMinutes
+        && request.resource.data.endMinutes == request.resource.data.startMinutes + request.resource.data.duration
+        && request.resource.data.endMinutes <= 1440;
+    }
+
+    function validBookingSlotTiming() {
+      return request.resource.data.duration is number
+        && request.resource.data.duration >= 15
+        && request.resource.data.duration <= 240
+        && request.resource.data.startMinutes is number
+        && request.resource.data.endMinutes is number
+        && request.resource.data.startMinutes >= 0
+        && request.resource.data.startMinutes < 1440
+        && request.resource.data.endMinutes > request.resource.data.startMinutes
+        && request.resource.data.endMinutes == request.resource.data.startMinutes + request.resource.data.duration
+        && request.resource.data.endMinutes <= 1440;
+    }
+
+    function matchesPublicProfile(userId, slug) {
+      return userId is string
+        && slug is string
+        && exists(/databases/$(database)/documents/publicProfiles/$(userId))
+        && get(/databases/$(database)/documents/publicProfiles/$(userId)).data.slug == slug
+        && get(/databases/$(database)/documents/publicProfiles/$(userId)).data.profileComplete == true;
+    }
+
+    function hasCompletePublicProfile(userId) {
+      return userId is string
+        && exists(/databases/$(database)/documents/publicProfiles/$(userId))
+        && get(/databases/$(database)/documents/publicProfiles/$(userId)).data.profileComplete == true;
+    }
+
+    function publicUserFields() {
+      return [
+        'email',
+        'slug',
+        'displayName',
+        'barbershopName',
+        'phone',
+        'bio',
+        'logoUrl',
+        'avatar',
+        'businessHours',
+        'blockedDates',
+        'profileComplete',
+        'plan',
+        'subscriptionStatus',
+        'subscriptionEndsAt',
+        'billingUpdatedAt',
+        'trialEndsAt',
+        'createdAt',
+        'updatedAt'
+      ];
+    }
+
+    function appointmentFields() {
+      return [
+        'id',
+        'clientId',
+        'client',
+        'clientName',
+        'clientPhone',
+        'service',
+        'barberId',
+        'barberName',
+        'date',
+        'time',
+        'duration',
+        'startMinutes',
+        'endMinutes',
+        'status',
+        'userId',
+        'barberSlug',
+        'slotId',
+        'slotIds',
+        'createdAt',
+        'updatedAt'
+      ];
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId)
+        && hasOnly([
+          'email',
+          'slug',
+          'displayName',
+          'plan',
+          'subscriptionStatus',
+          'profileComplete',
+          'trialEndsAt',
+          'createdAt'
+        ])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.email is string
+        && validSlug(request.resource.data.slug)
+        && validText(request.resource.data.displayName, 2, 80)
+        && validPlan(request.resource.data.plan)
+        && validSubscriptionStatus(request.resource.data.subscriptionStatus)
+        && request.resource.data.plan == 'trial'
+        && request.resource.data.subscriptionStatus == 'trialing'
+        && request.resource.data.profileComplete == false
+        && request.resource.data.trialEndsAt is timestamp;
+      allow update: if isOwner(userId)
+        && hasOnly(publicUserFields())
+        && request.resource.data.email == resource.data.email
+        && validSlug(request.resource.data.slug)
+        && validText(request.resource.data.displayName, 2, 80)
+        && (!('barbershopName' in request.resource.data) || validText(request.resource.data.barbershopName, 2, 80))
+        && (!('phone' in request.resource.data) || validPhone(request.resource.data.phone))
+        && (!('bio' in request.resource.data) || validOptionalText(request.resource.data.bio, 500))
+        && (!('logoUrl' in request.resource.data) || validOptionalUrl(request.resource.data.logoUrl))
+        && (!('avatar' in request.resource.data) || validOptionalUrl(request.resource.data.avatar))
+        && (!('businessHours' in request.resource.data) || validBusinessHours(request.resource.data.businessHours))
+        && (!('blockedDates' in request.resource.data) || validBlockedDates(request.resource.data.blockedDates))
+        && request.resource.data.profileComplete is bool
+        && request.resource.data.plan == resource.data.plan
+        && request.resource.data.subscriptionStatus == resource.data.subscriptionStatus
+        && (
+          (!('trialEndsAt' in request.resource.data) && !('trialEndsAt' in resource.data))
+          || (('trialEndsAt' in resource.data) && request.resource.data.trialEndsAt == resource.data.trialEndsAt)
+        )
+        && (
+          (!('subscriptionEndsAt' in request.resource.data) && !('subscriptionEndsAt' in resource.data))
+          || (('subscriptionEndsAt' in resource.data) && request.resource.data.subscriptionEndsAt == resource.data.subscriptionEndsAt)
+        )
+        && (
+          (!('billingUpdatedAt' in request.resource.data) && !('billingUpdatedAt' in resource.data))
+          || (('billingUpdatedAt' in resource.data) && request.resource.data.billingUpdatedAt == resource.data.billingUpdatedAt)
+        );
+      allow delete: if false;
+    }
+
+    match /publicProfiles/{profileId} {
+      allow get: if isOwner(profileId) || resource.data.profileComplete == true;
+      allow list: if (
+        signedIn()
+        && request.query.limit <= 2
+      ) || (
+        request.query.limit <= 1
+        && resource.data.profileComplete == true
+      );
+      allow create, update: if isOwner(profileId)
+        && hasOnly([
+          'slug',
+          'displayName',
+          'barbershopName',
+          'phone',
+          'bio',
+          'logoUrl',
+          'avatar',
+          'businessHours',
+          'blockedDates',
+          'profileComplete',
+          'updatedAt'
+        ])
+        && validSlug(request.resource.data.slug)
+        && validText(request.resource.data.displayName, 2, 80)
+        && request.resource.data.profileComplete is bool
+        && (!('barbershopName' in request.resource.data) || validText(request.resource.data.barbershopName, 2, 80))
+        && (!('phone' in request.resource.data) || validPhone(request.resource.data.phone))
+        && (!('bio' in request.resource.data) || validOptionalText(request.resource.data.bio, 500))
+        && (!('logoUrl' in request.resource.data) || validOptionalUrl(request.resource.data.logoUrl))
+        && (!('avatar' in request.resource.data) || validOptionalUrl(request.resource.data.avatar))
+        && (!('businessHours' in request.resource.data) || validBusinessHours(request.resource.data.businessHours))
+        && (!('blockedDates' in request.resource.data) || validBlockedDates(request.resource.data.blockedDates));
+      allow delete: if false;
+    }
+
+    match /clients/{clientId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId) && request.query.limit <= 1000;
+      allow create: if hasOnly(['name', 'phone', 'phoneNormalized', 'createdAt', 'userId', 'barberSlug', 'isArchived'])
+        && (
+          isOwner(request.resource.data.userId)
+          || matchesPublicProfile(request.resource.data.userId, request.resource.data.barberSlug)
+        )
+        && request.resource.data.userId is string
+        && request.resource.data.name is string
+        && request.resource.data.phone is string
+        && request.resource.data.phoneNormalized is string
+        && request.resource.data.phone == request.resource.data.phoneNormalized
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.phone.size() >= 10
+        && request.resource.data.phone.size() <= 13
+        && (!('isArchived' in request.resource.data) || request.resource.data.isArchived == false);
+      allow update: if isOwner(resource.data.userId)
+        && hasOnly(['name', 'phone', 'phoneNormalized', 'createdAt', 'updatedAt', 'userId', 'barberSlug', 'isArchived', 'archivedAt'])
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.name is string
+        && request.resource.data.phone is string
+        && request.resource.data.phoneNormalized is string
+        && request.resource.data.phone == request.resource.data.phoneNormalized
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.phone.size() >= 10
+        && request.resource.data.phone.size() <= 13
+        && validArchiveFields();
+      allow delete: if false;
+    }
+
+    match /clientPhoneKeys/{phoneKeyId} {
+      allow get: if !exists(/databases/$(database)/documents/clientPhoneKeys/$(phoneKeyId))
+        || isOwner(resource.data.userId)
+        || hasCompletePublicProfile(resource.data.userId)
+        || matchesPublicProfile(resource.data.userId, resource.data.barberSlug);
+      allow list: if false;
+      allow create: if hasOnly(['userId', 'phoneNormalized', 'clientId', 'barberSlug', 'createdAt'])
+        && phoneKeyId == request.resource.data.userId + '_' + request.resource.data.phoneNormalized
+        && (
+          isOwner(request.resource.data.userId)
+          || matchesPublicProfile(request.resource.data.userId, request.resource.data.barberSlug)
+        )
+        && request.resource.data.userId is string
+        && request.resource.data.phoneNormalized is string
+        && request.resource.data.clientId is string
+        && request.resource.data.phoneNormalized.size() >= 10
+        && request.resource.data.phoneNormalized.size() <= 13;
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+
+    match /services/{serviceId} {
+      allow get: if isOwner(resource.data.userId) || hasCompletePublicProfile(resource.data.userId);
+      allow list: if (
+          isOwner(resource.data.userId) && request.query.limit <= 300
+        ) || (
+          hasCompletePublicProfile(resource.data.userId) && request.query.limit <= 100
+        );
+      allow create: if hasOnly(['name', 'price', 'duration', 'createdAt', 'updatedAt', 'userId', 'isArchived'])
+        && isOwner(request.resource.data.userId)
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.price is number
+        && request.resource.data.price >= 0
+        && request.resource.data.price <= 100000
+        && request.resource.data.duration is number
+        && request.resource.data.duration >= 15
+        && request.resource.data.duration <= 240
+        && (!('isArchived' in request.resource.data) || request.resource.data.isArchived == false);
+      allow update: if isOwner(resource.data.userId)
+        && hasOnly(['name', 'price', 'duration', 'createdAt', 'updatedAt', 'userId', 'isArchived', 'archivedAt'])
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.price is number
+        && request.resource.data.price >= 0
+        && request.resource.data.price <= 100000
+        && request.resource.data.duration is number
+        && request.resource.data.duration >= 15
+        && request.resource.data.duration <= 240
+        && validArchiveFields();
+      allow delete: if false;
+    }
+
+    match /barbers/{barberId} {
+      allow get: if isOwner(resource.data.ownerId) || hasCompletePublicProfile(resource.data.ownerId);
+      allow list: if (
+          isOwner(resource.data.ownerId) && request.query.limit <= 100
+        ) || (
+          hasCompletePublicProfile(resource.data.ownerId) && request.query.limit <= 50
+        );
+      allow create: if hasOnly(['name', 'specialty', 'avatar', 'ownerId', 'createdAt', 'updatedAt', 'isArchived'])
+        && isOwner(request.resource.data.ownerId)
+        && validText(request.resource.data.name, 2, 80)
+        && (!('specialty' in request.resource.data) || validOptionalText(request.resource.data.specialty, 80))
+        && (!('avatar' in request.resource.data) || validOptionalUrl(request.resource.data.avatar))
+        && (!('isArchived' in request.resource.data) || request.resource.data.isArchived == false);
+      allow update: if isOwner(resource.data.ownerId)
+        && hasOnly(['name', 'specialty', 'avatar', 'ownerId', 'createdAt', 'updatedAt', 'isArchived', 'archivedAt'])
+        && request.resource.data.ownerId == resource.data.ownerId
+        && validText(request.resource.data.name, 2, 80)
+        && (!('specialty' in request.resource.data) || validOptionalText(request.resource.data.specialty, 80))
+        && (!('avatar' in request.resource.data) || validOptionalUrl(request.resource.data.avatar))
+        && validArchiveFields();
+      allow delete: if false;
+    }
+
+    match /appointments/{appointmentId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId) && request.query.limit <= 2000;
+      allow create: if (
+          isOwner(request.resource.data.userId)
+          || (
+            matchesPublicProfile(request.resource.data.userId, request.resource.data.barberSlug)
+            && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.appointmentId == appointmentId
+          )
+        )
+        && hasOnly(appointmentFields())
+        && request.resource.data.userId is string
+        && validText(request.resource.data.clientName, 2, 80)
+        && request.resource.data.clientPhone is string
+        && request.resource.data.clientPhone.size() >= 10
+        && request.resource.data.clientPhone.size() <= 13
+        && validClientSnapshot(request.resource.data.client)
+        && validServiceSnapshot(request.resource.data['service'])
+        && request.resource.data.barberId is string
+        && validText(request.resource.data.barberName, 2, 80)
+        && validDateString(request.resource.data.date)
+        && validTimeString(request.resource.data.time)
+        && request.resource.data.slotId is string
+        && request.resource.data.slotIds is list
+        && request.resource.data.slotIds.size() >= 1
+        && request.resource.data.slotIds.size() <= 16
+        && request.resource.data.slotIds[0] == request.resource.data.slotId
+        && validAppointmentTiming()
+        && request.resource.data.status == 'pending';
+      allow update: if isOwner(resource.data.userId)
+        && resource.data.status in ['pending', 'confirmed']
+        && hasOnly(appointmentFields())
+        && request.resource.data.userId == resource.data.userId
+        && (!('id' in request.resource.data) || request.resource.data.id == appointmentId)
+        && request.resource.data.status in ['pending', 'confirmed', 'completed', 'cancelled']
+        && validText(request.resource.data.clientName, 2, 80)
+        && request.resource.data.clientPhone is string
+        && request.resource.data.clientPhone.size() >= 10
+        && request.resource.data.clientPhone.size() <= 13
+        && validClientSnapshot(request.resource.data.client)
+        && validServiceSnapshot(request.resource.data['service'])
+        && validText(request.resource.data.barberName, 2, 80)
+        && validDateString(request.resource.data.date)
+        && validTimeString(request.resource.data.time)
+        && request.resource.data.slotId is string
+        && request.resource.data.slotIds is list
+        && request.resource.data.slotIds.size() >= 1
+        && request.resource.data.slotIds.size() <= 16
+        && request.resource.data.slotIds[0] == request.resource.data.slotId
+        && validAppointmentTiming();
+      allow delete: if false;
+    }
+
+    match /bookingSlots/{slotId} {
+      allow get: if isOwner(resource.data.userId) || hasCompletePublicProfile(resource.data.userId);
+      allow list: if (
+          isOwner(resource.data.userId) || hasCompletePublicProfile(resource.data.userId)
+        ) && request.query.limit <= 200;
+      allow create: if hasOnly([
+          'appointmentId',
+          'userId',
+          'barberId',
+          'barberName',
+          'date',
+          'time',
+          'rootTime',
+          'duration',
+          'startMinutes',
+          'endMinutes',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.userId is string
+        && (
+          isOwner(request.resource.data.userId)
+          || getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.barberSlug
+            == get(/databases/$(database)/documents/publicProfiles/$(request.resource.data.userId)).data.slug
+        )
+        && request.resource.data.appointmentId is string
+        && request.resource.data.barberId is string
+        && validText(request.resource.data.barberName, 2, 80)
+        && validDateString(request.resource.data.date)
+        && validTimeString(request.resource.data.time)
+        && validTimeString(request.resource.data.rootTime)
+        && validBookingSlotTiming()
+        && request.resource.data.status in ['pending', 'confirmed'];
+      allow update: if isOwner(resource.data.userId)
+        && hasOnly([
+          'appointmentId',
+          'userId',
+          'barberId',
+          'barberName',
+          'date',
+          'time',
+          'rootTime',
+          'duration',
+          'startMinutes',
+          'endMinutes',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.appointmentId == resource.data.appointmentId
+        && request.resource.data.barberId == resource.data.barberId
+        && validText(request.resource.data.barberName, 2, 80)
+        && validDateString(request.resource.data.date)
+        && validTimeString(request.resource.data.time)
+        && (!('rootTime' in request.resource.data) || validTimeString(request.resource.data.rootTime))
+        && validBookingSlotTiming()
+        && request.resource.data.status in ['pending', 'confirmed', 'completed', 'cancelled'];
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    match /renewalRequests/{requestId} {
+      allow create: if hasOnly(['userId', 'barbershopName', 'accountStatus', 'plan', 'timestamp', 'status', 'createdAt'])
+        && requestId == request.auth.uid
+        && isOwner(request.resource.data.userId)
+        && request.resource.data.status == 'pending'
+        && validText(request.resource.data.barbershopName, 2, 80)
+        && validAccountStatus(request.resource.data.accountStatus)
+        && validPlan(request.resource.data.plan)
+        && request.resource.data.timestamp is timestamp
+        && request.resource.data.createdAt is timestamp;
+      allow read, update, delete: if false;
+    }
+  }
+}

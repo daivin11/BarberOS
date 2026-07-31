@@ -1,43 +1,60 @@
+import { formatCurrencyBRL } from "../utils/format";
+
+const cards = [
+  {
+    key: "revenue",
+    label: "Receita realizada",
+    getValue: ({ totalRevenue }) => formatCurrencyBRL(totalRevenue),
+    getHelper: ({ metricScopeLabel }) => `Concluidos ${metricScopeLabel}`,
+  },
+  {
+    key: "appointments",
+    label: "Agenda ativa",
+    getValue: ({ appointmentsCount }) => appointmentsCount,
+    getHelper: ({ metricScopeLabel }) => `Pendentes e confirmados ${metricScopeLabel}`,
+  },
+  {
+    key: "clients",
+    label: "Clientes",
+    getValue: ({ clientsCount }) => clientsCount,
+    getHelper: () => "Base cadastrada",
+  },
+  {
+    key: "services",
+    label: "Servicos",
+    getValue: ({ servicesCount }) => servicesCount,
+    getHelper: () => "Publicados na barbearia",
+  },
+];
+
 export default function DashboardCards({
   totalRevenue,
   appointmentsCount,
   clientsCount,
   servicesCount,
+  metricScopeLabel = "na janela carregada",
 }) {
+  const values = { totalRevenue, appointmentsCount, clientsCount, servicesCount, metricScopeLabel };
+
   return (
     <section
-      className="grid gap-4 mt-6"
+      className="mt-6 grid gap-4"
       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}
     >
-
-      <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 min-h-[88px] flex flex-col justify-center">
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-gray-400">💰 Faturamento</p>
+      {cards.map((card) => (
+        <div
+          key={card.key}
+          className="flex min-h-[120px] flex-col justify-between rounded-2xl border border-gray-800 bg-gray-900 p-6"
+        >
+          <p className="text-sm font-medium text-gray-400">{card.label}</p>
+          <div>
+            <h3 className="text-2xl font-extrabold text-white sm:text-3xl">
+              {card.getValue(values)}
+            </h3>
+            <p className="mt-2 text-xs text-gray-500">{card.getHelper(values)}</p>
+          </div>
         </div>
-        <h3 className="text-2xl sm:text-3xl font-extrabold mt-3">R$ {totalRevenue}</h3>
-      </div>
-
-      <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 min-h-[88px] flex flex-col justify-center">
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-gray-400">📅 Agendamentos</p>
-        </div>
-        <h3 className="text-2xl sm:text-3xl font-extrabold mt-3">{appointmentsCount}</h3>
-      </div>
-
-      <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 min-h-[88px] flex flex-col justify-center">
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-gray-400">👤 Clientes</p>
-        </div>
-        <h3 className="text-2xl sm:text-3xl font-extrabold mt-3">{clientsCount}</h3>
-      </div>
-
-      <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 min-h-[88px] flex flex-col justify-center">
-        <div className="flex items-start justify-between gap-4">
-          <p className="text-gray-400">✂️ Serviços</p>
-        </div>
-        <h3 className="text-2xl sm:text-3xl font-extrabold mt-3">{servicesCount}</h3>
-      </div>
-
+      ))}
     </section>
   );
 }

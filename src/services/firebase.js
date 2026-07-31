@@ -11,12 +11,17 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+const missingFirebaseConfig = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+
+if (missingFirebaseConfig.length > 0) {
+  throw new Error(`Firebase config missing: ${missingFirebaseConfig.join(", ")}`);
+}
+
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore
 export const db = getFirestore(app);
-// Initialize Auth
 export const auth = getAuth(app);
 
 export default app;

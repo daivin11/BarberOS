@@ -1,7 +1,29 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
-import { collection, getDocs, addDoc, query, where } from "firebase/firestore";
+import { useParams } from "react-router-dom";
+import { collection, getDocs, query, where, orderBy, runTransaction, doc, limit } from "firebase/firestore";
 import { db } from "../services/firebase";
+import { createClientPhoneKeyId } from "../utils/adminData";
+import { APPOINTMENT_STATUS } from "../utils/appointments";
+import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "../utils/appointmentWindow";
+import { formatLocalDate } from "../utils/date";
+import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
+import { isValidBrazilianPhone, normalizePhone } from "../utils/phone";
+import {
+  createSlotId,
+  defaultBusinessHours,
+  getOccupiedTimes,
+  getTimeSlots,
+  isFutureAppointmentStart,
+  overlaps,
+  timeToMinutes,
+} from "../utils/schedule";
+import { reportError, trackEvent } from "../utils/telemetry";
+
+const PUBLIC_QUERY_LIMITS = {
+  services: 100,
+  barbers: 50,
+  slotsByDay: 200,
+};
 
 export default function PublicBooking() {
   const { slug } = useParams();
@@ -9,9 +31,10 @@ export default function PublicBooking() {
   const [barbers, setBarbers] = useState([]);
   const [selectedBarber, setSelectedBarber] = useState(null);
   const [services, setServices] = useState([]);
-  const [appointments, setAppointments] = useState([]);
+  const [bookedSlots, setBookedSlots] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [fatalError, setFatalError] = useState("");
+  const [formError, setFormError] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedService, setSelectedService] = useState("");
@@ -20,67 +43,81 @@ export default function PublicBooking() {
   const [success, setSuccess] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  // Generate time slots from 09:00 to 18:00 in 30-minute intervals
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let hour = 9; hour <= 17; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        slots.push(`${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`);
-      }
-    }
-    return slots;
-  };
+  const businessHours = barber?.businessHours || defaultBusinessHours;
+  const blockedDates = Array.isArray(barber?.blockedDates) ? barber.blockedDates : [];
+  const isBlockedDate = date ? blockedDates.includes(date) : false;
+  const appointmentWindow = createAppointmentDateWindow();
+  const selectedServiceData = services.find((serviceItem) => serviceItem.id === selectedService);
+  const selectedDuration = Number(selectedServiceData?.duration) || 30;
 
   // Get booked times for the selected date and selected barber
   const getBookedTimes = () => {
     if (!date || !selectedBarber) return [];
 
-    return appointments
-      .filter((apt) => {
-        if (apt.status === "cancelled") return false;
-        if (apt.date !== date) return false;
-        if (apt.barberId) {
-          return apt.barberId === selectedBarber.id;
-        }
-        return selectedBarber.id === barber.uid;
-      })
-      .map((apt) => apt.time);
+    return bookedSlots.filter((slot) => slot.date === date && slot.barberId === selectedBarber.id);
   };
 
   // Check if a time slot is available
   const isTimeAvailable = (timeSlot) => {
-    return !getBookedTimes().includes(timeSlot);
+    const slotStart = timeToMinutes(timeSlot);
+    const slotEnd = slotStart + selectedDuration;
+
+    return !getBookedTimes().some((bookedSlot) => {
+      const bookedStart = bookedSlot.startMinutes ?? timeToMinutes(bookedSlot.time);
+      const bookedEnd = bookedSlot.endMinutes ?? bookedStart + Number(bookedSlot.duration || 30);
+      return overlaps(slotStart, slotEnd, bookedStart, bookedEnd);
+    });
   };
 
-  const timeSlots = generateTimeSlots();
+  const timeSlots = getTimeSlots({ businessHours, duration: selectedDuration });
   const bookedTimes = getBookedTimes();
-  const availableSlots = selectedBarber && date ? timeSlots.filter((slot) => isTimeAvailable(slot)) : [];
+  const availableSlots =
+    selectedBarber && date && !isBlockedDate ? timeSlots.filter((slot) => isTimeAvailable(slot)) : [];
+  const hasPublishedServices = services.length > 0;
+  const hasSelectableBarber = Boolean(selectedBarber);
+  const cleanPhoneForSubmit = normalizePhone(phone);
+  const canSubmit =
+    hasPublishedServices &&
+    hasSelectableBarber &&
+    Boolean(selectedService) &&
+    Boolean(name.trim()) &&
+    isValidBrazilianPhone(cleanPhoneForSubmit) &&
+    Boolean(date) &&
+    Boolean(time) &&
+    timeSlots.includes(time) &&
+    !isBlockedDate &&
+    isDateWithinAppointmentWindow(date, appointmentWindow) &&
+    !submitLoading;
+  const setupUnavailable = !hasPublishedServices || !hasSelectableBarber;
 
   const routeSlug = typeof slug === "string" ? slug.trim() : "";
-  const publicPath = barber?.slug ? `/${barber.slug}` : routeSlug ? `/${routeSlug}` : null;
-  const isBarberLoaded = !!barber && !!barber.uid;
-
   useEffect(() => {
     const loadBarberAndServices = async () => {
       setLoading(true);
-      setError("");
+      setFatalError("");
+      setFormError("");
       setBarber(null);
       setServices([]);
-      setAppointments([]);
+      setBookedSlots([]);
       setSuccess(false);
 
       if (!routeSlug) {
-        setError("Slug inválido ou ausente. Verifique o endereço público do barbeiro.");
+        setFatalError("Slug invalido ou ausente. Verifique o endereco publico do barbeiro.");
         setLoading(false);
         return;
       }
 
       try {
-        const usersQuery = query(collection(db, "users"), where("slug", "==", routeSlug));
+        const usersQuery = query(
+          collection(db, "publicProfiles"),
+          where("slug", "==", routeSlug),
+          where("profileComplete", "==", true),
+          limit(1)
+        );
         const usersSnapshot = await getDocs(usersQuery);
 
         if (usersSnapshot.empty) {
-          setError("Barbeiro não encontrado. Verifique o link ou peça ao seu barbeiro o endereço correto.");
+          setFatalError("Barbeiro nao encontrado. Verifique o link ou peca ao seu barbeiro o endereco correto.");
           return;
         }
 
@@ -88,14 +125,28 @@ export default function PublicBooking() {
         const barberData = { id: barberDoc.id, uid: barberDoc.id, ...barberDoc.data() };
         setBarber(barberData);
 
-        const servicesQuery = query(collection(db, "services"), where("userId", "==", barberData.uid));
+        const servicesQuery = query(
+          collection(db, "services"),
+          where("userId", "==", barberData.uid),
+          orderBy("createdAt", "desc"),
+          limit(PUBLIC_QUERY_LIMITS.services)
+        );
         const servicesSnapshot = await getDocs(servicesQuery);
-        const servicesList = servicesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const servicesList = servicesSnapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((service) => !service.isArchived && !service.archivedAt);
         setServices(servicesList);
 
-        const barbersQuery = query(collection(db, "barbers"), where("ownerId", "==", barberData.uid));
+        const barbersQuery = query(
+          collection(db, "barbers"),
+          where("ownerId", "==", barberData.uid),
+          orderBy("name"),
+          limit(PUBLIC_QUERY_LIMITS.barbers)
+        );
         const barbersSnapshot = await getDocs(barbersQuery);
-        const barbersList = barbersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const barbersList = barbersSnapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((barber) => !barber.isArchived && !barber.archivedAt);
 
         const normalizedBarbers =
           barbersList.length > 0
@@ -113,13 +164,9 @@ export default function PublicBooking() {
         setBarbers(normalizedBarbers);
         setSelectedBarber(normalizedBarbers[0] || null);
 
-        const appointmentsQuery = query(collection(db, "appointments"), where("userId", "==", barberData.uid));
-        const appointmentsSnapshot = await getDocs(appointmentsQuery);
-        const appointmentsList = appointmentsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setAppointments(appointmentsList);
       } catch (err) {
-        console.error(err);
-        setError("Erro ao carregar os dados da barbearia. Tente novamente mais tarde.");
+        reportError(err, { source: "public-booking", action: "load-profile" });
+        setFatalError("Erro ao carregar os dados da barbearia. Tente novamente mais tarde.");
       } finally {
         setLoading(false);
       }
@@ -128,78 +175,211 @@ export default function PublicBooking() {
     loadBarberAndServices();
   }, [routeSlug]);
 
+  useEffect(() => {
+    const loadBookedSlots = async () => {
+      if (!barber?.uid || !selectedBarber?.id || !date) {
+        setBookedSlots([]);
+        return;
+      }
+
+      try {
+        const slotsQuery = query(
+          collection(db, "bookingSlots"),
+          where("userId", "==", barber.uid),
+          where("barberId", "==", selectedBarber.id),
+          where("date", "==", date),
+          orderBy("time"),
+          limit(PUBLIC_QUERY_LIMITS.slotsByDay)
+        );
+        const slotsSnapshot = await getDocs(slotsQuery);
+        const slotsList = slotsSnapshot.docs.map((slotDoc) => ({ id: slotDoc.id, ...slotDoc.data() }));
+        setBookedSlots(slotsList);
+      } catch (err) {
+        reportError(err, { source: "public-booking", action: "load-slots" });
+        setFormError("Nao foi possivel carregar os horarios ocupados. Tente trocar a data.");
+      }
+    };
+
+    loadBookedSlots();
+  }, [barber?.uid, selectedBarber?.id, date]);
+
   const bookAppointment = async () => {
     if (!barber || !barber.uid) {
-      setError("Dados do barbeiro não disponíveis. Atualize a página e tente novamente.");
+      setFormError("Dados do barbeiro nao disponiveis. Atualize a pagina e tente novamente.");
+      return;
+    }
+
+    if (!hasPublishedServices) {
+      setFormError("Esta barbearia ainda nao publicou servicos para agendamento online.");
       return;
     }
 
     if (!selectedBarber) {
-      setError("Selecione um barbeiro antes de agendar.");
+      setFormError("Selecione um barbeiro antes de agendar.");
       return;
     }
 
-    if (!name || !phone || !selectedService || !date || !time) {
-      setError("Preencha todos os campos para agendar o seu horário.");
+    const cleanName = name.trim();
+    const cleanPhone = normalizePhone(phone);
+
+    if (!cleanName || !cleanPhone || !selectedService || !date || !time) {
+      setFormError("Preencha todos os campos para agendar o seu horario.");
+      return;
+    }
+
+    if (!isValidBrazilianPhone(cleanPhone)) {
+      setFormError("Informe um telefone valido com DDD.");
+      return;
+    }
+
+    if (isBlockedDate) {
+      setFormError("Esta data esta indisponivel. Escolha outro dia para agendar.");
+      return;
+    }
+
+    if (!timeSlots.includes(time)) {
+      setFormError("Escolha um horario valido dentro do funcionamento da barbearia.");
+      return;
+    }
+
+    if (!isFutureAppointmentStart({ date, time })) {
+      setFormError("Escolha um horario futuro para agendar.");
+      return;
+    }
+
+    if (!isDateWithinAppointmentWindow(date, appointmentWindow)) {
+      setFormError("Escolha uma data dentro da janela disponivel para agendamento online.");
       return;
     }
 
     if (!isTimeAvailable(time)) {
-      setError("Este horário não está mais disponível. Escolha outro horário.");
+      setFormError("Este horario nao esta mais disponivel. Escolha outro horario.");
       return;
     }
 
     const service = services.find((serviceItem) => serviceItem.id === selectedService);
     if (!service) {
-      setError("Selecione um serviço válido.");
+      setFormError("Selecione um servico valido.");
       return;
     }
 
     setSubmitLoading(true);
-    setError("");
+    setFormError("");
 
     try {
-      const clientQuery = query(
-        collection(db, "clients"),
-        where("userId", "==", barber.uid),
-        where("phone", "==", phone)
-      );
-
-      const clientSnapshot = await getDocs(clientQuery);
-      let clientRecord;
-
-      if (!clientSnapshot.empty) {
-        clientRecord = { id: clientSnapshot.docs[0].id, ...clientSnapshot.docs[0].data() };
-      } else {
-        const newClient = {
-          name,
-          phone,
-          createdAt: new Date(),
-          userId: barber.uid,
-          barberSlug: routeSlug,
-        };
-        const clientRef = await addDoc(collection(db, "clients"), newClient);
-        clientRecord = { id: clientRef.id, ...newClient };
-      }
-
-      await addDoc(collection(db, "appointments"), {
-        clientId: clientRecord.id,
-        client: {
-          id: clientRecord.id,
-          name: clientRecord.name,
-          phone: clientRecord.phone,
-        },
-        clientName: clientRecord.name,
-        clientPhone: clientRecord.phone,
-        service,
-        barberId: selectedBarber?.id,
-        barberName: selectedBarber?.name,
+      const slotId = createSlotId({
+        userId: barber.uid,
+        barberId: selectedBarber.id,
         date,
         time,
-        status: "pending",
+      });
+      const appointmentRef = doc(collection(db, "appointments"));
+      const clientRef = doc(collection(db, "clients"));
+      const phoneKeyRef = doc(
+        db,
+        "clientPhoneKeys",
+        createClientPhoneKeyId({ userId: barber.uid, phone: cleanPhone })
+      );
+      const createdAt = new Date();
+      const startMinutes = timeToMinutes(time);
+      const endMinutes = startMinutes + selectedDuration;
+      const occupiedTimes = getOccupiedTimes({
+        startMinutes,
+        endMinutes,
+        interval: Number(businessHours.slotInterval) || defaultBusinessHours.slotInterval,
+      });
+      const slotIds = occupiedTimes.map((occupiedTime) =>
+        createSlotId({
+          userId: barber.uid,
+          barberId: selectedBarber.id,
+          date,
+          time: occupiedTime,
+        })
+      );
+      const slotRefs = slotIds.map((occupiedSlotId) => doc(db, "bookingSlots", occupiedSlotId));
+      let clientRecord = null;
+      const newClient = {
+        name: cleanName,
+        phone: cleanPhone,
+        phoneNormalized: cleanPhone,
+        createdAt,
         userId: barber.uid,
         barberSlug: routeSlug,
-        createdAt: new Date(),
+        isArchived: false,
+      };
+      const appointmentData = {
+        clientId: clientRef.id,
+        client: {
+          id: clientRef.id,
+          name: cleanName,
+          phone: cleanPhone,
+        },
+        clientName: cleanName,
+        clientPhone: cleanPhone,
+        service,
+        barberId: selectedBarber.id,
+        barberName: selectedBarber.name,
+        date,
+        time,
+        duration: selectedDuration,
+        startMinutes,
+        endMinutes,
+        status: APPOINTMENT_STATUS.pending,
+        userId: barber.uid,
+        barberSlug: routeSlug,
+        slotId,
+        slotIds,
+        createdAt,
+      };
+
+      await runTransaction(db, async (transaction) => {
+        const phoneKeySnapshot = await transaction.get(phoneKeyRef);
+        if (phoneKeySnapshot.exists()) {
+          clientRecord = {
+            id: phoneKeySnapshot.data().clientId,
+            name: cleanName,
+            phone: cleanPhone,
+          };
+          appointmentData.clientId = clientRecord.id;
+          appointmentData.client = clientRecord;
+        }
+
+        for (const slotRef of slotRefs) {
+          const slotSnapshot = await transaction.get(slotRef);
+          if (slotSnapshot.exists()) {
+            throw new Error("slot-unavailable");
+          }
+        }
+
+        slotRefs.forEach((slotRef, index) => {
+          transaction.set(slotRef, {
+            appointmentId: appointmentRef.id,
+            userId: barber.uid,
+            barberId: selectedBarber.id,
+            barberName: selectedBarber.name,
+            date,
+            time: occupiedTimes[index],
+            rootTime: time,
+            duration: selectedDuration,
+            startMinutes,
+            endMinutes,
+            status: APPOINTMENT_STATUS.pending,
+            createdAt,
+          });
+        });
+
+        if (!clientRecord) {
+          transaction.set(clientRef, newClient);
+          transaction.set(phoneKeyRef, {
+            userId: barber.uid,
+            phoneNormalized: cleanPhone,
+            clientId: clientRef.id,
+            barberSlug: routeSlug,
+            createdAt,
+          });
+        }
+
+        transaction.set(appointmentRef, appointmentData);
       });
 
       setSuccess(true);
@@ -209,13 +389,31 @@ export default function PublicBooking() {
       setDate("");
       setTime("");
 
-      const appointmentsQuery = query(collection(db, "appointments"), where("userId", "==", barber.uid));
-      const appointmentsSnapshot = await getDocs(appointmentsQuery);
-      const appointmentsList = appointmentsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setAppointments(appointmentsList);
+      setBookedSlots((current) => [
+        ...current,
+        ...slotIds.map((occupiedSlotId, index) => ({
+          id: occupiedSlotId,
+          appointmentId: appointmentRef.id,
+          userId: barber.uid,
+          barberId: selectedBarber.id,
+          barberName: selectedBarber.name,
+          date,
+          time: occupiedTimes[index],
+          rootTime: time,
+          duration: selectedDuration,
+          startMinutes,
+          endMinutes,
+          status: APPOINTMENT_STATUS.pending,
+        })),
+      ]);
+      trackEvent("public_appointment_requested", { source: "public-booking", action: "book-appointment" });
     } catch (err) {
-      console.error(err);
-      setError("Erro ao enviar o agendamento. Tente novamente.");
+      reportError(err, { source: "public-booking", action: "book-appointment" });
+      setFormError(
+        err.message === "slot-unavailable"
+          ? "Este horario acabou de ser reservado. Escolha outro horario."
+          : "Erro ao enviar o agendamento. Tente novamente."
+      );
     } finally {
       setSubmitLoading(false);
     }
@@ -223,22 +421,21 @@ export default function PublicBooking() {
 
   const brandName = barber?.barbershopName || barber?.displayName || "Barbearia premium";
   const barberName = barber?.displayName || barber?.barbershopName || "Seu barbeiro";
-  const brandTagline = barber?.bio || "Agende online o seu próximo corte de forma rápida e elegante.";
-  const displayPath = publicPath || (routeSlug ? `/${routeSlug}` : "/link-indisponivel");
-
+  const brandTagline = barber?.bio || "Agende online o seu proximo corte de forma rapida e elegante.";
+  const today = formatLocalDate();
   return (
-    <main className="min-h-screen bg-gray-950 text-white px-4 py-8 sm:px-6 lg:px-10">
+    <main className="min-h-screen bg-gray-950 px-4 py-5 text-white sm:px-6 sm:py-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 space-y-6">
-          <div className="rounded-3xl border border-gray-800 bg-gray-900 p-8 shadow-sm">
+          <div className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-3xl space-y-4">
-                <span className="inline-flex rounded-full border border-indigo-500/20 bg-indigo-500/10 px-4 py-2 text-sm uppercase tracking-[0.35em] text-indigo-300">
+                <span className="inline-flex rounded-full border border-indigo-500/20 bg-indigo-500/10 px-4 py-2 text-xs uppercase tracking-[0.25em] text-indigo-300 sm:text-sm sm:tracking-[0.35em]">
                   Agendamento online
                 </span>
                 <div className="space-y-3">
-                  <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{brandName}</h1>
-                  <p className="text-lg text-gray-400 sm:text-xl">{brandTagline}</p>
+                  <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">{brandName}</h1>
+                  <p className="text-base text-gray-400 sm:text-xl">{brandTagline}</p>
                 </div>
                 <div className="flex flex-wrap gap-3 text-sm text-gray-300">
                   <span className="rounded-full bg-white/5 px-4 py-2">{barberName}</span>
@@ -247,9 +444,9 @@ export default function PublicBooking() {
               </div>
 
               <div className="rounded-3xl border border-gray-800 bg-gray-950 p-5 text-sm text-gray-300">
-                <p className="font-semibold text-white">Agendamento público</p>
+                <p className="font-semibold text-white">Agendamento publico</p>
                 <p className="mt-4 text-sm leading-6 text-gray-400">
-                  Escolha um serviço, selecione data e horário e confirme seu agendamento de forma rápida.
+                  Escolha um servico, selecione data e horario e confirme seu agendamento de forma rapida.
                 </p>
               </div>
             </div>
@@ -257,25 +454,25 @@ export default function PublicBooking() {
         </div>
 
         {loading ? (
-          <div className="rounded-3xl border border-gray-800 bg-gray-900 p-10 text-center text-gray-400">Carregando...</div>
-        ) : error ? (
-          <div className="rounded-3xl border border-red-600 bg-red-950 p-10 text-center text-red-400">{error}</div>
+          <div className="rounded-3xl border border-gray-800 bg-gray-900 p-8 text-center text-gray-400 sm:p-10">Carregando...</div>
+        ) : fatalError ? (
+          <div className="rounded-3xl border border-red-600 bg-red-950 p-8 text-center text-red-400 sm:p-10">{fatalError}</div>
         ) : (
           <div className="grid gap-8 xl:grid-cols-[1.4fr_1fr]">
             <section className="space-y-6">
-              <div className="rounded-3xl border border-gray-800 bg-gray-900 p-8 shadow-sm">
+              <div className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-8">
                 <div className="mb-6 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Barbeiros</p>
                     <h2 className="mt-3 text-2xl font-bold">Escolha o barbeiro</h2>
                   </div>
-                  <span className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black">{barbers.length} opções</span>
+                  <span className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black">{barbers.length} opcoes</span>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   {barbers.length === 0 ? (
                     <div className="rounded-3xl border border-dashed border-gray-700 bg-gray-950 p-8 text-center text-gray-400">
-                      Nenhum barbeiro disponível no momento.
+                      Nenhum barbeiro disponivel no momento.
                     </div>
                   ) : (
                     barbers.map((barberItem) => {
@@ -287,8 +484,10 @@ export default function PublicBooking() {
                           onClick={() => {
                             setSelectedBarber(barberItem);
                             setTime("");
+                            setFormError("");
+                            setSuccess(false);
                           }}
-                          className={`flex min-h-[120px] flex-col justify-between rounded-3xl border p-5 text-left transition ${
+                          className={`flex min-h-[112px] flex-col justify-between rounded-3xl border p-4 text-left transition sm:p-5 ${
                             selected
                               ? "border-indigo-500 bg-indigo-500/10 shadow-lg"
                               : "border-gray-800 bg-gray-950 hover:border-white/20"
@@ -323,30 +522,38 @@ export default function PublicBooking() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-gray-800 bg-gray-900 p-8 shadow-sm">
+              <div className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-8">
                 <div className="mb-6 flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Serviços</p>
-                    <h2 className="mt-3 text-2xl font-bold">Escolha o serviço ideal</h2>
+                    <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Servicos</p>
+                    <h2 className="mt-3 text-2xl font-bold">Escolha o servico ideal</h2>
                   </div>
-                  <span className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black">{services.length} serviços</span>
+                  <span className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black">
+                    {pluralize(services.length, "servico")}
+                  </span>
                 </div>
 
                 {services.length === 0 ? (
                   <div className="rounded-3xl border border-dashed border-gray-700 bg-gray-950 p-8 text-center text-gray-400">
-                    Não há serviços publicados ainda. Peça ao barbeiro para cadastrar seus serviços.
+                    Nao ha servicos publicados ainda. Peca ao barbeiro para cadastrar seus servicos.
                   </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
                     {services.map((service) => {
                       const selected = selectedService === service.id;
-                      const duration = service.duration ? `${service.duration} min` : "30 min";
+                      const duration = formatDuration(service.duration || 30);
                       return (
                         <button
                           key={service.id}
                           type="button"
-                          onClick={() => setSelectedService(service.id)}
-                          className={`flex flex-col justify-between rounded-3xl border p-6 text-left transition ${
+                          onClick={() => {
+                            setSelectedService(service.id);
+                            setDate("");
+                            setTime("");
+                            setFormError("");
+                            setSuccess(false);
+                          }}
+                          className={`flex flex-col justify-between rounded-3xl border p-5 text-left transition sm:p-6 ${
                             selected
                               ? "border-indigo-500 bg-indigo-500/10 shadow-lg"
                               : "border-gray-800 bg-gray-950 hover:border-white/20"
@@ -357,7 +564,9 @@ export default function PublicBooking() {
                             <p className="mt-3 text-sm text-gray-400">{duration}</p>
                           </div>
                           <div className="mt-6 flex items-center justify-between gap-4">
-                            <span className="rounded-full bg-gray-800 px-3 py-1 text-sm text-gray-300">R$ {service.price}</span>
+                            <span className="rounded-full bg-gray-800 px-3 py-1 text-sm text-gray-300">
+                              {formatCurrencyBRL(service.price)}
+                            </span>
                             {selected && <span className="rounded-full bg-indigo-500 px-3 py-1 text-sm text-white">Selecionado</span>}
                           </div>
                         </button>
@@ -367,80 +576,126 @@ export default function PublicBooking() {
                 )}
               </div>
 
-              <div className="rounded-3xl border border-gray-800 bg-gray-900 p-8 shadow-sm">
+              <div className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-8">
                 <h2 className="text-2xl font-bold">Como funciona</h2>
                 <ol className="mt-5 space-y-3 text-gray-400">
-                  <li>1. Escolha o serviço desejado.</li>
+                  <li>1. Escolha o servico desejado.</li>
                   <li>2. Informe seus dados de contato.</li>
                   <li>3. Selecione a data.</li>
-                  <li>4. Escolha um horário disponível (em verde).</li>
-                  <li>5. Clique em reservar e aguarde a confirmação.</li>
+                  <li>4. Escolha um horario disponivel (em verde).</li>
+                  <li>5. Clique em reservar e aguarde a confirmacao.</li>
                 </ol>
                 <p className="mt-5 text-sm text-gray-500 border-t border-gray-800 pt-5">
-                  💡 <span className="text-red-400">Horários em vermelho</span> já estão ocupados. Escolha outro horário ou data.
+                  <span className="text-red-400">Horarios em vermelho</span> ja estao ocupados. Escolha outro horario ou data.
                 </p>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-gray-800 bg-gray-900 p-8 shadow-sm">
+            <section className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-8">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold">Agendar horário</h2>
+                <h2 className="text-2xl font-bold">Agendar horario</h2>
                 <p className="text-gray-400 mt-2">Preencha seus dados para confirmar o seu agendamento.</p>
               </div>
 
               {success && (
-                <div className="mb-6 rounded-3xl border border-emerald-500 bg-emerald-950 p-4 text-emerald-300">
-                  Agendamento confirmado! O barbeiro receberá a solicitação e entrará em contato.
+                <div className="mb-6 rounded-3xl border border-emerald-500 bg-emerald-950 p-4 text-emerald-300" role="status">
+                  Solicitacao enviada! A barbearia recebeu o pedido e deve confirmar o horario.
+                </div>
+              )}
+
+              {setupUnavailable && (
+                <div className="mb-6 rounded-3xl border border-yellow-500/70 bg-yellow-950/80 p-4 text-sm text-yellow-100">
+                  Esta barbearia ainda esta finalizando a configuracao online. Tente novamente mais tarde ou fale
+                  diretamente com a equipe.
+                </div>
+              )}
+
+              {formError && (
+                <div className="mb-6 rounded-3xl border border-red-800 bg-red-950/70 p-4 text-sm text-red-100" role="alert">
+                  {formError}
                 </div>
               )}
 
               <div className="grid gap-4">
-                <input
-                  className="w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 outline-none"
-                  placeholder="Seu nome"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                <input
-                  className="w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 outline-none"
-                  placeholder="Telefone com DDD"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-gray-300">Nome</span>
+                  <input
+                    className="w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
+                    autoComplete="name"
+                    placeholder="Seu nome"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setFormError("");
+                      setSuccess(false);
+                    }}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-gray-300">Telefone com DDD</span>
+                  <input
+                    className="w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="(11) 98765-4321"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      setFormError("");
+                      setSuccess(false);
+                    }}
+                  />
+                </label>
                 <div className="rounded-3xl border border-gray-800 bg-gray-950 p-4">
-                  <p className="text-sm text-gray-400">Serviço selecionado</p>
+                  <p className="text-sm text-gray-400">Servico selecionado</p>
                   <p className="mt-2 text-base font-semibold text-white">
-                    {selectedService
-                      ? services.find((service) => service.id === selectedService)?.name
-                      : "Selecione um serviço acima"}
+                    {selectedServiceData ? selectedServiceData.name : "Selecione um servico acima"}
                   </p>
+                  {selectedServiceData && (
+                    <p className="mt-2 text-sm text-gray-400">
+                      {formatDuration(selectedDuration)} - {formatCurrencyBRL(selectedServiceData.price)}
+                    </p>
+                  )}
                 </div>
-                <div className="rounded-3xl border border-indigo-500 bg-indigo-500/10 p-5 shadow-lg shadow-indigo-500/10 transition hover:border-indigo-400 hover:bg-indigo-500/15">
+                <div className="rounded-3xl border border-indigo-500 bg-indigo-500/10 p-4 shadow-lg shadow-indigo-500/10 transition hover:border-indigo-400 hover:bg-indigo-500/15 sm:p-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.25em] text-indigo-300">
                         2. Escolha a data
                       </p>
                       <p className="mt-2 text-sm text-gray-300 max-w-md">
-                        Selecione o dia que mais combina com você. As datas mostram os horários disponíveis apenas depois da seleção.
+                        {selectedService
+                          ? "Selecione o dia desejado. Os horarios respeitam a duracao do servico."
+                          : "Escolha um servico antes da data para o BarberOS calcular os horarios corretamente."}
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.3em] text-white">
-                      <span>📅</span>
                       <span>Data</span>
                     </div>
                   </div>
                   <div className="mt-5 rounded-3xl border border-gray-800 bg-gray-950 p-4 transition hover:border-white/20 focus-within:border-white/20">
-                    <input
-                      className="w-full cursor-pointer rounded-3xl border border-transparent bg-transparent px-3 py-4 text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-400 focus:bg-gray-900 focus:ring-2 focus:ring-indigo-500/20"
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                    />
+                    <label className="block">
+                      <span className="sr-only">Data do agendamento</span>
+                      <input
+                        className="w-full cursor-pointer rounded-3xl border border-transparent bg-transparent px-3 py-4 text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-400 focus:bg-gray-900 focus:ring-2 focus:ring-indigo-500/20"
+                        type="date"
+                        min={today}
+                        max={appointmentWindow.endDate}
+                        value={date}
+                        disabled={!selectedService}
+                        onChange={(e) => {
+                          setDate(e.target.value);
+                          setTime("");
+                          setFormError("");
+                          setSuccess(false);
+                        }}
+                      />
+                    </label>
                   </div>
                   {!date && (
                     <p className="mt-4 text-sm text-gray-400">
-                      Primeiro selecione a data desejada para conferir os horários disponíveis.
+                      {selectedService ? "Escolha uma data para ver os horarios disponiveis." : "Primeiro escolha um servico acima."}
                     </p>
                   )}
                 </div>
@@ -448,20 +703,29 @@ export default function PublicBooking() {
                   <div className="rounded-3xl border border-gray-800 bg-gray-950 p-4">
                     <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-sm uppercase tracking-[0.25em] text-gray-500">3. Escolha o horário</p>
-                        <p className="mt-2 text-base text-white">Horários disponíveis para {new Date(date).toLocaleDateString("pt-BR")}</p>
+                        <p className="text-sm uppercase tracking-[0.25em] text-gray-500">3. Escolha o horario</p>
+                        <p className="mt-2 text-base text-white">Horarios disponiveis para {new Date(date).toLocaleDateString("pt-BR")}</p>
                       </div>
                       <span className="rounded-full bg-gray-900 px-3 py-1 text-xs uppercase tracking-[0.2em] text-gray-400">
-                        {selectedBarber ? `${availableSlots.length} disponível${availableSlots.length === 1 ? "" : "s"}` : "Selecione um barbeiro"}
+                        {selectedBarber
+                          ? `${availableSlots.length} ${availableSlots.length === 1 ? "disponivel" : "disponiveis"}`
+                          : "Selecione um barbeiro"}
                       </span>
                     </div>
 
-                    {!selectedBarber ? (
+                    {isBlockedDate ? (
+                      <div className="rounded-3xl border border-dashed border-yellow-500 bg-yellow-950 p-5 text-sm text-yellow-200">
+                        <p className="font-semibold">Data indisponivel</p>
+                        <p className="mt-2 text-gray-300">
+                          Esta data foi bloqueada pela barbearia. Escolha outro dia para agendar.
+                        </p>
+                      </div>
+                    ) : !selectedBarber ? (
                       <div className="rounded-3xl border border-dashed border-gray-700 bg-gray-950 p-5 text-sm text-gray-300">
-                        Selecione um barbeiro primeiro para ver os horários disponíveis.
+                        Selecione um barbeiro primeiro para ver os horarios disponiveis.
                       </div>
                     ) : availableSlots.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
                         {timeSlots.map((slot) => {
                           const isAvailable = isTimeAvailable(slot);
                           const isSelected = time === slot;
@@ -469,7 +733,12 @@ export default function PublicBooking() {
                             <button
                               key={slot}
                               type="button"
-                              onClick={() => isAvailable && setTime(slot)}
+                              onClick={() => {
+                                if (!isAvailable) return;
+                                setTime(slot);
+                                setFormError("");
+                                setSuccess(false);
+                              }}
                               disabled={!isAvailable}
                               className={`rounded-3xl border px-3 py-3 text-sm font-semibold transition ${
                                 isSelected
@@ -487,31 +756,32 @@ export default function PublicBooking() {
                       </div>
                     ) : (
                       <div className="rounded-3xl border border-dashed border-yellow-500 bg-yellow-950 p-5 text-sm text-yellow-200">
-                        <p className="font-semibold">Sem horários disponíveis</p>
+                        <p className="font-semibold">Sem horarios disponiveis</p>
                         <p className="mt-2 text-gray-300">
-                          Não há horários livres neste dia. Escolha outra data ou volte ao serviço para alterar a seleção.
+                          Nao ha horarios livres neste dia. Escolha outra data ou volte ao servico para alterar a selecao.
                         </p>
                       </div>
                     )}
 
                     {bookedTimes.length > 0 && availableSlots.length > 0 && (
                       <p className="text-xs text-gray-400 mt-3">
-                        {bookedTimes.length} horário(s) já ocupado(s) nesta data.
+                        {pluralize(bookedTimes.length, "horario")} ja{" "}
+                        {bookedTimes.length === 1 ? "ocupado" : "ocupados"} nesta data.
                       </p>
                     )}
                   </div>
                 )}
 
-                <button
+                <button type="button"
                   className={`w-full rounded-3xl py-4 text-sm font-semibold transition ${
-                    selectedBarber && selectedService && name && phone && date && time && !submitLoading
+                    canSubmit
                       ? "bg-white text-black hover:bg-gray-200"
                       : "bg-gray-700 text-gray-400 cursor-not-allowed"
                   }`}
                   onClick={bookAppointment}
-                  disabled={!selectedBarber || !selectedService || !name || !phone || !date || !time || submitLoading}
+                  disabled={!canSubmit}
                 >
-                  {submitLoading ? "Enviando..." : "Confirmar agendamento"}
+                  {submitLoading ? "Enviando..." : "Solicitar agendamento"}
                 </button>
               </div>
             </section>

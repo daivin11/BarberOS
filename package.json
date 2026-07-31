@@ -7,6 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node --test",
+    "check:production": "node scripts/production-check.js",
+    "check:bundle": "node scripts/bundle-budget.js",
     "preview": "vite preview"
   },
   "dependencies": {

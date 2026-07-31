@@ -1,13 +1,18 @@
-import { useMemo, useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
-
-const normalizeSlug = (value) =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]+/g, "")
-    .replace(/(^-|-$)/g, "");
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { formatLocalDate } from "../utils/date";
+import { formatDuration } from "../utils/format";
+import { PROFILE_LIMITS, normalizeSlug, validatePublicProfileInput } from "../utils/profileValidation";
+import {
+  BUSINESS_HOURS_LIMITS,
+  defaultBusinessHours,
+  isValidDateString,
+  normalizeBlockedDates,
+  normalizeBusinessHours,
+  validateBlockedDatesInput,
+  validateBusinessHoursInput,
+} from "../utils/schedule";
+import { reportError, trackEvent } from "../utils/telemetry";
 
 export default function ProfileSettings() {
   const { user, profile, updateProfile, isSlugAvailable } = useAuth();
@@ -15,6 +20,9 @@ export default function ProfileSettings() {
   const [slug, setSlug] = useState(profile?.slug || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [bio, setBio] = useState(profile?.bio || "");
+  const [businessHours, setBusinessHours] = useState(profile?.businessHours || defaultBusinessHours);
+  const [blockedDateInput, setBlockedDateInput] = useState("");
+  const [blockedDates, setBlockedDates] = useState(profile?.blockedDates || []);
   const [slugError, setSlugError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState("");
@@ -23,6 +31,15 @@ export default function ProfileSettings() {
 
   const normalizedSlug = useMemo(() => normalizeSlug(slug || ""), [slug]);
   const previewUrl = normalizedSlug ? `${window.location.origin}/${normalizedSlug}` : "";
+
+  useEffect(() => {
+    setBarbershopName(profile?.barbershopName || "");
+    setSlug(profile?.slug || "");
+    setPhone(profile?.phone || "");
+    setBio(profile?.bio || "");
+    setBusinessHours(profile?.businessHours || defaultBusinessHours);
+    setBlockedDates(profile?.blockedDates || []);
+  }, [profile]);
 
   const handleSlugBlur = async () => {
     if (!normalizedSlug) {
@@ -39,7 +56,7 @@ export default function ProfileSettings() {
       const available = await isSlugAvailable(normalizedSlug, user?.uid);
       setSlugError(available ? "" : "Este slug ja esta em uso.");
     } catch (error) {
-      console.error(error);
+      reportError(error, { source: "profile-settings", action: "check-slug" });
       setSlugError("Nao foi possivel verificar o slug.");
     } finally {
       setSlugChecking(false);
@@ -52,15 +69,37 @@ export default function ProfileSettings() {
     const trimmedName = barbershopName.trim();
     const trimmedPhone = phone.trim();
     const trimmedBio = bio.trim();
+    const normalizedBusinessHours = normalizeBusinessHours(businessHours);
+    const normalizedBlockedDates = normalizeBlockedDates(blockedDates);
+    const validationError = validatePublicProfileInput({
+      barbershopName: trimmedName,
+      slug: normalizedSlug,
+      phone: trimmedPhone,
+      bio: trimmedBio,
+    });
 
-    if (!trimmedName || !normalizedSlug || !trimmedPhone) {
-      setSaveError("Preencha nome da barbearia, slug e telefone.");
+    if (validationError) {
+      setSaveError(validationError);
       setSaveSuccess("");
       return;
     }
 
     if (slugError) {
       setSaveError("Corrija o slug antes de salvar.");
+      setSaveSuccess("");
+      return;
+    }
+
+    const businessHoursError = validateBusinessHoursInput(businessHours);
+    if (businessHoursError) {
+      setSaveError(businessHoursError);
+      setSaveSuccess("");
+      return;
+    }
+
+    const blockedDatesError = validateBlockedDatesInput(blockedDates);
+    if (blockedDatesError) {
+      setSaveError(blockedDatesError);
       setSaveSuccess("");
       return;
     }
@@ -72,7 +111,7 @@ export default function ProfileSettings() {
     try {
       const available = await isSlugAvailable(normalizedSlug, user?.uid);
       if (!available) {
-      setSlugError("Este slug ja esta em uso.");
+        setSlugError("Este slug ja esta em uso.");
         setSaveError("Escolha outro slug publico.");
         return;
       }
@@ -82,14 +121,17 @@ export default function ProfileSettings() {
         slug: normalizedSlug,
         phone: trimmedPhone,
         bio: trimmedBio,
+        businessHours: normalizedBusinessHours,
+        blockedDates: normalizedBlockedDates,
         profileComplete: true,
         updatedAt: new Date(),
       });
 
       setSlug(normalizedSlug);
       setSaveSuccess("Perfil da barbearia salvo com sucesso.");
+      trackEvent("profile_settings_saved", { source: "profile-settings", action: "save-profile" });
     } catch (error) {
-      console.error(error);
+      reportError(error, { source: "profile-settings", action: "save-profile" });
       setSaveError("Erro ao salvar o perfil. Tente novamente.");
     } finally {
       setSaving(false);
@@ -97,12 +139,12 @@ export default function ProfileSettings() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-6 text-white md:p-8">
+    <main className="flex-1 overflow-y-auto p-4 text-white sm:p-6 lg:p-8">
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-indigo-300">Perfil publico</p>
-            <h2 className="mt-3 text-3xl font-bold">Configuracoes da barbearia</h2>
+            <h2 className="mt-3 text-3xl font-black tracking-tight">Configuracoes da barbearia</h2>
             <p className="mt-2 max-w-2xl text-gray-400">
               Edite os dados exibidos no link publico e no painel da sua equipe.
             </p>
@@ -120,12 +162,13 @@ export default function ProfileSettings() {
         </div>
 
         <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-          <section className="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-sm md:p-8">
+          <section className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6 lg:p-8">
             <div className="grid gap-5">
               <label className="block">
                 <span className="text-sm text-gray-300">Nome da barbearia</span>
                 <input
                   value={barbershopName}
+                  maxLength={PROFILE_LIMITS.nameMax}
                   onChange={(event) => setBarbershopName(event.target.value)}
                   className="mt-2 w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="Ex: Barbearia Central"
@@ -135,9 +178,10 @@ export default function ProfileSettings() {
               <label className="block">
                 <span className="text-sm text-gray-300">Slug publico</span>
                 <div className="mt-2 flex flex-col gap-2 rounded-3xl border border-gray-800 bg-gray-950 p-4 transition focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 sm:flex-row sm:items-center">
-                  <span className="shrink-0 text-gray-500">{window.location.origin}/</span>
+                  <span className="shrink-0 break-all text-gray-500">{window.location.origin}/</span>
                   <input
                     value={slug}
+                    maxLength={PROFILE_LIMITS.slugMax}
                     onBlur={handleSlugBlur}
                     onChange={(event) => setSlug(event.target.value)}
                     className="min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-gray-500"
@@ -157,6 +201,7 @@ export default function ProfileSettings() {
                 <span className="text-sm text-gray-300">Telefone</span>
                 <input
                   value={phone}
+                  maxLength={PROFILE_LIMITS.phoneMax}
                   onChange={(event) => setPhone(event.target.value)}
                   className="mt-2 w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="(11) 98765-4321"
@@ -167,11 +212,131 @@ export default function ProfileSettings() {
                 <span className="text-sm text-gray-300">Bio</span>
                 <textarea
                   value={bio}
+                  maxLength={PROFILE_LIMITS.bioMax}
                   onChange={(event) => setBio(event.target.value)}
                   className="mt-2 min-h-[160px] w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="Conte em poucas linhas o estilo, especialidades e experiencia da sua barbearia."
                 />
               </label>
+
+              <div className="rounded-3xl border border-gray-800 bg-gray-950 p-5">
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-white">Horario de funcionamento</p>
+                  <p className="mt-1 text-sm text-gray-400">
+                    Usado para gerar horarios disponiveis na pagina publica.
+                  </p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <label className="block">
+                    <span className="text-sm text-gray-300">Abre as</span>
+                    <input
+                      type="time"
+                      value={businessHours.start}
+                      onChange={(event) =>
+                        setBusinessHours((current) => ({ ...current, start: event.target.value }))
+                      }
+                      className="mt-2 w-full rounded-2xl border border-gray-800 bg-gray-900 p-3 text-white outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm text-gray-300">Fecha as</span>
+                    <input
+                      type="time"
+                      value={businessHours.end}
+                      onChange={(event) =>
+                        setBusinessHours((current) => ({ ...current, end: event.target.value }))
+                      }
+                      className="mt-2 w-full rounded-2xl border border-gray-800 bg-gray-900 p-3 text-white outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                    {businessHours.end <= businessHours.start && (
+                      <p className="mt-2 text-xs text-yellow-300">Fechamento deve ser depois da abertura.</p>
+                    )}
+                  </label>
+                  <label className="block">
+                    <span className="text-sm text-gray-300">Intervalo</span>
+                    <select
+                      value={businessHours.slotInterval}
+                      onChange={(event) =>
+                        setBusinessHours((current) => ({
+                          ...current,
+                          slotInterval: Number(event.target.value),
+                        }))
+                      }
+                      className="mt-2 w-full rounded-2xl border border-gray-800 bg-gray-900 p-3 text-white outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      <option value={15}>15 min</option>
+                      <option value={30}>30 min</option>
+                      <option value={45}>45 min</option>
+                      <option value={60}>60 min</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-gray-800 bg-gray-950 p-5">
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-white">Folgas e bloqueios</p>
+                  <p className="mt-1 text-sm text-gray-400">
+                    Datas bloqueadas ficam indisponiveis na pagina publica.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <input
+                    type="date"
+                    min={formatLocalDate()}
+                    value={blockedDateInput}
+                    onChange={(event) => setBlockedDateInput(event.target.value)}
+                    className="min-w-0 flex-1 rounded-2xl border border-gray-800 bg-gray-900 p-3 text-white outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!blockedDateInput) return;
+                      if (!isValidDateString(blockedDateInput)) {
+                        setSaveError("Escolha uma data valida para bloquear.");
+                        setSaveSuccess("");
+                        return;
+                      }
+                      setBlockedDates((current) =>
+                        current.includes(blockedDateInput)
+                          ? current
+                          : normalizeBlockedDates([...current, blockedDateInput])
+                      );
+                      setSaveError("");
+                      setBlockedDateInput("");
+                    }}
+                    disabled={blockedDates.length >= BUSINESS_HOURS_LIMITS.blockedDatesMax}
+                    className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
+                  >
+                    Bloquear data
+                  </button>
+                </div>
+                {blockedDates.length >= BUSINESS_HOURS_LIMITS.blockedDatesMax && (
+                  <p className="mt-3 text-sm text-yellow-300">
+                    Limite de {BUSINESS_HOURS_LIMITS.blockedDatesMax} datas bloqueadas atingido.
+                  </p>
+                )}
+
+                {blockedDates.length === 0 ? (
+                  <p className="mt-4 text-sm text-gray-500">Nenhuma data bloqueada.</p>
+                ) : (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {blockedDates.map((blockedDate) => (
+                      <button
+                        key={blockedDate}
+                        type="button"
+                        onClick={() =>
+                          setBlockedDates((current) => current.filter((item) => item !== blockedDate))
+                        }
+                        className="rounded-full border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-300 transition hover:border-red-500 hover:text-red-200"
+                        title="Clique para remover"
+                      >
+                        {blockedDate}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mt-6 flex flex-col gap-3 border-t border-gray-800 pt-6 sm:flex-row sm:items-center sm:justify-between">
@@ -189,7 +354,7 @@ export default function ProfileSettings() {
             </div>
           </section>
 
-          <aside className="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-sm md:p-8">
+          <aside className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6 lg:p-8">
             <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Previa</p>
             <div className="mt-5 rounded-3xl border border-gray-800 bg-gray-950 p-5">
               <p className="text-xl font-bold text-white">{barbershopName.trim() || "Sua barbearia"}</p>
@@ -200,6 +365,21 @@ export default function ProfileSettings() {
               <p className="mt-4 text-sm leading-6 text-gray-300">
                 {bio.trim() || "Adicione uma bio curta para aparecer na pagina publica."}
               </p>
+              <p className="mt-4 text-sm text-gray-400">
+                Agenda: {businessHours.start} - {businessHours.end}, grade de {formatDuration(businessHours.slotInterval)}
+              </p>
+              <p className="mt-2 text-sm text-gray-500">
+                {blockedDates.length} data(s) bloqueada(s)
+              </p>
+            </div>
+            <div className="mt-5 rounded-3xl border border-gray-800 bg-gray-950 p-5 text-sm text-gray-400">
+              <p className="font-semibold text-white">Checklist publico</p>
+              <div className="mt-4 grid gap-2">
+                <p>{barbershopName.trim() ? "OK Nome informado" : "Pendente Nome da barbearia"}</p>
+                <p>{normalizedSlug ? "OK Slug configurado" : "Pendente Slug publico"}</p>
+                <p>{phone.trim() ? "OK Telefone informado" : "Pendente Telefone"}</p>
+                <p>{bio.trim() ? "OK Bio publicada" : "Opcional Bio publica"}</p>
+              </div>
             </div>
           </aside>
         </form>
