@@ -114,6 +114,8 @@ export default function AdminApp() {
   const [barbersLoading, setBarbersLoading] = useState(true);
   const [appointments, setAppointments] = useState([]);
   const [appointmentsLoading, setAppointmentsLoading] = useState(true);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLogsLoading, setAuditLogsLoading] = useState(true);
   const [dataError, setDataError] = useState("");
   const [dataWarnings, setDataWarnings] = useState({});
   const [notification, setNotification] = useState(null);
@@ -147,6 +149,29 @@ export default function AdminApp() {
       return nextWarnings;
     });
   }, []);
+  const recordAuditLog = useCallback(
+    async ({ action, entityType, entityId, entityLabel = "", summary = "", source = "admin" }) => {
+      if (!user || !action || !entityType || !entityId) return;
+
+      try {
+        await addDoc(collection(db, "auditLogs"), {
+          userId: user.uid,
+          actorId: user.uid,
+          action: String(action).slice(0, 80),
+          entityType: String(entityType).slice(0, 40),
+          entityId: String(entityId).slice(0, 128),
+          entityLabel: String(entityLabel || "").slice(0, 120),
+          summary: String(summary || "").slice(0, 160),
+          source: String(source || "admin").slice(0, 40),
+          createdAt: new Date(),
+        });
+      } catch (error) {
+        reportError(error, { source: "admin", action: "write-audit-log" });
+      }
+    },
+    [user]
+  );
+
   const hasActiveAppointmentByField = useCallback(
     async (fieldName, value) => {
       if (!user || !value) return false;
@@ -179,6 +204,8 @@ export default function AdminApp() {
       setBarbersLoading(false);
       setAppointments([]);
       setAppointmentsLoading(false);
+      setAuditLogs([]);
+      setAuditLogsLoading(false);
       setDataError("");
       setDataWarnings({});
       return;
@@ -188,6 +215,7 @@ export default function AdminApp() {
     setServicesLoading(true);
     setBarbersLoading(true);
     setAppointmentsLoading(true);
+    setAuditLogsLoading(true);
 
     const clientsQuery = query(
       collection(db, "clients"),
@@ -216,6 +244,13 @@ export default function AdminApp() {
       orderBy("time"),
       limit(ADMIN_QUERY_LIMITS.appointments)
     );
+    const auditLogsQuery = query(
+      collection(db, "auditLogs"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+      limit(ADMIN_QUERY_LIMITS.auditLogs)
+    );
+
 
     const unsubscribeClients = onSnapshot(
       clientsQuery,
@@ -284,11 +319,29 @@ export default function AdminApp() {
       }
     );
 
+
+    const unsubscribeAuditLogs = onSnapshot(
+      auditLogsQuery,
+      (auditLogsSnapshot) => {
+        const auditLogsList = auditLogsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setAuditLogs(auditLogsList);
+        updateLimitWarning("auditLogs", auditLogsSnapshot.size);
+        setAuditLogsLoading(false);
+        setDataError("");
+      },
+      (error) => {
+        reportError(error, { source: "admin", action: "watch-audit-logs" });
+        setAuditLogsLoading(false);
+        setDataError("Nao foi possivel sincronizar atividades recentes. Recarregue a pagina ou tente novamente em instantes.");
+      }
+    );
+
     return () => {
       unsubscribeClients();
       unsubscribeServices();
       unsubscribeBarbers();
       unsubscribeAppointments();
+      unsubscribeAuditLogs();
     };
   }, [user, updateLimitWarning, appointmentWindow.startDate, appointmentWindow.endDate]);
 
@@ -349,6 +402,13 @@ export default function AdminApp() {
       const clientWithId = { id: clientRef.id, ...newClient };
       setClients((prevClients) => [...prevClients, clientWithId]);
       trackEvent("client_created", { source: "admin", action: "add-client" });
+      await recordAuditLog({
+        action: "client_created",
+        entityType: "client",
+        entityId: clientRef.id,
+        entityLabel: cleanName,
+        summary: "Cliente cadastrado na base ativa.",
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "add-client" });
@@ -442,6 +502,13 @@ export default function AdminApp() {
         }
       });
 
+      await recordAuditLog({
+        action: "client_updated",
+        entityType: "client",
+        entityId: clientId,
+        entityLabel: cleanName,
+        summary: previousPhone !== cleanPhone ? "Cliente atualizado com troca de telefone." : "Cliente atualizado.",
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "update-client" });
@@ -506,6 +573,13 @@ export default function AdminApp() {
         }
       });
       trackEvent("client_archived", { source: "admin", action: "archive-client" });
+      await recordAuditLog({
+        action: "client_archived",
+        entityType: "client",
+        entityId: clientId,
+        entityLabel: currentClient.name,
+        summary: "Cliente arquivado da base ativa.",
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "archive-client" });
@@ -543,6 +617,13 @@ export default function AdminApp() {
       const serviceWithId = { id: docRef.id, ...newService };
       setServices((prev) => [...prev, serviceWithId]);
       trackEvent("service_created", { source: "admin", action: "add-service" });
+      await recordAuditLog({
+        action: "service_created",
+        entityType: "service",
+        entityId: docRef.id,
+        entityLabel: serviceInput.name,
+        summary: "Servico cadastrado no catalogo ativo.",
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "add-service" });
@@ -574,6 +655,13 @@ export default function AdminApp() {
         prev.map((service) => (service.id === serviceId ? { ...service, ...nextUpdates } : service))
       );
       trackEvent("service_updated", { source: "admin", action: "update-service" });
+      await recordAuditLog({
+        action: "service_updated",
+        entityType: "service",
+        entityId: serviceId,
+        entityLabel: serviceInput.name,
+        summary: "Servico atualizado no catalogo.",
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "update-service" });
@@ -610,6 +698,13 @@ export default function AdminApp() {
       await updateDoc(serviceRef, { isArchived: true, archivedAt, updatedAt: archivedAt });
       setServices((prev) => prev.filter((service) => service.id !== serviceId));
       trackEvent("service_archived", { source: "admin", action: "archive-service" });
+      await recordAuditLog({
+        action: "service_archived",
+        entityType: "service",
+        entityId: serviceId,
+        entityLabel: services.find((service) => service.id === serviceId)?.name || "Servico",
+        summary: "Servico arquivado do catalogo ativo.",
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "archive-service" });
@@ -671,6 +766,13 @@ export default function AdminApp() {
       });
 
       trackEvent("client_restored", { source: "admin", action: "restore-client" });
+      await recordAuditLog({
+        action: "client_restored",
+        entityType: "client",
+        entityId: clientId,
+        entityLabel: archivedClient.name,
+        summary: "Cliente restaurado para a base ativa.",
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "restore-client" });
@@ -712,6 +814,13 @@ export default function AdminApp() {
         updatedAt: restoredAt,
       });
       trackEvent("service_restored", { source: "admin", action: "restore-service" });
+      await recordAuditLog({
+        action: "service_restored",
+        entityType: "service",
+        entityId: serviceId,
+        entityLabel: archivedService.name,
+        summary: "Servico restaurado para o catalogo ativo.",
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "restore-service" });
@@ -749,6 +858,13 @@ export default function AdminApp() {
         updatedAt: restoredAt,
       });
       trackEvent("barber_restored", { source: "admin", action: "restore-barber" });
+      await recordAuditLog({
+        action: "barber_restored",
+        entityType: "barber",
+        entityId: barberId,
+        entityLabel: archivedBarber.name,
+        summary: "Barbeiro restaurado para a equipe ativa.",
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "restore-barber" });
@@ -879,6 +995,13 @@ export default function AdminApp() {
       setAppointmentDate("");
       setAppointmentTime("");
       trackEvent("appointment_created", { source: "admin", action: "add-appointment" });
+      await recordAuditLog({
+        action: "appointment_created",
+        entityType: "appointment",
+        entityId: appointmentRef.id,
+        entityLabel: client.name,
+        summary: `Agendamento criado para ${appointmentDate} as ${appointmentTime}.`,
+      });
     } catch (error) {
       reportError(error, { source: "admin", action: "add-appointment" });
       notify(
@@ -943,6 +1066,13 @@ export default function AdminApp() {
         });
       });
       trackEvent("appointment_status_updated", { source: "admin", action: "update-appointment-status", status: newStatus });
+      await recordAuditLog({
+        action: "appointment_status_updated",
+        entityType: "appointment",
+        entityId: appointmentId,
+        entityLabel: appointment.clientName || appointment.client?.name || "Cliente",
+        summary: `Status alterado para ${newStatus}.`,
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "update-appointment-status", status: newStatus });
@@ -1081,6 +1211,13 @@ export default function AdminApp() {
       });
 
       trackEvent("appointment_updated", { source: "admin", action: "update-appointment" });
+      await recordAuditLog({
+        action: "appointment_updated",
+        entityType: "appointment",
+        entityId: appointmentId,
+        entityLabel: client.name,
+        summary: `Agendamento remarcado para ${updates.date} as ${updates.time}.`,
+      });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "update-appointment" });
@@ -1156,6 +1293,8 @@ export default function AdminApp() {
               barbers={barbers}
               profile={profile}
               appointmentWindow={appointmentWindow}
+              auditLogs={auditLogs}
+              auditLogsLoading={auditLogsLoading}
             />
           </ProtectedRoute>
         );
@@ -1206,6 +1345,7 @@ export default function AdminApp() {
               onBarbersChange={setBarbers}
               onArchivedBarbersChange={setArchivedBarbers}
               restoreBarber={restoreBarber}
+              recordAuditLog={recordAuditLog}
               notify={notify}
             />
           </ProtectedRoute>

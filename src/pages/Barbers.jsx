@@ -27,6 +27,7 @@ export default function Barbers({
   onBarbersChange,
   onArchivedBarbersChange,
   restoreBarber,
+  recordAuditLog,
   notify = () => {},
 }) {
   const { user } = useAuth();
@@ -95,6 +96,14 @@ export default function Barbers({
         );
         syncBarbers(nextBarbers);
         setStatusMessage("Barbeiro atualizado com sucesso.");
+        await recordAuditLog?.({
+          action: "barber_updated",
+          entityType: "barber",
+          entityId: editingBarber.id,
+          entityLabel: barberInput.name,
+          summary: "Barbeiro atualizado na equipe.",
+          source: "barbers",
+        });
       } else {
         const createdAt = new Date();
         const docRef = await addDoc(collection(db, "barbers"), {
@@ -104,6 +113,14 @@ export default function Barbers({
         });
         syncBarbers([{ id: docRef.id, ...barberData, createdAt }, ...barbers]);
         setStatusMessage("Barbeiro cadastrado com sucesso.");
+        await recordAuditLog?.({
+          action: "barber_created",
+          entityType: "barber",
+          entityId: docRef.id,
+          entityLabel: barberInput.name,
+          summary: "Barbeiro cadastrado na equipe ativa.",
+          source: "barbers",
+        });
       }
       trackEvent(editingBarber ? "barber_updated" : "barber_created", {
         source: "barbers",
@@ -170,6 +187,14 @@ export default function Barbers({
       if (editingBarber?.id === deleteBarber.id) resetForm();
       setDeleteBarber(null);
       trackEvent("barber_archived", { source: "barbers", action: "archive-barber" });
+      await recordAuditLog?.({
+        action: "barber_archived",
+        entityType: "barber",
+        entityId: deleteBarber.id,
+        entityLabel: deleteBarber.name,
+        summary: "Barbeiro arquivado da equipe ativa.",
+        source: "barbers",
+      });
     } catch (error) {
       reportError(error, { source: "barbers", action: "archive-barber" });
       notify("Erro ao arquivar barbeiro. Tente novamente.");

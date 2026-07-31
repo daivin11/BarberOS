@@ -486,6 +486,35 @@ const assertOperationalDataUsesSoftArchive = () => {
     failures.push("Barbers page still imports or uses deleteDoc for operational data");
   }
 };
+const assertOperationalAuditLogsAreEnabled = () => {
+  const rules = readFileSync(join(root, "firestore.rules"), "utf8");
+  const indexes = readFileSync(join(root, "firestore.indexes.json"), "utf8");
+  const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
+  const dashboardPage = readFileSync(join(root, "src", "pages", "Dashboard.jsx"), "utf8");
+  const barbersPage = readFileSync(join(root, "src", "pages", "Barbers.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [rules, "firestore.rules", "match /auditLogs/{auditLogId}"],
+    [rules, "firestore.rules", "validAuditAction"],
+    [rules, "firestore.rules", "allow update, delete: if false"],
+    [indexes, "firestore.indexes.json", '"collectionGroup": "auditLogs"'],
+    [indexes, "firestore.indexes.json", '"fieldPath": "createdAt"'],
+    [adminApp, "AdminApp.jsx", "const recordAuditLog = useCallback"],
+    [adminApp, "AdminApp.jsx", 'collection(db, "auditLogs")'],
+    [adminApp, "AdminApp.jsx", "const auditLogsQuery = query"],
+    [adminApp, "AdminApp.jsx", "client_archived"],
+    [adminApp, "AdminApp.jsx", "appointment_status_updated"],
+    [dashboardPage, "Dashboard.jsx", "Atividade recente"],
+    [dashboardPage, "Dashboard.jsx", "auditLogs.slice(0, 8)"],
+    [barbersPage, "Barbers.jsx", "recordAuditLog"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`operational audit log guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 const assertAvailabilityContractIsBounded = () => {
   const rules = readFileSync(join(root, "firestore.rules"), "utf8");
   const profileSettings = readFileSync(join(root, "src", "pages", "ProfileSettings.jsx"), "utf8");
@@ -555,6 +584,7 @@ assertServiceContractIsBounded();
 assertScheduleRendersMultiSlotOccupancy();
 assertDeletionGuardsQueryActiveAppointments();
 assertOperationalDataUsesSoftArchive();
+assertOperationalAuditLogsAreEnabled();
 assertAppointmentsUseDateWindow();
 assertAvailabilityContractIsBounded();
 assertBarberContractIsBounded();

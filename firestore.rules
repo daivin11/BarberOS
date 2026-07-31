@@ -176,6 +176,30 @@ service cloud.firestore {
       ];
     }
 
+    function validAuditAction(action) {
+      return action in [
+        'client_created',
+        'client_updated',
+        'client_archived',
+        'client_restored',
+        'service_created',
+        'service_updated',
+        'service_archived',
+        'service_restored',
+        'barber_created',
+        'barber_updated',
+        'barber_archived',
+        'barber_restored',
+        'appointment_created',
+        'appointment_updated',
+        'appointment_status_updated'
+      ];
+    }
+
+    function validAuditEntity(entityType) {
+      return entityType in ['client', 'service', 'barber', 'appointment'];
+    }
+
     function appointmentFields() {
       return [
         'id',
@@ -515,6 +539,32 @@ service cloud.firestore {
         && validBookingSlotTiming()
         && request.resource.data.status in ['pending', 'confirmed', 'completed', 'cancelled'];
       allow delete: if isOwner(resource.data.userId);
+    }
+
+    match /auditLogs/{auditLogId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId) && request.query.limit <= 100;
+      allow create: if isOwner(request.resource.data.userId)
+        && hasOnly([
+          'userId',
+          'actorId',
+          'action',
+          'entityType',
+          'entityId',
+          'entityLabel',
+          'summary',
+          'source',
+          'createdAt'
+        ])
+        && request.resource.data.actorId == request.auth.uid
+        && validAuditAction(request.resource.data.action)
+        && validAuditEntity(request.resource.data.entityType)
+        && validText(request.resource.data.entityId, 1, 128)
+        && validOptionalText(request.resource.data.entityLabel, 120)
+        && validOptionalText(request.resource.data.summary, 160)
+        && validOptionalText(request.resource.data.source, 40)
+        && request.resource.data.createdAt is timestamp;
+      allow update, delete: if false;
     }
 
     match /renewalRequests/{requestId} {

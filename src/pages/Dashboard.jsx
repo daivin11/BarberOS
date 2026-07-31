@@ -10,6 +10,37 @@ import { formatLocalDate } from "../utils/date";
 import { pluralize } from "../utils/format";
 import { reportError, trackEvent } from "../utils/telemetry";
 
+
+const activityLabels = {
+  client_created: "Cliente criado",
+  client_updated: "Cliente atualizado",
+  client_archived: "Cliente arquivado",
+  client_restored: "Cliente restaurado",
+  service_created: "Servico criado",
+  service_updated: "Servico atualizado",
+  service_archived: "Servico arquivado",
+  service_restored: "Servico restaurado",
+  barber_created: "Barbeiro criado",
+  barber_updated: "Barbeiro atualizado",
+  barber_archived: "Barbeiro arquivado",
+  barber_restored: "Barbeiro restaurado",
+  appointment_created: "Agendamento criado",
+  appointment_updated: "Agendamento atualizado",
+  appointment_status_updated: "Status alterado",
+};
+
+const formatActivityTime = (value) => {
+  const date = value?.toDate ? value.toDate() : value instanceof Date ? value : value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "Agora";
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
+
 const normalizeSlug = (value) =>
   value
     .toLowerCase()
@@ -26,6 +57,8 @@ export default function Dashboard({
   barbers = [],
   profile,
   appointmentWindow,
+  auditLogs = [],
+  auditLogsLoading = false,
 }) {
   const { updateProfile, isSlugAvailable, user } = useAuth();
   const [copyMessage, setCopyMessage] = useState("");
@@ -444,6 +477,51 @@ export default function Dashboard({
           </div>
         </section>
       )}
+
+
+      <section className="mb-8 rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-indigo-300">Auditoria</p>
+            <h3 className="mt-2 text-2xl font-bold">Atividade recente</h3>
+            <p className="mt-2 max-w-2xl text-sm text-gray-400">
+              Ultimas alteracoes operacionais registradas para ajudar em suporte, conferencia e investigacao.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.25em] text-gray-400">
+            {auditLogsLoading ? "Sincronizando" : auditLogs.length + " eventos"}
+          </span>
+        </div>
+
+        {auditLogsLoading ? (
+          <div className="rounded-2xl border border-dashed border-gray-800 bg-gray-950 p-5 text-sm text-gray-400">
+            Carregando atividades...
+          </div>
+        ) : auditLogs.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-gray-800 bg-gray-950 p-5 text-sm text-gray-400">
+            Nenhuma atividade registrada ainda. Novos cadastros, arquivamentos, restauracoes e mudancas de agenda aparecerao aqui.
+          </div>
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {auditLogs.slice(0, 8).map((activity) => (
+              <article key={activity.id} className="rounded-2xl border border-gray-800 bg-gray-950 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-white">
+                      {activityLabels[activity.action] || activity.action || "Atividade"}
+                    </p>
+                    <p className="mt-1 truncate text-sm text-indigo-200">{activity.entityLabel || activity.entityType || "Registro"}</p>
+                    {activity.summary && <p className="mt-2 text-sm leading-5 text-gray-400">{activity.summary}</p>}
+                  </div>
+                  <span className="shrink-0 rounded-full bg-white/5 px-3 py-1 text-xs text-gray-400">
+                    {formatActivityTime(activity.createdAt)}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
