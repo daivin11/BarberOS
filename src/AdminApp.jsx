@@ -121,6 +121,7 @@ export default function AdminApp() {
   const [auditLogsLoading, setAuditLogsLoading] = useState(true);
   const [dataError, setDataError] = useState("");
   const [dataWarnings, setDataWarnings] = useState({});
+  const [syncRetryToken, setSyncRetryToken] = useState(0);
   const [notification, setNotification] = useState(null);
   const appointmentWindow = useMemo(() => createAppointmentDateWindow(), []);
 
@@ -151,6 +152,18 @@ export default function AdminApp() {
       delete nextWarnings[key];
       return nextWarnings;
     });
+  }, []);
+
+  const retryDataSync = useCallback(() => {
+    setDataError("");
+    setDataWarnings({});
+    setClientsLoading(true);
+    setServicesLoading(true);
+    setBarbersLoading(true);
+    setAppointmentsLoading(true);
+    setAuditLogsLoading(true);
+    setSyncRetryToken((currentToken) => currentToken + 1);
+    trackEvent("admin_data_sync_retry", { source: "admin", action: "retry-data-sync" });
   }, []);
   const recordAuditLog = useCallback(
     async ({ action, entityType, entityId, entityLabel = "", summary = "", source = "admin" }) => {
@@ -346,7 +359,7 @@ export default function AdminApp() {
       unsubscribeAppointments();
       unsubscribeAuditLogs();
     };
-  }, [user, updateLimitWarning, appointmentWindow.startDate, appointmentWindow.endDate]);
+  }, [user, updateLimitWarning, appointmentWindow.startDate, appointmentWindow.endDate, syncRetryToken]);
 
   const addClient = async (name, phone) => {
     const cleanName = String(name || "").trim();
@@ -1441,7 +1454,16 @@ export default function AdminApp() {
 
         {shouldShowSidebar && dataError && (
           <div className="border-b border-yellow-800 bg-yellow-950/80 px-4 py-3 text-sm text-yellow-100 sm:px-6 lg:px-8">
-            {dataError}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p>{dataError}</p>
+              <button
+                type="button"
+                onClick={retryDataSync}
+                className="w-fit rounded-2xl border border-yellow-600 bg-yellow-900/70 px-4 py-2 text-sm font-semibold text-yellow-50 transition hover:border-yellow-300 hover:bg-yellow-800"
+              >
+                Tentar novamente
+              </button>
+            </div>
           </div>
         )}
 

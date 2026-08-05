@@ -739,6 +739,24 @@ const assertFinanceShowsOperationalHealth = () => {
     }
   });
 };
+
+const assertAdminDataSyncCanRetry = () => {
+  const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [adminApp, "src/AdminApp.jsx", "syncRetryToken"],
+    [adminApp, "src/AdminApp.jsx", "retryDataSync"],
+    [adminApp, "src/AdminApp.jsx", "setSyncRetryToken((currentToken) => currentToken + 1)"],
+    [adminApp, "src/AdminApp.jsx", "Tentar novamente"],
+    [adminApp, "src/AdminApp.jsx", "admin_data_sync_retry"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`admin data sync retry is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -792,6 +810,7 @@ assertPublicBookingRequiresPrivacyConsent();
 assertPublicBookingShowsConfirmationSummary();
 assertPendingAppointmentsHaveResponseFlow();
 assertFinanceShowsOperationalHealth();
+assertAdminDataSyncCanRetry();
 
 if (failures.length > 0) {
   console.error("Production check failed:");
