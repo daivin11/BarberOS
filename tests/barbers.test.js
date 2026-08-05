@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   BARBER_LIMITS,
+  findDuplicateBarberByName,
   normalizeBarberInput,
+  normalizeBarberNameKey,
   validateBarberInput,
 } from "../src/utils/barbers.js";
 
@@ -12,6 +14,7 @@ describe("barber utils", () => {
       normalizeBarberInput({ name: " Gabriel ", specialty: " Corte e barba ", avatar: " https://example.com/a.png " }),
       { name: "Gabriel", specialty: "Corte e barba", avatar: "https://example.com/a.png" }
     );
+    assert.equal(normalizeBarberNameKey("  Gabriel   Santos  "), "gabriel santos");
   });
 
   it("accepts valid barber input", () => {
@@ -24,5 +27,16 @@ describe("barber utils", () => {
     assert.match(validateBarberInput({ name: "A".repeat(BARBER_LIMITS.nameMax + 1) }), /maximo/);
     assert.match(validateBarberInput({ name: "Gabriel", specialty: "A".repeat(BARBER_LIMITS.specialtyMax + 1) }), /Especialidade/);
     assert.match(validateBarberInput({ name: "Gabriel", avatar: "javascript:alert(1)" }), /Avatar/);
+  });
+
+  it("finds duplicate active barbers by normalized name", () => {
+    const barbers = [
+      { id: "1", name: "Gabriel Santos" },
+      { id: "2", name: "Joao", isArchived: true },
+    ];
+
+    assert.equal(findDuplicateBarberByName(barbers, " gabriel santos ")?.id, "1");
+    assert.equal(findDuplicateBarberByName(barbers, "GABRIEL SANTOS", "1"), null);
+    assert.equal(findDuplicateBarberByName(barbers, "joao"), null);
   });
 });

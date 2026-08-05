@@ -5,7 +5,7 @@ import { db } from "../services/firebase";
 import EmptyState from "../components/EmptyState";
 import { useAuth } from "../hooks/useAuth";
 import { ACTIVE_APPOINTMENT_STATUSES, countActiveAppointmentsByField } from "../utils/appointments";
-import { normalizeBarberInput, validateBarberInput } from "../utils/barbers";
+import { findDuplicateBarberByName, normalizeBarberInput, validateBarberInput } from "../utils/barbers";
 import { pluralize } from "../utils/format";
 import { PROFILE_LIMITS } from "../utils/profileValidation";
 import { reportError, trackEvent } from "../utils/telemetry";
@@ -41,6 +41,7 @@ export default function Barbers({
   const [deleteBarber, setDeleteBarber] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
   const isSetupMode = searchParams.get("setup") === "barbers";
+  const duplicateBarber = findDuplicateBarberByName(barbers, name, editingBarber?.id);
 
   useEffect(() => {
     setBarbers(syncedBarbers);
@@ -74,6 +75,15 @@ export default function Barbers({
 
     if (validationError) {
       notify(validationError);
+      return;
+    }
+
+    if (duplicateBarber) {
+      notify(
+        editingBarber
+          ? "Ja existe outro barbeiro ativo com este nome."
+          : "Ja existe um barbeiro ativo com este nome."
+      );
       return;
     }
 
@@ -307,10 +317,20 @@ export default function Barbers({
             <button
               type="button"
               onClick={handleSave}
-              className="w-full rounded-2xl bg-white px-4 py-4 text-sm font-semibold text-black transition hover:bg-gray-200"
+              disabled={Boolean(duplicateBarber)}
+              className={`w-full rounded-2xl px-4 py-4 text-sm font-semibold transition ${
+                duplicateBarber
+                  ? "cursor-not-allowed bg-gray-700 text-gray-400"
+                  : "bg-white text-black hover:bg-gray-200"
+              }`}
             >
               {editingBarber ? "Salvar alteracoes" : "Adicionar barbeiro"}
             </button>
+            {duplicateBarber && (
+              <p className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100">
+                Ja existe um barbeiro ativo chamado {duplicateBarber.name}.
+              </p>
+            )}
             {statusMessage && <p className="text-sm text-emerald-300">{statusMessage}</p>}
           </div>
         </section>

@@ -23,6 +23,7 @@ import {
   isTerminalAppointment,
 } from "./utils/appointments";
 import { createAppointmentWhatsAppMessage } from "./utils/appointmentMessages";
+import { findDuplicateBarberByName } from "./utils/barbers";
 import {
   createSlotId,
   getOccupiedTimes,
@@ -866,6 +867,11 @@ export default function AdminApp() {
     const archivedBarber = archivedBarbers.find((barber) => barber.id === barberId);
     if (!archivedBarber) {
       notify("Barbeiro arquivado nao encontrado.");
+      return false;
+    }
+
+    if (findDuplicateBarberByName(barbers, archivedBarber.name)) {
+      notify("Ja existe um barbeiro ativo com este nome. Renomeie ou arquive o barbeiro ativo antes de restaurar.");
       return false;
     }
 

@@ -13,6 +13,26 @@ export const normalizeBarberInput = ({ name = "", specialty = "", avatar = "" } 
   avatar: String(avatar).trim(),
 });
 
+export const normalizeBarberNameKey = (name = "") =>
+  String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+export const findDuplicateBarberByName = (barbers = [], name = "", ignoredBarberId = "") => {
+  const nameKey = normalizeBarberNameKey(name);
+  if (!nameKey) return null;
+
+  return (
+    barbers.find(
+      (barber) =>
+        String(barber.id || "") !== String(ignoredBarberId || "") &&
+        !barber.isArchived &&
+        normalizeBarberNameKey(barber.name) === nameKey
+    ) || null
+  );
+};
+
 export const validateBarberInput = ({ name = "", specialty = "", avatar = "" } = {}) => {
   const cleanName = String(name).trim();
   const cleanSpecialty = String(specialty).trim();

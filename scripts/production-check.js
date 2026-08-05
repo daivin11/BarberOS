@@ -446,8 +446,10 @@ const assertServiceContractIsBounded = () => {
 
 const assertBarberContractIsBounded = () => {
   const rules = readFileSync(join(root, "firestore.rules"), "utf8");
+  const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
   const barbersPage = readFileSync(join(root, "src", "pages", "Barbers.jsx"), "utf8");
   const barberUtils = readFileSync(join(root, "src", "utils", "barbers.js"), "utf8");
+  const barberUtilsTest = readFileSync(join(root, "tests", "barbers.test.js"), "utf8");
 
   const requiredRuleSnippets = [
     "validText(request.resource.data.name, 2, 80)",
@@ -468,6 +470,20 @@ const assertBarberContractIsBounded = () => {
   if (!barberUtils.includes("nameMin: 2") || !barberUtils.includes("avatarMax: 500")) {
     failures.push("barber validation limits are missing: src/utils/barbers.js");
   }
+
+  const duplicateGuardSnippets = [
+    [adminApp, "src/AdminApp.jsx", "findDuplicateBarberByName"],
+    [barbersPage, "src/pages/Barbers.jsx", "duplicateBarber"],
+    [barberUtils, "src/utils/barbers.js", "normalizeBarberNameKey"],
+    [barberUtils, "src/utils/barbers.js", "findDuplicateBarberByName"],
+    [barberUtilsTest, "tests/barbers.test.js", "finds duplicate active barbers"],
+  ];
+
+  duplicateGuardSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`barber duplicate-name guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
 };
 const assertOperationalDataUsesSoftArchive = () => {
   const rules = readFileSync(join(root, "firestore.rules"), "utf8");
