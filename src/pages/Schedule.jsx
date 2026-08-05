@@ -70,6 +70,8 @@ export default function Schedule({
   const [statusFilter, setStatusFilter] = useState("active");
   const today = formatLocalDate();
   const [calendarDate, setCalendarDate] = useState(today);
+  const [creatingAppointment, setCreatingAppointment] = useState(false);
+  const [confirmingPendingId, setConfirmingPendingId] = useState("");
   const needsData = !loading && (clients.length === 0 || services.length === 0 || barbers.length === 0);
   const isSetupMode = searchParams.get("setup") === "first-booking";
   const appointmentWindowLabel = getAppointmentWindowLabel(appointmentWindow);
@@ -186,6 +188,26 @@ export default function Schedule({
     setSelectedBarber(barberId);
     setAppointmentDate(calendarDate);
     setAppointmentTime(slot);
+  };
+  const handleAddAppointment = async () => {
+    if (!canCreateAppointment || creatingAppointment) return;
+
+    setCreatingAppointment(true);
+    try {
+      await addAppointment?.();
+    } finally {
+      setCreatingAppointment(false);
+    }
+  };
+  const handleConfirmPendingAppointment = async () => {
+    if (!nextPendingAppointment || confirmingPendingId) return;
+
+    setConfirmingPendingId(nextPendingAppointment.id);
+    try {
+      await updateAppointmentStatus?.(nextPendingAppointment.id, APPOINTMENT_STATUS.confirmed);
+    } finally {
+      setConfirmingPendingId("");
+    }
   };
   const moveCalendarDate = (days) => {
     const nextDate = addDays(calendarDate, days);
@@ -554,14 +576,14 @@ export default function Schedule({
 
             <button type="button"
               className={`mt-2 w-full rounded-2xl py-4 font-semibold transition ${
-                canCreateAppointment
+                canCreateAppointment && !creatingAppointment
                   ? "bg-white text-black hover:bg-gray-200"
                   : "cursor-not-allowed bg-gray-700 text-gray-400"
               }`}
-              onClick={addAppointment}
-              disabled={!canCreateAppointment}
+              onClick={handleAddAppointment}
+              disabled={!canCreateAppointment || creatingAppointment}
             >
-              Criar agendamento
+              {creatingAppointment ? "Criando agendamento..." : "Criar agendamento"}
             </button>
           </div>
         </section>
@@ -604,10 +626,11 @@ export default function Schedule({
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <button
                     type="button"
-                    onClick={() => updateAppointmentStatus(nextPendingAppointment.id, APPOINTMENT_STATUS.confirmed)}
-                    className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
+                    onClick={handleConfirmPendingAppointment}
+                    disabled={confirmingPendingId === nextPendingAppointment.id}
+                    className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Confirmar agora
+                    {confirmingPendingId === nextPendingAppointment.id ? "Confirmando..." : "Confirmar agora"}
                   </button>
                   <button
                     type="button"

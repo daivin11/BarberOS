@@ -21,6 +21,7 @@ export default function AppointmentCard({
 }) {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editClientId, setEditClientId] = useState(appointment.client?.id || appointment.clientId || "");
@@ -57,7 +58,7 @@ export default function AppointmentCard({
   };
 
   const handleCancelAppointment = async () => {
-    if (!onStatusChange) return;
+    if (!onStatusChange || cancelLoading) return;
 
     setCancelLoading(true);
     try {
@@ -68,8 +69,19 @@ export default function AppointmentCard({
     }
   };
 
+  const handleStatusChange = async (nextStatus) => {
+    if (!onStatusChange || statusLoading || isTerminal || nextStatus === currentStatus) return;
+
+    setStatusLoading(true);
+    try {
+      await onStatusChange(appointment.id, nextStatus);
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   const handleSaveEdit = async () => {
-    if (!onUpdateAppointment || !canSaveEdit) return;
+    if (!onUpdateAppointment || !canSaveEdit || editLoading) return;
 
     setEditLoading(true);
     try {
@@ -133,18 +145,19 @@ export default function AppointmentCard({
             {onStatusChange && isPending && (
               <button
                 type="button"
-                onClick={() => onStatusChange(appointment.id, APPOINTMENT_STATUS.confirmed)}
-                className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-gray-200"
+                onClick={() => handleStatusChange(APPOINTMENT_STATUS.confirmed)}
+                disabled={statusLoading}
+                className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Confirmar
+                {statusLoading ? "Confirmando..." : "Confirmar"}
               </button>
             )}
 
             {onStatusChange && (
               <select
                 value={currentStatus}
-                onChange={(event) => onStatusChange(appointment.id, event.target.value)}
-                disabled={isTerminal}
+                onChange={(event) => handleStatusChange(event.target.value)}
+                disabled={isTerminal || statusLoading}
                 className="w-full rounded-2xl border border-gray-800 bg-gray-900 px-3 py-2 text-xs outline-none transition focus:border-indigo-500 sm:w-auto lg:w-full"
               >
                 <option value={APPOINTMENT_STATUS.pending}>Pendente</option>
@@ -181,7 +194,7 @@ export default function AppointmentCard({
               <button
                 type="button"
                 onClick={() => setShowCancelModal(true)}
-                disabled={isTerminal}
+                disabled={isTerminal || statusLoading}
                 className="rounded-2xl border border-red-700 bg-red-950/70 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-900/80 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancelar

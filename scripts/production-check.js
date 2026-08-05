@@ -311,13 +311,27 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     }
   });
 
-  if (!appointmentCard.includes("isTerminalAppointment") || !appointmentCard.includes("disabled={isTerminal}")) {
+  if (!appointmentCard.includes("isTerminalAppointment") || !appointmentCard.includes("disabled={isTerminal || statusLoading}")) {
     failures.push("appointment card does not lock terminal appointment actions");
   }
 
   if (!adminApp.includes("isTerminalAppointment(appointment)") || !adminApp.includes("isTerminalAppointment(currentAppointment)")) {
     failures.push("admin appointment flows do not block terminal appointment mutations");
   }
+
+  const submitGuardSnippets = [
+    [appointmentCard, "src/components/AppointmentCard.jsx", "statusLoading"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "handleStatusChange"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "Confirmando..."],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "if (!onUpdateAppointment || !canSaveEdit || editLoading) return"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "if (!onStatusChange || cancelLoading) return"],
+  ];
+
+  submitGuardSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`appointment action submit guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
 };
 const assertAppointmentsUseDateWindow = () => {
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
@@ -378,6 +392,20 @@ const assertScheduleRendersMultiSlotOccupancy = () => {
   if (!schedulePage.includes("overlaps(slotStart, slotEnd, appointmentStart, appointmentEnd)")) {
     failures.push("daily schedule does not render multi-slot appointments as occupied: src/pages/Schedule.jsx");
   }
+
+  const submitGuardSnippets = [
+    [schedulePage, "src/pages/Schedule.jsx", "creatingAppointment"],
+    [schedulePage, "src/pages/Schedule.jsx", "confirmingPendingId"],
+    [schedulePage, "src/pages/Schedule.jsx", "handleAddAppointment"],
+    [schedulePage, "src/pages/Schedule.jsx", "Criando agendamento..."],
+    [schedulePage, "src/pages/Schedule.jsx", "Confirmando..."],
+  ];
+
+  submitGuardSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`schedule action submit guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
 };
 const assertDeletionGuardsQueryActiveAppointments = () => {
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
