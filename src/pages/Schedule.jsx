@@ -90,6 +90,17 @@ export default function Schedule({
     () => services.find((service) => String(service.id) === String(selectedService)),
     [services, selectedService]
   );
+  const selectedServiceDuration = Number(selectedServiceData?.duration) || normalizedBusinessHours.slotInterval;
+  const appointmentTimeOptions = useMemo(
+    () =>
+      selectedServiceData
+        ? getTimeSlots({
+            businessHours: normalizedBusinessHours,
+            duration: selectedServiceDuration,
+          })
+        : [],
+    [normalizedBusinessHours, selectedServiceData, selectedServiceDuration]
+  );
   const selectedClientData = useMemo(
     () => clients.find((client) => String(client.id) === String(selectedClient)),
     [clients, selectedClient]
@@ -104,6 +115,7 @@ export default function Schedule({
     selectedBarber &&
     appointmentDate &&
     appointmentTime &&
+    appointmentTimeOptions.includes(appointmentTime) &&
     isDateWithinAppointmentWindow(appointmentDate, appointmentWindow) &&
     !needsData;
   const assignedAppointments = useMemo(
@@ -512,7 +524,10 @@ export default function Schedule({
               <select
                 className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
                 value={selectedService}
-                onChange={(e) => setSelectedService(e.target.value)}
+                onChange={(e) => {
+                  setSelectedService(e.target.value);
+                  setAppointmentTime("");
+                }}
               >
                 <option value="">Selecione o servico</option>
                 {services.map((service) => (
@@ -554,12 +569,21 @@ export default function Schedule({
 
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-gray-300">Horario</span>
-                <input
+                <select
                   className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
-                  type="time"
                   value={appointmentTime}
+                  disabled={!selectedServiceData || appointmentTimeOptions.length === 0}
                   onChange={(e) => setAppointmentTime(e.target.value)}
-                />
+                >
+                  <option value="">
+                    {selectedServiceData ? "Selecione o horario" : "Escolha um servico primeiro"}
+                  </option>
+                  {appointmentTimeOptions.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
 

@@ -423,6 +423,9 @@ const assertScheduleRendersMultiSlotOccupancy = () => {
   const submitGuardSnippets = [
     [schedulePage, "src/pages/Schedule.jsx", "creatingAppointment"],
     [schedulePage, "src/pages/Schedule.jsx", "confirmingPendingId"],
+    [schedulePage, "src/pages/Schedule.jsx", "appointmentTimeOptions"],
+    [schedulePage, "src/pages/Schedule.jsx", "appointmentTimeOptions.includes(appointmentTime)"],
+    [schedulePage, "src/pages/Schedule.jsx", "Escolha um servico primeiro"],
     [schedulePage, "src/pages/Schedule.jsx", "handleAddAppointment"],
     [schedulePage, "src/pages/Schedule.jsx", "Criando agendamento..."],
     [schedulePage, "src/pages/Schedule.jsx", "Confirmando..."],
