@@ -147,7 +147,12 @@ export default function ProfileSettings({ workspaceData = {} }) {
       trackEvent("profile_settings_saved", { source: "profile-settings", action: "save-profile" });
     } catch (error) {
       reportError(error, { source: "profile-settings", action: "save-profile" });
-      setSaveError("Erro ao salvar o perfil. Tente novamente.");
+      if (error.message === "slug-unavailable") {
+        setSlugError("Este slug acabou de ser reservado por outra conta.");
+        setSaveError("Escolha outro slug publico.");
+      } else {
+        setSaveError("Erro ao salvar o perfil. Tente novamente.");
+      }
     } finally {
       setSaving(false);
     }

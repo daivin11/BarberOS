@@ -172,7 +172,12 @@ export default function Dashboard({
       trackEvent("public_slug_updated", { source: "dashboard", action: "save-slug" });
     } catch (err) {
       reportError(err, { source: "dashboard", action: "save-slug" });
-      setSaveError("Erro ao salvar. Tente novamente.");
+      if (err.message === "slug-unavailable") {
+        setSlugError("Este endereco acabou de ser reservado por outra conta.");
+        setSaveError("Escolha outro slug publico.");
+      } else {
+        setSaveError("Erro ao salvar. Tente novamente.");
+      }
     } finally {
       setSaving(false);
     }

@@ -269,13 +269,40 @@ const assertBillingRulesAreServerControlled = () => {
 
 const assertProfileWritesAreAtomic = () => {
   const authContext = readFileSync(join(root, "src", "contexts", "AuthContext.jsx"), "utf8");
+  const rules = readFileSync(join(root, "firestore.rules"), "utf8");
+  const dashboard = readFileSync(join(root, "src", "pages", "Dashboard.jsx"), "utf8");
+  const profileSetup = readFileSync(join(root, "src", "pages", "ProfileSetup.jsx"), "utf8");
+  const profileSettings = readFileSync(join(root, "src", "pages", "ProfileSettings.jsx"), "utf8");
 
-  if (!authContext.includes("writeBatch")) {
-    failures.push("profile writes are not batched atomically: src/contexts/AuthContext.jsx");
+  if (!authContext.includes("runTransaction")) {
+    failures.push("profile writes are not transactional: src/contexts/AuthContext.jsx");
   }
 
   if (!authContext.includes("commitInitialProfile") || !authContext.includes("commitProfileUpdate")) {
-    failures.push("profile batch helpers are missing: src/contexts/AuthContext.jsx");
+    failures.push("profile transaction helpers are missing: src/contexts/AuthContext.jsx");
+  }
+
+  const slugReservationSnippets = [
+    [authContext, "src/contexts/AuthContext.jsx", "publicSlugKeys"],
+    [authContext, "src/contexts/AuthContext.jsx", "slug-unavailable"],
+    [authContext, "src/contexts/AuthContext.jsx", "previousSlugKeyRef"],
+    [rules, "firestore.rules", "match /publicSlugKeys/{slugId}"],
+    [rules, "firestore.rules", "function slugKeyWillBelongTo"],
+    [rules, "firestore.rules", "slugKeyWillBelongTo(request.resource.data.slug, userId)"],
+    [rules, "firestore.rules", "slugKeyWillBelongTo(request.resource.data.slug, profileId)"],
+    [dashboard, "src/pages/Dashboard.jsx", "slug-unavailable"],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "slug-unavailable"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "slug-unavailable"],
+  ];
+
+  slugReservationSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`public slug reservation is missing in ${fileName}: ${snippet}`);
+    }
+  });
+
+  if (authContext.includes("writeBatch")) {
+    failures.push("AuthContext still uses writeBatch for profile writes instead of slug transaction");
   }
 
   if (/import\s*\{[^}]*\b(setDoc|updateDoc)\b[^}]*\}\s*from\s*["']firebase\/firestore["']/s.test(authContext)) {

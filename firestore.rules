@@ -196,6 +196,11 @@ service cloud.firestore {
       ];
     }
 
+    function slugKeyWillBelongTo(slug, userId) {
+      return existsAfter(/databases/$(database)/documents/publicSlugKeys/$(slug))
+        && getAfter(/databases/$(database)/documents/publicSlugKeys/$(slug)).data.uid == userId;
+    }
+
     function validAuditEntity(entityType) {
       return entityType in ['client', 'service', 'barber', 'appointment'];
     }
@@ -251,7 +256,8 @@ service cloud.firestore {
         && request.resource.data.plan == 'trial'
         && request.resource.data.subscriptionStatus == 'trialing'
         && request.resource.data.profileComplete == false
-        && request.resource.data.trialEndsAt is timestamp;
+        && request.resource.data.trialEndsAt is timestamp
+        && slugKeyWillBelongTo(request.resource.data.slug, userId);
       allow update: if isOwner(userId)
         && hasOnly(publicUserFields())
         && request.resource.data.email == resource.data.email
@@ -278,8 +284,23 @@ service cloud.firestore {
         && (
           (!('billingUpdatedAt' in request.resource.data) && !('billingUpdatedAt' in resource.data))
           || (('billingUpdatedAt' in resource.data) && request.resource.data.billingUpdatedAt == resource.data.billingUpdatedAt)
-        );
+        )
+        && slugKeyWillBelongTo(request.resource.data.slug, userId);
       allow delete: if false;
+    }
+
+    match /publicSlugKeys/{slugId} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create, update: if signedIn()
+        && hasOnly(['uid', 'slug', 'createdAt', 'updatedAt'])
+        && slugId == request.resource.data.slug
+        && request.resource.data.uid == request.auth.uid
+        && validSlug(slugId)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && (!exists(/databases/$(database)/documents/publicSlugKeys/$(slugId)) || resource.data.uid == request.auth.uid);
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
 
     match /publicProfiles/{profileId} {
@@ -314,7 +335,8 @@ service cloud.firestore {
         && (!('logoUrl' in request.resource.data) || validOptionalUrl(request.resource.data.logoUrl))
         && (!('avatar' in request.resource.data) || validOptionalUrl(request.resource.data.avatar))
         && (!('businessHours' in request.resource.data) || validBusinessHours(request.resource.data.businessHours))
-        && (!('blockedDates' in request.resource.data) || validBlockedDates(request.resource.data.blockedDates));
+        && (!('blockedDates' in request.resource.data) || validBlockedDates(request.resource.data.blockedDates))
+        && slugKeyWillBelongTo(request.resource.data.slug, profileId);
       allow delete: if false;
     }
 

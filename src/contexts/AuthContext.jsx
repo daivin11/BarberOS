@@ -14,7 +14,7 @@ import {
   where,
   getDocs,
   limit,
-  writeBatch,
+  runTransaction,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { createTrialEndDate, DEFAULT_PLAN, DEFAULT_SUBSCRIPTION_STATUS } from "../utils/trial";
@@ -65,17 +65,55 @@ const slugify = (value) =>
     .replace(/(^-|-$)/g, "");
 
 const commitInitialProfile = async ({ uid, profile, publicProfile }) => {
-  const batch = writeBatch(db);
-  batch.set(doc(db, "users", uid), profile);
-  batch.set(doc(db, "publicProfiles", uid), publicProfile);
-  await batch.commit();
+  const userRef = doc(db, "users", uid);
+  const publicProfileRef = doc(db, "publicProfiles", uid);
+  const slugKeyRef = doc(db, "publicSlugKeys", profile.slug);
+  const now = new Date();
+
+  await runTransaction(db, async (transaction) => {
+    const slugKeySnapshot = await transaction.get(slugKeyRef);
+    if (slugKeySnapshot.exists() && slugKeySnapshot.data().uid !== uid) {
+      throw new Error("slug-unavailable");
+    }
+
+    transaction.set(userRef, profile);
+    transaction.set(publicProfileRef, publicProfile);
+    transaction.set(slugKeyRef, {
+      uid,
+      slug: profile.slug,
+      createdAt: now,
+      updatedAt: now,
+    });
+  });
 };
 
-const commitProfileUpdate = async ({ uid, profileData, publicProfile }) => {
-  const batch = writeBatch(db);
-  batch.update(doc(db, "users", uid), profileData);
-  batch.set(doc(db, "publicProfiles", uid), publicProfile, { merge: true });
-  await batch.commit();
+const commitProfileUpdate = async ({ uid, profileData, publicProfile, previousSlug }) => {
+  const userRef = doc(db, "users", uid);
+  const publicProfileRef = doc(db, "publicProfiles", uid);
+  const nextSlug = publicProfile.slug;
+  const nextSlugKeyRef = doc(db, "publicSlugKeys", nextSlug);
+  const previousSlugKeyRef = previousSlug && previousSlug !== nextSlug ? doc(db, "publicSlugKeys", previousSlug) : null;
+  const now = new Date();
+
+  await runTransaction(db, async (transaction) => {
+    const nextSlugKeySnapshot = await transaction.get(nextSlugKeyRef);
+    if (nextSlugKeySnapshot.exists() && nextSlugKeySnapshot.data().uid !== uid) {
+      throw new Error("slug-unavailable");
+    }
+
+    transaction.update(userRef, profileData);
+    transaction.set(publicProfileRef, publicProfile, { merge: true });
+    transaction.set(nextSlugKeyRef, {
+      uid,
+      slug: nextSlug,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    if (previousSlugKeyRef) {
+      transaction.delete(previousSlugKeyRef);
+    }
+  });
 };
 
 export function AuthProvider({ children }) {
@@ -169,6 +207,7 @@ export function AuthProvider({ children }) {
       await commitProfileUpdate({
         uid: user.uid,
         profileData,
+        previousSlug: profile?.slug || "",
         publicProfile: normalizePublicProfile({
           ...updatedProfile,
           updatedAt: profileData.updatedAt || new Date(),
@@ -185,6 +224,11 @@ export function AuthProvider({ children }) {
   const isSlugAvailable = async (slugValue, currentUid) => {
     try {
       const usersRef = collection(db, "publicProfiles");
+      const slugKeySnapshot = await getDoc(doc(db, "publicSlugKeys", slugValue));
+      if (slugKeySnapshot.exists() && slugKeySnapshot.data().uid !== currentUid) {
+        return false;
+      }
+
       const slugQuery = query(usersRef, where("slug", "==", slugValue), limit(2));
       const snapshot = await getDocs(slugQuery);
       const matchingDocs = snapshot.docs.filter((doc) => doc.id !== currentUid);

@@ -143,7 +143,12 @@ export default function ProfileSetup() {
       window.setTimeout(() => navigate("/dashboard"), 900);
     } catch (err) {
       reportError(err, { source: "profile-setup", action: "save-profile" });
-      setSaveError("Erro ao salvar o perfil. Tente novamente.");
+      if (err.message === "slug-unavailable") {
+        setSlugError("Este endereco acabou de ser reservado por outra conta.");
+        setSaveError("Escolha outro slug publico.");
+      } else {
+        setSaveError("Erro ao salvar o perfil. Tente novamente.");
+      }
     } finally {
       setLoading(false);
     }
