@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { getActivationState } from "../utils/onboarding";
+import { getActivationState, getPublicBookingReadiness } from "../utils/onboarding";
 import { reportError, trackEvent } from "../utils/telemetry";
 
 const navItems = [
@@ -35,9 +35,18 @@ export default function Sidebar({
     clientsCount,
     appointmentsCount,
   });
+  const publicReadiness = getPublicBookingReadiness({
+    profile,
+    servicesCount,
+    barbersCount,
+  });
 
   const copyPublicLink = async () => {
-    if (!publicUrl) return;
+    if (!publicUrl || !publicReadiness.isReady) {
+      setCopyMessage(publicReadiness.nextStep?.label || "Complete o link publico antes de copiar");
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(publicUrl);
       setCopyMessage("Link copiado");
@@ -123,22 +132,38 @@ export default function Sidebar({
               <div className="rounded-2xl border border-gray-800 bg-gray-950 px-3 py-2 text-sm text-indigo-300">
                 <p className="truncate">{publicPath}</p>
               </div>
+              {!publicReadiness.isReady && (
+                <div className="rounded-2xl border border-yellow-700 bg-yellow-950/40 p-3 text-sm text-yellow-100">
+                  <p className="font-semibold">Link em preparacao</p>
+                  <p className="mt-1 text-yellow-200">{publicReadiness.nextStep?.label}</p>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={copyPublicLink}
-                  className="rounded-2xl bg-white/10 px-3 py-2 text-sm font-semibold transition hover:bg-white/20"
+                  disabled={!publicReadiness.isReady}
+                  className="rounded-2xl bg-white/10 px-3 py-2 text-sm font-semibold transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Copiar
                 </button>
-                <a
-                  href={publicPath}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-black transition hover:bg-gray-200"
-                >
-                  Abrir
-                </a>
+                {publicReadiness.isReady ? (
+                  <a
+                    href={publicPath}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-black transition hover:bg-gray-200"
+                  >
+                    Abrir
+                  </a>
+                ) : (
+                  <Link
+                    to={publicReadiness.nextStep?.to || "/perfil"}
+                    className="inline-flex items-center justify-center rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-black transition hover:bg-gray-200"
+                  >
+                    Ajustar
+                  </Link>
+                )}
               </div>
               {copyMessage && <p className="text-xs text-green-300">{copyMessage}</p>}
             </div>
@@ -173,18 +198,28 @@ export default function Sidebar({
               <button
                 type="button"
                 onClick={copyPublicLink}
-                className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold transition hover:bg-white/20"
+                disabled={!publicReadiness.isReady}
+                className="rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Copiar
               </button>
-              <a
-                href={publicPath}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-black transition hover:bg-gray-200"
-              >
-                Abrir
-              </a>
+              {publicReadiness.isReady ? (
+                <a
+                  href={publicPath}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-black transition hover:bg-gray-200"
+                >
+                  Abrir
+                </a>
+              ) : (
+                <Link
+                  to={publicReadiness.nextStep?.to || "/perfil"}
+                  className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-black transition hover:bg-gray-200"
+                >
+                  Ajustar
+                </Link>
+              )}
             </div>
           )}
 

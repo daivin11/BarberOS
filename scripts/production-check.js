@@ -588,6 +588,30 @@ const assertWorkspaceDataExportExists = () => {
     }
   });
 };
+
+const assertPublicLinkReadinessGuardsSharing = () => {
+  const onboarding = readFileSync(join(root, "src", "utils", "onboarding.js"), "utf8");
+  const dashboardPage = readFileSync(join(root, "src", "pages", "Dashboard.jsx"), "utf8");
+  const sidebar = readFileSync(join(root, "src", "components", "Sidebar.jsx"), "utf8");
+  const onboardingTest = readFileSync(join(root, "tests", "onboarding.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [onboarding, "src/utils/onboarding.js", "getPublicBookingReadiness"],
+    [onboarding, "src/utils/onboarding.js", "servicesCount <= 0"],
+    [onboarding, "src/utils/onboarding.js", "barbersCount <= 0"],
+    [dashboardPage, "src/pages/Dashboard.jsx", "publicReadiness.isReady"],
+    [dashboardPage, "src/pages/Dashboard.jsx", "Ajustar link"],
+    [sidebar, "src/components/Sidebar.jsx", "Link em preparacao"],
+    [sidebar, "src/components/Sidebar.jsx", "disabled={!publicReadiness.isReady}"],
+    [onboardingTest, "tests/onboarding.test.js", "blocks public link sharing"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`public link readiness guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -635,6 +659,7 @@ assertAvailabilityContractIsBounded();
 assertBarberContractIsBounded();
 assertFirebaseAppCheckIsConfigurable();
 assertWorkspaceDataExportExists();
+assertPublicLinkReadinessGuardsSharing();
 
 if (failures.length > 0) {
   console.error("Production check failed:");

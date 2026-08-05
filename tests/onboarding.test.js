@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { getActivationState } from "../src/utils/onboarding.js";
+import { getActivationState, getPublicBookingReadiness } from "../src/utils/onboarding.js";
 
 describe("onboarding utils", () => {
   it("starts with profile as the first activation step", () => {
@@ -42,5 +42,38 @@ describe("onboarding utils", () => {
     assert.equal(state.isActivated, true);
     assert.equal(state.progress, 100);
     assert.equal(state.nextItem, null);
+  });
+
+  it("blocks public link sharing until profile, hours, services and barbers are ready", () => {
+    const readiness = getPublicBookingReadiness({
+      profile: {
+        profileComplete: true,
+        slug: "barbearia-central",
+        barbershopName: "Barbearia Central",
+        businessHours: { start: "09:00", end: "18:00" },
+      },
+      servicesCount: 1,
+      barbersCount: 0,
+    });
+
+    assert.equal(readiness.isReady, false);
+    assert.deepEqual(readiness.missing.map((item) => item.id), ["barbers"]);
+    assert.equal(readiness.nextStep.to, "/barbeiros");
+  });
+
+  it("marks the public booking link ready with the operational minimum", () => {
+    const readiness = getPublicBookingReadiness({
+      profile: {
+        profileComplete: true,
+        slug: "barbearia-central",
+        barbershopName: "Barbearia Central",
+        businessHours: { start: "09:00", end: "18:00" },
+      },
+      servicesCount: 1,
+      barbersCount: 1,
+    });
+
+    assert.equal(readiness.isReady, true);
+    assert.equal(readiness.nextStep, null);
   });
 });

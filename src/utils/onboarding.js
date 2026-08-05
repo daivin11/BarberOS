@@ -76,3 +76,49 @@ export const getActivationState = (input = {}) => {
     isActivated: completedCount === items.length,
   };
 };
+
+export const getPublicBookingReadiness = ({
+  profile,
+  servicesCount = 0,
+  barbersCount = 0,
+} = {}) => {
+  const missing = [];
+
+  if (!profile?.profileComplete || !profile?.slug || !profile?.barbershopName) {
+    missing.push({
+      id: "profile",
+      label: "Complete o perfil publico",
+      to: "/perfil",
+    });
+  }
+
+  if (!profile?.businessHours?.start || !profile?.businessHours?.end) {
+    missing.push({
+      id: "hours",
+      label: "Defina horarios de funcionamento",
+      to: "/perfil",
+    });
+  }
+
+  if (servicesCount <= 0) {
+    missing.push({
+      id: "services",
+      label: "Cadastre pelo menos um servico",
+      to: "/servicos",
+    });
+  }
+
+  if (barbersCount <= 0) {
+    missing.push({
+      id: "barbers",
+      label: "Cadastre pelo menos um barbeiro",
+      to: "/barbeiros",
+    });
+  }
+
+  return {
+    isReady: missing.length === 0,
+    missing,
+    nextStep: missing[0] || null,
+  };
+};

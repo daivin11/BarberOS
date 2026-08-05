@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { APPOINTMENT_STATUS, getAppointmentStatus, isActiveAppointment } from "../utils/appointments";
 import { getAppointmentWindowLabel } from "../utils/appointmentWindow";
-import { getActivationState } from "../utils/onboarding";
+import { getActivationState, getPublicBookingReadiness } from "../utils/onboarding";
 import { getAccountAccess } from "../utils/trial";
 import { formatLocalDate } from "../utils/date";
 import { pluralize } from "../utils/format";
@@ -127,7 +127,11 @@ export default function Dashboard({
   }, [slugInput, isEditingSlug, isSlugAvailable, user]);
 
   const copyPublicLink = async () => {
-    if (!publicUrl) return;
+    if (!publicUrl || !publicReadiness.isReady) {
+      setCopyMessage(publicReadiness.nextStep?.label || "Complete o link publico antes de copiar");
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(publicUrl);
       setCopyMessage("Link copiado!");
@@ -204,6 +208,16 @@ export default function Dashboard({
     clientsCount: clients.length,
     appointmentsCount: appointments.length,
   });
+  const publicReadiness = getPublicBookingReadiness({
+    profile,
+    servicesCount: services.length,
+    barbersCount: barbers.length,
+  });
+
+  const publicLinkStatusCopy =
+    publicPath && publicReadiness.isReady
+      ? "Seu link publico ja pode ser compartilhado com clientes."
+      : publicReadiness.nextStep?.label || "Complete seu perfil para ativar sua pagina publica.";
 
   return (
     <main className="flex-1 overflow-y-auto p-4 text-white sm:p-6 lg:p-8">
@@ -310,11 +324,12 @@ export default function Dashboard({
                   <button
                     type="button"
                     onClick={copyPublicLink}
-                    className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+                    disabled={!publicReadiness.isReady}
+                    className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Copiar link
                   </button>
-                  {publicPath && (
+                  {publicPath && publicReadiness.isReady && (
                     <a
                       href={publicPath}
                       target="_blank"
@@ -323,6 +338,14 @@ export default function Dashboard({
                     >
                       Abrir pagina
                     </a>
+                  )}
+                  {publicPath && !publicReadiness.isReady && publicReadiness.nextStep && (
+                    <Link
+                      to={publicReadiness.nextStep.to}
+                      className="rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-95"
+                    >
+                      Ajustar link
+                    </Link>
                   )}
                 </div>
               </div>
@@ -378,9 +401,7 @@ export default function Dashboard({
                 </div>
               ) : (
                 <div className="mt-4 rounded-2xl border border-gray-800 bg-gray-950 p-4 text-sm text-gray-400">
-                  {publicPath
-                    ? "Voce pode editar o link publico para manter sua URL simples e memoravel."
-                    : "Complete seu perfil para ativar sua pagina publica."}
+                  {publicLinkStatusCopy}
                 </div>
               )}
               {copyMessage && <p className="mt-3 text-sm text-green-300">{copyMessage}</p>}
