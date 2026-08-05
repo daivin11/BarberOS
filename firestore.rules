@@ -273,6 +273,25 @@ service cloud.firestore {
       ];
     }
 
+    function appointmentRootSlotMatches(appointmentId) {
+      return existsAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId))
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.appointmentId == appointmentId
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.userId == request.resource.data.userId
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.barberId == request.resource.data.barberId
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.date == request.resource.data.date
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.time == request.resource.data.time
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.rootTime == request.resource.data.time
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.startMinutes == request.resource.data.startMinutes
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.endMinutes == request.resource.data.endMinutes
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.duration == request.resource.data.duration
+        && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.status == request.resource.data.status;
+    }
+
+    function cancelledAppointmentReleasesRootSlot() {
+      return request.resource.data.status == 'cancelled'
+        && !existsAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId));
+    }
+
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
@@ -532,6 +551,7 @@ service cloud.firestore {
         && request.resource.data.slotIds.size() <= 16
         && request.resource.data.slotIds[0] == request.resource.data.slotId
         && validAppointmentTiming()
+        && appointmentRootSlotMatches(appointmentId)
         && request.resource.data.status == 'pending';
       allow update: if isOwner(resource.data.userId)
         && resource.data.status in ['pending', 'confirmed']
@@ -553,7 +573,11 @@ service cloud.firestore {
         && request.resource.data.slotIds.size() >= 1
         && request.resource.data.slotIds.size() <= 16
         && request.resource.data.slotIds[0] == request.resource.data.slotId
-        && validAppointmentTiming();
+        && validAppointmentTiming()
+        && (
+          cancelledAppointmentReleasesRootSlot()
+          || appointmentRootSlotMatches(appointmentId)
+        );
       allow delete: if false;
     }
 
