@@ -40,6 +40,9 @@ export default function Barbers({
   const [editingBarber, setEditingBarber] = useState(null);
   const [deleteBarber, setDeleteBarber] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const [savingBarber, setSavingBarber] = useState(false);
+  const [archivingBarber, setArchivingBarber] = useState(false);
+  const [restoringBarberId, setRestoringBarberId] = useState("");
   const isSetupMode = searchParams.get("setup") === "barbers";
   const duplicateBarber = findDuplicateBarberByName(barbers, name, editingBarber?.id);
 
@@ -70,6 +73,8 @@ export default function Barbers({
   };
 
   const handleSave = async () => {
+    if (savingBarber) return;
+
     const barberInput = normalizeBarberInput({ name, specialty, avatar });
     const validationError = validateBarberInput(barberInput);
 
@@ -100,6 +105,7 @@ export default function Barbers({
       updatedAt: new Date(),
     };
 
+    setSavingBarber(true);
     try {
       if (editingBarber) {
         const barberRef = doc(db, "barbers", editingBarber.id);
@@ -146,6 +152,8 @@ export default function Barbers({
         action: editingBarber ? "update-barber" : "create-barber",
       });
       notify("Erro ao salvar barbeiro. Tente novamente.");
+    } finally {
+      setSavingBarber(false);
     }
   };
 
@@ -158,7 +166,7 @@ export default function Barbers({
   };
 
   const handleDeleteConfirmed = async () => {
-    if (!deleteBarber) return;
+    if (!deleteBarber || archivingBarber) return;
 
     const activeCount = activeAppointmentsByBarber[String(deleteBarber.id)] || 0;
     if (activeCount > 0) {
@@ -171,6 +179,7 @@ export default function Barbers({
       return;
     }
 
+    setArchivingBarber(true);
     try {
       const activeAppointmentQuery = query(
         collection(db, "appointments"),
@@ -184,13 +193,7 @@ export default function Barbers({
         notify("Este barbeiro tem agendamentos ativos fora da tela atual. Reagende, conclua ou cancele antes de arquivar.");
         return;
       }
-    } catch (error) {
-      reportError(error, { source: "barbers", action: "check-barber-active-appointments" });
-      notify("Nao foi possivel verificar agendamentos ativos deste barbeiro. Tente novamente.");
-      return;
-    }
 
-    try {
       const archivedAt = new Date();
       const barberRef = doc(db, "barbers", deleteBarber.id);
       await updateDoc(barberRef, { isArchived: true, archivedAt, updatedAt: archivedAt });
@@ -209,14 +212,23 @@ export default function Barbers({
         source: "barbers",
       });
     } catch (error) {
-      reportError(error, { source: "barbers", action: "archive-barber" });
-      notify("Erro ao arquivar barbeiro. Tente novamente.");
+      reportError(error, { source: "barbers", action: "archive-barber-or-check-active-appointments" });
+      notify("Nao foi possivel arquivar este barbeiro. Verifique os agendamentos ativos e tente novamente.");
+    } finally {
+      setArchivingBarber(false);
     }
   };
 
   const restoreArchivedBarber = async (barberId) => {
-    const restored = await restoreBarber?.(barberId);
-    if (restored) setStatusMessage("Barbeiro restaurado para a equipe ativa.");
+    if (restoringBarberId) return;
+
+    setRestoringBarberId(barberId);
+    try {
+      const restored = await restoreBarber?.(barberId);
+      if (restored) setStatusMessage("Barbeiro restaurado para a equipe ativa.");
+    } finally {
+      setRestoringBarberId("");
+    }
   };
 
   return (
@@ -317,14 +329,14 @@ export default function Barbers({
             <button
               type="button"
               onClick={handleSave}
-              disabled={Boolean(duplicateBarber)}
+              disabled={Boolean(duplicateBarber) || savingBarber}
               className={`w-full rounded-2xl px-4 py-4 text-sm font-semibold transition ${
-                duplicateBarber
+                duplicateBarber || savingBarber
                   ? "cursor-not-allowed bg-gray-700 text-gray-400"
                   : "bg-white text-black hover:bg-gray-200"
               }`}
             >
-              {editingBarber ? "Salvar alteracoes" : "Adicionar barbeiro"}
+              {savingBarber ? (editingBarber ? "Salvando alteracoes..." : "Salvando barbeiro...") : editingBarber ? "Salvar alteracoes" : "Adicionar barbeiro"}
             </button>
             {duplicateBarber && (
               <p className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100">
@@ -443,9 +455,14 @@ export default function Barbers({
                   <button
                     type="button"
                     onClick={() => restoreArchivedBarber(barber.id)}
-                    className="mt-4 w-full rounded-2xl border border-emerald-700 bg-emerald-950/40 px-3 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-500"
+                    disabled={Boolean(restoringBarberId)}
+                    className={`mt-4 w-full rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
+                      restoringBarberId
+                        ? "cursor-not-allowed border-gray-700 bg-gray-900 text-gray-500"
+                        : "border-emerald-700 bg-emerald-950/40 text-emerald-200 hover:border-emerald-500"
+                    }`}
                   >
-                    Restaurar barbeiro
+                    {restoringBarberId === barber.id ? "Restaurando..." : "Restaurar barbeiro"}
                   </button>
                 </article>
               ))}
@@ -477,9 +494,12 @@ export default function Barbers({
               <button
                 type="button"
                 onClick={handleDeleteConfirmed}
-                className="rounded-3xl bg-red-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
+                disabled={archivingBarber}
+                className={`rounded-3xl px-6 py-3 text-sm font-semibold text-white transition ${
+                  archivingBarber ? "cursor-not-allowed bg-red-900 text-red-200" : "bg-red-500 hover:bg-red-600"
+                }`}
               >
-                Confirmar arquivamento
+                {archivingBarber ? "Arquivando..." : "Confirmar arquivamento"}
               </button>
             </div>
           </div>

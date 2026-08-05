@@ -478,6 +478,9 @@ const assertBarberContractIsBounded = () => {
   const duplicateGuardSnippets = [
     [adminApp, "src/AdminApp.jsx", "findDuplicateBarberByName"],
     [barbersPage, "src/pages/Barbers.jsx", "duplicateBarber"],
+    [barbersPage, "src/pages/Barbers.jsx", "savingBarber"],
+    [barbersPage, "src/pages/Barbers.jsx", "archivingBarber"],
+    [barbersPage, "src/pages/Barbers.jsx", "restoringBarberId"],
     [barberUtils, "src/utils/barbers.js", "normalizeBarberNameKey"],
     [barberUtils, "src/utils/barbers.js", "findDuplicateBarberByName"],
     [barberUtilsTest, "tests/barbers.test.js", "finds duplicate active barbers"],
@@ -851,6 +854,25 @@ const assertClientListSupportsWhatsAppContact = () => {
   });
 };
 
+const assertClientActionsHaveSubmitGuards = () => {
+  const clientsPage = readFileSync(join(root, "src", "pages", "Clients.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [clientsPage, "src/pages/Clients.jsx", "savingClient"],
+    [clientsPage, "src/pages/Clients.jsx", "archivingClient"],
+    [clientsPage, "src/pages/Clients.jsx", "restoringClientId"],
+    [clientsPage, "src/pages/Clients.jsx", "Salvando cliente"],
+    [clientsPage, "src/pages/Clients.jsx", "Arquivando..."],
+    [clientsPage, "src/pages/Clients.jsx", "Restaurando..."],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`client submit guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 const assertWhatsAppTemplatesAreDomainDriven = () => {
   const whatsappPage = readFileSync(join(root, "src", "pages", "WhatsApp.jsx"), "utf8");
   const whatsappTemplates = readFileSync(join(root, "src", "utils", "whatsappTemplates.js"), "utf8");
@@ -927,6 +949,7 @@ assertFinanceShowsOperationalHealth();
 assertAdminDataSyncCanRetry();
 assertPublicBookingSubmitRespectsAvailability();
 assertClientListSupportsWhatsAppContact();
+assertClientActionsHaveSubmitGuards();
 assertWhatsAppTemplatesAreDomainDriven();
 
 if (failures.length > 0) {

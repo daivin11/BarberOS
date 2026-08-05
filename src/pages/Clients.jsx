@@ -22,6 +22,9 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
   const [editingClient, setEditingClient] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const [savingClient, setSavingClient] = useState(false);
+  const [archivingClient, setArchivingClient] = useState(false);
+  const [restoringClientId, setRestoringClientId] = useState("");
   const isLoading = loading ?? false;
   const isSetupMode = searchParams.get("setup") === "clients";
   const cleanPhone = normalizePhone(clientPhone);
@@ -49,6 +52,8 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
   }, [clients, search]);
 
   const handleAddClient = async () => {
+    if (savingClient) return;
+
     const cleanName = clientName.trim();
     if (!cleanName || cleanPhone.length < 10) {
       setFormError("Informe nome e telefone com DDD.");
@@ -61,15 +66,21 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
     }
 
     setFormError("");
-    const success = editingClient
-      ? await updateClient(editingClient.id, { name: cleanName, phone: cleanPhone })
-      : await addClient(cleanName, cleanPhone);
+    setSavingClient(true);
 
-    if (success) {
-      setClientName("");
-      setClientPhone("");
-      setEditingClient(null);
-      setStatusMessage(editingClient ? "Cliente atualizado com sucesso." : "Cliente cadastrado com sucesso.");
+    try {
+      const success = editingClient
+        ? await updateClient(editingClient.id, { name: cleanName, phone: cleanPhone })
+        : await addClient(cleanName, cleanPhone);
+
+      if (success) {
+        setClientName("");
+        setClientPhone("");
+        setEditingClient(null);
+        setStatusMessage(editingClient ? "Cliente atualizado com sucesso." : "Cliente cadastrado com sucesso.");
+      }
+    } finally {
+      setSavingClient(false);
     }
   };
 
@@ -93,8 +104,15 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
   };
 
   const restoreArchivedClient = async (clientId) => {
-    const success = await restoreClient?.(clientId);
-    if (success) setStatusMessage("Cliente restaurado para a base ativa.");
+    if (restoringClientId) return;
+
+    setRestoringClientId(clientId);
+    try {
+      const success = await restoreClient?.(clientId);
+      if (success) setStatusMessage("Cliente restaurado para a base ativa.");
+    } finally {
+      setRestoringClientId("");
+    }
   };
 
   const createClientWhatsAppLink = (client) =>
@@ -104,12 +122,18 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
     });
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return;
-    const success = await deleteClient(deleteTarget.id);
-    if (success) {
-      setDeleteTarget(null);
-      setStatusMessage("Cliente arquivado com sucesso.");
-      if (editingClient?.id === deleteTarget.id) resetForm();
+    if (!deleteTarget || archivingClient) return;
+
+    setArchivingClient(true);
+    try {
+      const success = await deleteClient(deleteTarget.id);
+      if (success) {
+        setDeleteTarget(null);
+        setStatusMessage("Cliente arquivado com sucesso.");
+        if (editingClient?.id === deleteTarget.id) resetForm();
+      }
+    } finally {
+      setArchivingClient(false);
     }
   };
 
@@ -200,14 +224,14 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
             <button
               type="button"
               className={`w-full rounded-2xl py-4 font-semibold transition ${
-                duplicatedClient
+                duplicatedClient || savingClient
                   ? "cursor-not-allowed bg-gray-700 text-gray-400"
                   : "bg-white text-black hover:bg-gray-200"
               }`}
               onClick={handleAddClient}
-              disabled={Boolean(duplicatedClient)}
+              disabled={Boolean(duplicatedClient) || savingClient}
             >
-              {editingClient ? "Salvar alteracao" : "Adicionar cliente"}
+              {savingClient ? (editingClient ? "Salvando alteracao..." : "Salvando cliente...") : editingClient ? "Salvar alteracao" : "Adicionar cliente"}
             </button>
 
             {editingClient && (
@@ -334,9 +358,14 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
                   <button
                     type="button"
                     onClick={() => restoreArchivedClient(client.id)}
-                    className="mt-4 w-full rounded-2xl border border-emerald-700 bg-emerald-950/40 px-3 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-500"
+                    disabled={Boolean(restoringClientId)}
+                    className={`mt-4 w-full rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
+                      restoringClientId
+                        ? "cursor-not-allowed border-gray-700 bg-gray-900 text-gray-500"
+                        : "border-emerald-700 bg-emerald-950/40 text-emerald-200 hover:border-emerald-500"
+                    }`}
                   >
-                    Restaurar cliente
+                    {restoringClientId === client.id ? "Restaurando..." : "Restaurar cliente"}
                   </button>
                 </article>
               ))}
@@ -369,9 +398,12 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
               <button
                 type="button"
                 onClick={confirmDelete}
-                className="rounded-2xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
+                disabled={archivingClient}
+                className={`rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${
+                  archivingClient ? "cursor-not-allowed bg-red-900 text-red-200" : "bg-red-500 hover:bg-red-600"
+                }`}
               >
-                Arquivar cliente
+                {archivingClient ? "Arquivando..." : "Arquivar cliente"}
               </button>
             </div>
           </section>
