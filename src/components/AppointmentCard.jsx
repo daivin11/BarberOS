@@ -38,6 +38,7 @@ export default function AppointmentCard({
   const appointmentDate = appointment.date || "Data nao definida";
   const appointmentTime = appointment.time || "Horario nao definido";
   const isTerminal = isTerminalAppointment(appointment);
+  const isPending = currentStatus === APPOINTMENT_STATUS.pending;
   const canEdit = Boolean(onUpdateAppointment) && !isTerminal;
   const canSaveEdit =
     editClientId &&
@@ -129,6 +130,16 @@ export default function AppointmentCard({
           </div>
 
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col">
+            {onStatusChange && isPending && (
+              <button
+                type="button"
+                onClick={() => onStatusChange(appointment.id, APPOINTMENT_STATUS.confirmed)}
+                className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-gray-200"
+              >
+                Confirmar
+              </button>
+            )}
+
             {onStatusChange && (
               <select
                 value={currentStatus}
@@ -158,10 +169,12 @@ export default function AppointmentCard({
 
             <button
               type="button"
-              className="rounded-2xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700"
+              className={`rounded-2xl px-4 py-2 text-sm font-semibold text-white transition ${
+                isPending ? "bg-emerald-600 hover:bg-emerald-700" : "bg-green-600 hover:bg-green-700"
+              }`}
               onClick={() => sendWhatsApp(appointment)}
             >
-              WhatsApp
+              {isPending ? "Confirmar no WhatsApp" : "WhatsApp"}
             </button>
 
             {onStatusChange && (

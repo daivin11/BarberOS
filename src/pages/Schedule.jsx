@@ -110,6 +110,19 @@ export default function Schedule({
   );
   const unassignedAppointments = appointments.length - assignedAppointments;
   const appointmentCounts = useMemo(() => countAppointmentsByStatus(appointments), [appointments]);
+  const pendingAppointments = useMemo(
+    () =>
+      [...appointments]
+        .filter((appointment) => getAppointmentStatus(appointment) === APPOINTMENT_STATUS.pending)
+        .sort((first, second) => {
+          const firstValue = `${first.date || ""} ${first.time || ""}`;
+          const secondValue = `${second.date || ""} ${second.time || ""}`;
+          return firstValue.localeCompare(secondValue);
+        }),
+    [appointments]
+  );
+  const nextPendingAppointment = pendingAppointments[0] || null;
+  const pendingClientName = nextPendingAppointment?.client?.name || nextPendingAppointment?.clientName || "Cliente";
   const filterOptions = useMemo(
     () => [
       { value: "active", label: "Todos", count: activeAppointments.length },
@@ -575,6 +588,38 @@ export default function Schedule({
               )}
             </div>
           </div>
+
+          {nextPendingAppointment && (
+            <div className="mb-5 rounded-3xl border border-yellow-600/50 bg-yellow-950/40 p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.25em] text-yellow-300">Resposta pendente</p>
+                  <h3 className="mt-2 text-xl font-bold text-white">
+                    Confirme o pedido de {pendingClientName}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-yellow-100/80">
+                    {nextPendingAppointment.service?.name || "Servico"} em {nextPendingAppointment.date} as {nextPendingAppointment.time}. Clientes esperam retorno rapido depois de solicitar pelo link publico.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => updateAppointmentStatus(nextPendingAppointment.id, APPOINTMENT_STATUS.confirmed)}
+                    className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
+                  >
+                    Confirmar agora
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => sendWhatsApp(nextPendingAppointment)}
+                    className="rounded-2xl border border-emerald-600 bg-emerald-950/60 px-4 py-3 text-sm font-semibold text-emerald-100 transition hover:border-emerald-400"
+                  >
+                    Chamar no WhatsApp
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="mb-5 flex flex-wrap gap-2">
             {filterOptions.map((option) => {

@@ -690,6 +690,31 @@ const assertPublicBookingShowsConfirmationSummary = () => {
     }
   });
 };
+
+const assertPendingAppointmentsHaveResponseFlow = () => {
+  const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
+  const appointmentCard = readFileSync(join(root, "src", "components", "AppointmentCard.jsx"), "utf8");
+  const schedulePage = readFileSync(join(root, "src", "pages", "Schedule.jsx"), "utf8");
+  const appointmentMessages = readFileSync(join(root, "src", "utils", "appointmentMessages.js"), "utf8");
+  const appointmentMessagesTest = readFileSync(join(root, "tests", "appointmentMessages.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [adminApp, "src/AdminApp.jsx", "createAppointmentWhatsAppMessage"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "Confirmar no WhatsApp"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "APPOINTMENT_STATUS.confirmed"],
+    [schedulePage, "src/pages/Schedule.jsx", "Resposta pendente"],
+    [schedulePage, "src/pages/Schedule.jsx", "Confirmar agora"],
+    [schedulePage, "src/pages/Schedule.jsx", "Chamar no WhatsApp"],
+    [appointmentMessages, "src/utils/appointmentMessages.js", "Recebemos sua solicitacao"],
+    [appointmentMessagesTest, "tests/appointmentMessages.test.js", "asks for confirmation"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`pending appointment response flow is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -741,6 +766,7 @@ assertPublicLinkReadinessGuardsSharing();
 assertSetupDeepLinksGuideFirstRun();
 assertPublicBookingRequiresPrivacyConsent();
 assertPublicBookingShowsConfirmationSummary();
+assertPendingAppointmentsHaveResponseFlow();
 
 if (failures.length > 0) {
   console.error("Production check failed:");

@@ -22,6 +22,7 @@ import {
   isCompletedAppointment,
   isTerminalAppointment,
 } from "./utils/appointments";
+import { createAppointmentWhatsAppMessage } from "./utils/appointmentMessages";
 import {
   createSlotId,
   getOccupiedTimes,
@@ -1239,8 +1240,7 @@ export default function AdminApp() {
       notify("Este cliente nao tem telefone valido para WhatsApp.");
       return;
     }
-    const clientName = appointment.clientName || appointment.client?.name || "cliente";
-    const message = `Fala, ${clientName}! Passando para lembrar do seu horario dia ${appointment.date} as ${appointment.time}. Confirma para mim?`;
+    const message = createAppointmentWhatsAppMessage(appointment);
 
     const url = createWhatsAppUrl({ phone, message });
     window.open(url, "_blank", "noopener,noreferrer");
