@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
-import { formatBrazilianPhone, normalizePhone } from "../utils/phone";
+import { createWhatsAppUrl, formatBrazilianPhone, normalizePhone } from "../utils/phone";
 
 function getInitials(name = "CL") {
   return name
@@ -96,6 +96,12 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
     const success = await restoreClient?.(clientId);
     if (success) setStatusMessage("Cliente restaurado para a base ativa.");
   };
+
+  const createClientWhatsAppLink = (client) =>
+    createWhatsAppUrl({
+      phone: normalizePhone(client.phoneNormalized || client.phone),
+      message: `Ola, ${client.name || "cliente"}! Aqui e da barbearia. Quer agendar um horario?`,
+    });
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -269,7 +275,15 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
                       <p className="mt-1 text-sm text-gray-400">{formatBrazilianPhone(client.phone)}</p>
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    <a
+                      href={createClientWhatsAppLink(client)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-2xl border border-emerald-800 bg-emerald-950/50 px-3 py-2 text-center text-sm font-semibold text-emerald-200 transition hover:border-emerald-500"
+                    >
+                      WhatsApp
+                    </a>
                     <button
                       type="button"
                       onClick={() => startEdit(client)}

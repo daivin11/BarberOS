@@ -797,6 +797,23 @@ const assertPublicBookingSubmitRespectsAvailability = () => {
     }
   });
 };
+
+const assertClientListSupportsWhatsAppContact = () => {
+  const clientsPage = readFileSync(join(root, "src", "pages", "Clients.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [clientsPage, "src/pages/Clients.jsx", "createWhatsAppUrl"],
+    [clientsPage, "src/pages/Clients.jsx", "createClientWhatsAppLink"],
+    [clientsPage, "src/pages/Clients.jsx", "target=\"_blank\""],
+    [clientsPage, "src/pages/Clients.jsx", "WhatsApp"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`client WhatsApp contact action is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -852,6 +869,7 @@ assertPendingAppointmentsHaveResponseFlow();
 assertFinanceShowsOperationalHealth();
 assertAdminDataSyncCanRetry();
 assertPublicBookingSubmitRespectsAvailability();
+assertClientListSupportsWhatsAppContact();
 
 if (failures.length > 0) {
   console.error("Production check failed:");
