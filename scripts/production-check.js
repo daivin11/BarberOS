@@ -667,6 +667,29 @@ const assertPublicBookingRequiresPrivacyConsent = () => {
     }
   });
 };
+
+const assertPublicBookingShowsConfirmationSummary = () => {
+  const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+  const bookingConfirmation = readFileSync(join(root, "src", "utils", "bookingConfirmation.js"), "utf8");
+  const bookingConfirmationTest = readFileSync(join(root, "tests", "bookingConfirmation.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [publicBooking, "src/pages/PublicBooking.jsx", "bookingConfirmation"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "createBookingConfirmation"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "getBookingConfirmationLines"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "Seu horario esta aguardando confirmacao"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "Proximo passo"],
+    [bookingConfirmation, "src/utils/bookingConfirmation.js", "createBookingConfirmation"],
+    [bookingConfirmation, "src/utils/bookingConfirmation.js", "getBookingConfirmationLines"],
+    [bookingConfirmationTest, "tests/bookingConfirmation.test.js", "formats confirmation lines"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`public booking confirmation summary is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -717,6 +740,7 @@ assertWorkspaceDataExportExists();
 assertPublicLinkReadinessGuardsSharing();
 assertSetupDeepLinksGuideFirstRun();
 assertPublicBookingRequiresPrivacyConsent();
+assertPublicBookingShowsConfirmationSummary();
 
 if (failures.length > 0) {
   console.error("Production check failed:");

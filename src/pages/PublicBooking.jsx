@@ -5,6 +5,7 @@ import { db } from "../services/firebase";
 import { createClientPhoneKeyId } from "../utils/adminData";
 import { APPOINTMENT_STATUS } from "../utils/appointments";
 import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "../utils/appointmentWindow";
+import { createBookingConfirmation, getBookingConfirmationLines } from "../utils/bookingConfirmation";
 import { formatLocalDate } from "../utils/date";
 import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
 import { isValidBrazilianPhone, normalizePhone } from "../utils/phone";
@@ -44,6 +45,7 @@ export default function PublicBooking() {
   const [success, setSuccess] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [bookingConfirmation, setBookingConfirmation] = useState(null);
 
   const businessHours = barber?.businessHours || defaultBusinessHours;
   const blockedDates = Array.isArray(barber?.blockedDates) ? barber.blockedDates : [];
@@ -104,6 +106,7 @@ export default function PublicBooking() {
       setBookedSlots([]);
       setSuccess(false);
       setPrivacyAccepted(false);
+      setBookingConfirmation(null);
 
       if (!routeSlug) {
         setFatalError("Slug invalido ou ausente. Verifique o endereco publico do barbeiro.");
@@ -274,6 +277,14 @@ export default function PublicBooking() {
 
     setSubmitLoading(true);
     setFormError("");
+    const confirmation = createBookingConfirmation({
+      clientName: cleanName,
+      clientPhone: cleanPhone,
+      service,
+      barber: selectedBarber,
+      date,
+      time,
+    });
 
     try {
       const slotId = createSlotId({
@@ -393,6 +404,7 @@ export default function PublicBooking() {
       });
 
       setSuccess(true);
+      setBookingConfirmation(confirmation);
       setName("");
       setPhone("");
       setSelectedService("");
@@ -425,6 +437,7 @@ export default function PublicBooking() {
           ? "Este horario acabou de ser reservado. Escolha outro horario."
           : "Erro ao enviar o agendamento. Tente novamente."
       );
+      setBookingConfirmation(null);
     } finally {
       setSubmitLoading(false);
     }
@@ -608,9 +621,24 @@ export default function PublicBooking() {
                 <p className="text-gray-400 mt-2">Preencha seus dados para confirmar o seu agendamento.</p>
               </div>
 
-              {success && (
-                <div className="mb-6 rounded-3xl border border-emerald-500 bg-emerald-950 p-4 text-emerald-300" role="status">
-                  Solicitacao enviada! A barbearia recebeu o pedido e deve confirmar o horario.
+              {success && bookingConfirmation && (
+                <div className="mb-6 rounded-3xl border border-emerald-500/70 bg-emerald-950 p-5 text-emerald-100" role="status">
+                  <p className="text-sm uppercase tracking-[0.25em] text-emerald-300">Solicitacao enviada</p>
+                  <h3 className="mt-2 text-xl font-bold text-white">Seu horario esta aguardando confirmacao</h3>
+                  <p className="mt-2 text-sm leading-6 text-emerald-100/80">
+                    A barbearia recebeu seu pedido e deve confirmar pelo telefone informado. Salve este resumo ate receber o retorno.
+                  </p>
+                  <div className="mt-5 grid gap-2">
+                    {getBookingConfirmationLines(bookingConfirmation).map(([label, value]) => (
+                      <div key={label} className="flex items-start justify-between gap-4 rounded-2xl bg-black/20 px-4 py-3 text-sm">
+                        <span className="text-emerald-200/80">{label}</span>
+                        <span className="max-w-[60%] text-right font-semibold text-white">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-900/30 p-4 text-sm leading-6 text-emerald-50/90">
+                    Proximo passo: aguarde a confirmacao da barbearia. Se precisar alterar o horario, envie uma nova solicitacao ou fale diretamente com a equipe.
+                  </div>
                 </div>
               )}
 
