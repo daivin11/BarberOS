@@ -6,8 +6,6 @@ import {
   getAppointmentStatusClass,
   getAppointmentStatusLabel,
   isActiveAppointment,
-  isCancelledAppointment,
-  isCompletedAppointment,
 } from "../utils/appointments";
 import {
   createAppointmentDateWindow,
@@ -17,9 +15,12 @@ import {
 } from "../utils/appointmentWindow";
 import { formatLocalDate } from "../utils/date";
 import { formatCurrencyBRL } from "../utils/format";
-
-const getServicePrice = (appointment) =>
-  Number(appointment?.service?.price ?? appointment?.servicePrice ?? 0);
+import {
+  calculateFinanceMetrics,
+  formatPercentage,
+  getServicePrice,
+  getUpcomingRevenueAppointments,
+} from "../utils/finance";
 
 export default function Finance({ appointments = [], loading = false, appointmentWindow = createAppointmentDateWindow() }) {
   const [statusFilter, setStatusFilter] = useState("all");
@@ -38,35 +39,13 @@ export default function Finance({ appointments = [], loading = false, appointmen
   }, [appointments, selectedMonth, selectedMonthIsLoaded]);
 
   const metrics = useMemo(() => {
-    const completedAppointments = monthAppointments.filter(isCompletedAppointment);
-    const cancelledAppointments = monthAppointments.filter(isCancelledAppointment);
-    const activeAppointments = monthAppointments.filter(isActiveAppointment);
-
-    const realizedRevenue = completedAppointments.reduce(
-      (total, appointment) => total + getServicePrice(appointment),
-      0
-    );
-    const projectedRevenue = activeAppointments.reduce(
-      (total, appointment) => total + getServicePrice(appointment),
-      0
-    );
-    const lostRevenue = cancelledAppointments.reduce(
-      (total, appointment) => total + getServicePrice(appointment),
-      0
-    );
-
-    return {
-      activeAppointments,
-      cancelledAppointments,
-      completedAppointments,
-      realizedRevenue,
-      projectedRevenue,
-      lostRevenue,
-      averageTicket: completedAppointments.length
-        ? realizedRevenue / completedAppointments.length
-        : 0,
-    };
+    return calculateFinanceMetrics(monthAppointments);
   }, [monthAppointments]);
+
+  const upcomingRevenueAppointments = useMemo(
+    () => getUpcomingRevenueAppointments(monthAppointments, 5),
+    [monthAppointments]
+  );
 
   const filteredAppointments = useMemo(() => {
     const sorted = [...monthAppointments].sort((first, second) => {
@@ -135,6 +114,98 @@ export default function Finance({ appointments = [], loading = false, appointmen
             <p className="mt-3 text-sm text-gray-500">{helper}</p>
           </div>
         ))}
+      </section>
+
+      <section className="mb-8 grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-indigo-300">Saude do mes</p>
+              <h2 className="mt-2 text-2xl font-bold">Conversao financeira</h2>
+              <p className="mt-2 text-sm text-gray-400">
+                Use estes sinais para decidir se precisa confirmar pedidos, reduzir cancelamentos ou fechar atendimentos.
+              </p>
+            </div>
+            <span className="w-fit rounded-full bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.25em] text-gray-400">
+              {monthAppointments.length} movimentos
+            </span>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              ["Conclusao", formatPercentage(metrics.completionRate), "Atendimentos que viraram receita."],
+              ["Cancelamento", formatPercentage(metrics.cancellationRate), "Receita que saiu do caixa."],
+              ["Pendencia", formatPercentage(metrics.pendingShare), "Agenda ativa ainda sem confirmacao."],
+            ].map(([label, value, helper]) => (
+              <div key={label} className="rounded-2xl border border-gray-800 bg-gray-950 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-gray-500">{label}</p>
+                <p className="mt-3 text-3xl font-black">{loading ? "..." : value}</p>
+                <p className="mt-2 text-sm leading-5 text-gray-400">{helper}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="rounded-2xl border border-yellow-700/60 bg-yellow-950/30 p-4">
+              <p className="text-xs uppercase tracking-[0.25em] text-yellow-300">Receita pendente</p>
+              <p className="mt-3 text-2xl font-black">{loading ? "..." : formatCurrencyBRL(metrics.pendingRevenue)}</p>
+              <p className="mt-2 text-sm text-yellow-100/75">
+                {metrics.pendingAppointments.length} pedidos precisam de retorno antes de entrar como previsao firme.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-blue-700/60 bg-blue-950/30 p-4">
+              <p className="text-xs uppercase tracking-[0.25em] text-blue-300">Receita confirmada</p>
+              <p className="mt-3 text-2xl font-black">{loading ? "..." : formatCurrencyBRL(metrics.confirmedRevenue)}</p>
+              <p className="mt-2 text-sm text-blue-100/75">
+                {metrics.confirmedAppointments.length} horarios ativos ja estao confirmados no mes.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <aside className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6">
+          <p className="text-sm uppercase tracking-[0.3em] text-indigo-300">Proximos recebimentos</p>
+          <h2 className="mt-2 text-2xl font-bold">Agenda que vira caixa</h2>
+          <p className="mt-2 text-sm text-gray-400">
+            Priorize confirmacao dos proximos horarios para proteger a previsao.
+          </p>
+
+          <div className="mt-5 space-y-3">
+            {loading ? (
+              <div className="rounded-2xl border border-dashed border-gray-800 bg-gray-950 p-4 text-sm text-gray-400">
+                Carregando proximos recebimentos...
+              </div>
+            ) : upcomingRevenueAppointments.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-gray-800 bg-gray-950 p-4 text-sm text-gray-400">
+                Nenhum horario ativo neste mes.
+              </div>
+            ) : (
+              upcomingRevenueAppointments.map((appointment) => {
+                const status = getAppointmentStatus(appointment);
+                return (
+                  <article key={appointment.id || `${appointment.date}-${appointment.time}`} className="rounded-2xl border border-gray-800 bg-gray-950 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-white">
+                          {appointment.client?.name || appointment.clientName || "Cliente"}
+                        </p>
+                        <p className="mt-1 text-sm text-gray-400">
+                          {appointment.date || "Data"} as {appointment.time || "Horario"}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-sm font-bold text-white">
+                        {formatCurrencyBRL(getServicePrice(appointment))}
+                      </p>
+                    </div>
+                    <span className={`mt-3 inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold ${getAppointmentStatusClass(status)}`}>
+                      {getAppointmentStatusLabel(status)}
+                    </span>
+                  </article>
+                );
+              })
+            )}
+          </div>
+        </aside>
       </section>
 
       <section className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6">

@@ -715,6 +715,30 @@ const assertPendingAppointmentsHaveResponseFlow = () => {
     }
   });
 };
+
+const assertFinanceShowsOperationalHealth = () => {
+  const financePage = readFileSync(join(root, "src", "pages", "Finance.jsx"), "utf8");
+  const financeUtils = readFileSync(join(root, "src", "utils", "finance.js"), "utf8");
+  const financeTest = readFileSync(join(root, "tests", "finance.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [financePage, "src/pages/Finance.jsx", "Conversao financeira"],
+    [financePage, "src/pages/Finance.jsx", "Receita pendente"],
+    [financePage, "src/pages/Finance.jsx", "Proximos recebimentos"],
+    [financePage, "src/pages/Finance.jsx", "getUpcomingRevenueAppointments"],
+    [financeUtils, "src/utils/finance.js", "calculateFinanceMetrics"],
+    [financeUtils, "src/utils/finance.js", "pendingRevenue"],
+    [financeUtils, "src/utils/finance.js", "completionRate"],
+    [financeTest, "tests/finance.test.js", "calculates realized, projected, pending and lost revenue"],
+    [financeTest, "tests/finance.test.js", "calculates operational conversion rates"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`finance operational health is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -767,6 +791,7 @@ assertSetupDeepLinksGuideFirstRun();
 assertPublicBookingRequiresPrivacyConsent();
 assertPublicBookingShowsConfirmationSummary();
 assertPendingAppointmentsHaveResponseFlow();
+assertFinanceShowsOperationalHealth();
 
 if (failures.length > 0) {
   console.error("Production check failed:");
