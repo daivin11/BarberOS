@@ -594,9 +594,13 @@ const assertWorkspaceDataExportExists = () => {
     [profileSettings, "src/pages/ProfileSettings.jsx", "handleExportData"],
     [profileSettings, "src/pages/ProfileSettings.jsx", "Exportar dados"],
     [profileSettings, "src/pages/ProfileSettings.jsx", "createWorkspaceExportPayload"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "Backup com dados pessoais"],
     [dataExport, "src/utils/dataExport.js", "schemaVersion"],
     [dataExport, "src/utils/dataExport.js", "createWorkspaceExportFilename"],
+    [dataExport, "src/utils/dataExport.js", "containsPersonalData"],
+    [dataExport, "src/utils/dataExport.js", "privacyNotice"],
     [dataExportTest, "tests/dataExport.test.js", "creates a portable workspace export"],
+    [dataExportTest, "tests/dataExport.test.js", "manifest.containsPersonalData"],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {

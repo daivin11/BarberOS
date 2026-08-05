@@ -1,4 +1,6 @@
-const EXPORT_SCHEMA_VERSION = 1;
+const EXPORT_SCHEMA_VERSION = 2;
+const EXPORT_PRIVACY_NOTICE =
+  "Este arquivo contem dados pessoais de clientes e deve ser armazenado com controle de acesso.";
 
 const toExportValue = (value) => {
   if (value === undefined) return null;
@@ -45,9 +47,16 @@ export const createWorkspaceExportPayload = (
     schemaVersion: EXPORT_SCHEMA_VERSION,
     product: "BarberOS",
     generatedAt,
+    manifest: {
+      purpose: "workspace_backup",
+      privacyNotice: EXPORT_PRIVACY_NOTICE,
+      containsPersonalData: true,
+      collections: Object.keys(data),
+    },
     owner: {
       uid: owner.uid || "",
       email: owner.email || "",
+      workspaceName: profile.barbershopName || profile.displayName || "",
     },
     counts: Object.fromEntries(
       Object.entries(data).map(([key, value]) => [key, Array.isArray(value) ? value.length : 1])

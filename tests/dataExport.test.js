@@ -22,7 +22,13 @@ describe("data export utils", () => {
     );
 
     assert.equal(payload.product, "BarberOS");
+    assert.equal(payload.schemaVersion, 2);
     assert.equal(payload.generatedAt, "2026-08-05T12:00:00.000Z");
+    assert.equal(payload.manifest.purpose, "workspace_backup");
+    assert.equal(payload.manifest.containsPersonalData, true);
+    assert.equal(payload.manifest.collections.includes("clients"), true);
+    assert.match(payload.manifest.privacyNotice, /dados pessoais/);
+    assert.equal(payload.owner.workspaceName, "BarberOS Centro");
     assert.equal(payload.counts.clients, 1);
     assert.equal(payload.counts.profile, 1);
     assert.equal(payload.data.profile.createdAt, "2026-08-05T12:00:00.000Z");

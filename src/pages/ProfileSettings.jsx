@@ -453,6 +453,12 @@ export default function ProfileSettings({ workspaceData = {} }) {
               <p className="mt-2 leading-6">
                 Gere um arquivo JSON com perfil, agenda, clientes, servicos, equipe e auditoria carregados no painel.
               </p>
+              <div className="mt-4 rounded-2xl border border-yellow-700/60 bg-yellow-950/30 p-4 text-yellow-100">
+                <p className="font-semibold">Backup com dados pessoais</p>
+                <p className="mt-2 leading-6">
+                  O arquivo pode conter nomes, telefones e historico de atendimento. Salve apenas em local seguro e compartilhe somente com pessoas autorizadas.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={handleExportData}
