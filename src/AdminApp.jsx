@@ -52,6 +52,7 @@ const ADMIN_QUERY_LIMITS = {
   services: 300,
   barbers: 100,
   appointments: 700,
+  auditLogs: 100,
 };
 
 const VALID_APPOINTMENT_STATUSES = new Set(Object.values(APPOINTMENT_STATUS));
@@ -61,6 +62,7 @@ const limitWarnings = {
   services: "Limite de servicos carregados atingido. Revise o catalogo antes de cadastrar muitos itens.",
   barbers: "Limite de barbeiros carregados atingido. Revise a estrutura de equipe antes de expandir.",
   appointments: "Limite de agendamentos da janela operacional atingido. Use filtros por periodo antes de operar uma agenda maior.",
+  auditLogs: "Limite de atividades recentes carregadas atingido. Consulte logs no Firebase para auditorias maiores.",
 };
 
 function RouteLoading() {
@@ -1387,7 +1389,18 @@ export default function AdminApp() {
       case "/perfil":
         return (
           <ProtectedRoute {...routeAuth}>
-            <ProfileSettings />
+            <ProfileSettings
+              workspaceData={{
+                clients,
+                archivedClients,
+                services,
+                archivedServices,
+                barbers,
+                archivedBarbers,
+                appointments,
+                auditLogs,
+              }}
+            />
           </ProtectedRoute>
         );
       case "/setup-profile":

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { createWorkspaceExportFilename, createWorkspaceExportPayload } from "../utils/dataExport";
 import { formatLocalDate } from "../utils/date";
 import { formatDuration } from "../utils/format";
 import { PROFILE_LIMITS, normalizeSlug, validatePublicProfileInput } from "../utils/profileValidation";
@@ -14,7 +15,7 @@ import {
 } from "../utils/schedule";
 import { reportError, trackEvent } from "../utils/telemetry";
 
-export default function ProfileSettings() {
+export default function ProfileSettings({ workspaceData = {} }) {
   const { user, profile, updateProfile, isSlugAvailable } = useAuth();
   const [barbershopName, setBarbershopName] = useState(profile?.barbershopName || "");
   const [slug, setSlug] = useState(profile?.slug || "");
@@ -135,6 +136,40 @@ export default function ProfileSettings() {
       setSaveError("Erro ao salvar o perfil. Tente novamente.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleExportData = () => {
+    try {
+      const generatedAt = new Date();
+      const payload = createWorkspaceExportPayload(
+        {
+          owner: { uid: user?.uid, email: user?.email },
+          profile,
+          ...workspaceData,
+        },
+        { generatedAt }
+      );
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = createWorkspaceExportFilename(profile, generatedAt);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setSaveError("");
+      setSaveSuccess("Exportacao de dados gerada com sucesso.");
+      trackEvent("workspace_data_exported", { source: "profile-settings", action: "export-data" });
+    } catch (error) {
+      reportError(error, { source: "profile-settings", action: "export-data" });
+      setSaveSuccess("");
+      setSaveError("Nao foi possivel exportar os dados agora.");
     }
   };
 
@@ -380,6 +415,19 @@ export default function ProfileSettings() {
                 <p>{phone.trim() ? "OK Telefone informado" : "Pendente Telefone"}</p>
                 <p>{bio.trim() ? "OK Bio publicada" : "Opcional Bio publica"}</p>
               </div>
+            </div>
+            <div className="mt-5 rounded-3xl border border-gray-800 bg-gray-950 p-5 text-sm text-gray-400">
+              <p className="font-semibold text-white">Dados da conta</p>
+              <p className="mt-2 leading-6">
+                Gere um arquivo JSON com perfil, agenda, clientes, servicos, equipe e auditoria carregados no painel.
+              </p>
+              <button
+                type="button"
+                onClick={handleExportData}
+                className="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:border-indigo-400 hover:text-indigo-100"
+              >
+                Exportar dados
+              </button>
             </div>
           </aside>
         </form>

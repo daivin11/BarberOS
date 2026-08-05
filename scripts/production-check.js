@@ -564,6 +564,30 @@ const assertFirebaseAppCheckIsConfigurable = () => {
     }
   });
 };
+
+const assertWorkspaceDataExportExists = () => {
+  const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
+  const profileSettings = readFileSync(join(root, "src", "pages", "ProfileSettings.jsx"), "utf8");
+  const dataExport = readFileSync(join(root, "src", "utils", "dataExport.js"), "utf8");
+  const dataExportTest = readFileSync(join(root, "tests", "dataExport.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [adminApp, "src/AdminApp.jsx", "auditLogs: 100"],
+    [adminApp, "src/AdminApp.jsx", "workspaceData"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "handleExportData"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "Exportar dados"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "createWorkspaceExportPayload"],
+    [dataExport, "src/utils/dataExport.js", "schemaVersion"],
+    [dataExport, "src/utils/dataExport.js", "createWorkspaceExportFilename"],
+    [dataExportTest, "tests/dataExport.test.js", "creates a portable workspace export"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`workspace data export is incomplete in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -610,6 +634,7 @@ assertAppointmentsUseDateWindow();
 assertAvailabilityContractIsBounded();
 assertBarberContractIsBounded();
 assertFirebaseAppCheckIsConfigurable();
+assertWorkspaceDataExportExists();
 
 if (failures.length > 0) {
   console.error("Production check failed:");
