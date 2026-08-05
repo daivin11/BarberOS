@@ -1,6 +1,6 @@
 # BarberOS
 
-[![CI](https://github.com/daivin11/trimly/actions/workflows/ci.yml/badge.svg)](https://github.com/daivin11/trimly/actions/workflows/ci.yml)
+[![CI](https://github.com/daivin11/BarberOS/actions/workflows/ci.yml/badge.svg)](https://github.com/daivin11/BarberOS/actions/workflows/ci.yml)
 
 BarberOS e um SaaS para barbearias com agenda online, clientes, servicos, equipe multi-barbeiro, financeiro, templates de WhatsApp e pagina publica de agendamento.
 
