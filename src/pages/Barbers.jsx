@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { collection, addDoc, updateDoc, doc, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "../services/firebase";
 import EmptyState from "../components/EmptyState";
@@ -31,6 +32,7 @@ export default function Barbers({
   notify = () => {},
 }) {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [barbers, setBarbers] = useState(syncedBarbers);
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -38,6 +40,7 @@ export default function Barbers({
   const [editingBarber, setEditingBarber] = useState(null);
   const [deleteBarber, setDeleteBarber] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const isSetupMode = searchParams.get("setup") === "barbers";
 
   useEffect(() => {
     setBarbers(syncedBarbers);
@@ -222,6 +225,29 @@ export default function Barbers({
             <p className="mt-2 text-2xl font-black">{loading ? "..." : barbers.length}</p>
           </div>
         </div>
+        {isSetupMode && barbers.length === 0 && !loading && (
+          <div className="rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5">
+            <p className="text-sm uppercase tracking-[0.25em] text-indigo-200">Etapa de ativacao</p>
+            <h2 className="mt-2 text-xl font-bold">Cadastre quem atende na agenda</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-300">
+              Cada barbeiro vira uma opcao no link publico e uma coluna na agenda diaria.
+            </p>
+          </div>
+        )}
+        {isSetupMode && barbers.length > 0 && (
+          <div className="flex flex-col gap-3 rounded-3xl border border-emerald-600/40 bg-emerald-950/40 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-emerald-200">Equipe pronta</p>
+              <p className="mt-1 text-sm text-gray-300">Crie um agendamento teste para validar o fluxo completo.</p>
+            </div>
+            <Link
+              to="/agenda?setup=first-booking"
+              className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
+            >
+              Ir para agenda
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">

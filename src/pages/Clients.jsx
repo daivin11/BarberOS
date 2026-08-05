@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import { formatBrazilianPhone, normalizePhone } from "../utils/phone";
 
@@ -13,6 +14,7 @@ function getInitials(name = "CL") {
 }
 
 export default function Clients({ clients, archivedClients = [], addClient, updateClient, deleteClient, restoreClient, loading }) {
+  const [searchParams] = useSearchParams();
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [search, setSearch] = useState("");
@@ -21,6 +23,7 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
   const isLoading = loading ?? false;
+  const isSetupMode = searchParams.get("setup") === "clients";
   const cleanPhone = normalizePhone(clientPhone);
   const duplicatedClient = useMemo(
     () =>
@@ -120,6 +123,15 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
             <p className="mt-2 text-2xl font-black">{isLoading ? "..." : clients.length}</p>
           </div>
         </div>
+        {isSetupMode && clients.length === 0 && !isLoading && (
+          <div className="rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5">
+            <p className="text-sm uppercase tracking-[0.25em] text-indigo-200">Etapa de ativacao</p>
+            <h2 className="mt-2 text-xl font-bold">Cadastre um cliente para operar encaixes internos</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-300">
+              Clientes publicos entram pela pagina de agendamento, mas uma base inicial ajuda a testar telefone, agenda e WhatsApp.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">

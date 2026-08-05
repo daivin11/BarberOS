@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { createWorkspaceExportFilename, createWorkspaceExportPayload } from "../utils/dataExport";
 import { formatLocalDate } from "../utils/date";
@@ -17,6 +18,7 @@ import { reportError, trackEvent } from "../utils/telemetry";
 
 export default function ProfileSettings({ workspaceData = {} }) {
   const { user, profile, updateProfile, isSlugAvailable } = useAuth();
+  const [searchParams] = useSearchParams();
   const [barbershopName, setBarbershopName] = useState(profile?.barbershopName || "");
   const [slug, setSlug] = useState(profile?.slug || "");
   const [phone, setPhone] = useState(profile?.phone || "");
@@ -32,6 +34,18 @@ export default function ProfileSettings({ workspaceData = {} }) {
 
   const normalizedSlug = useMemo(() => normalizeSlug(slug || ""), [slug]);
   const previewUrl = normalizedSlug ? `${window.location.origin}/${normalizedSlug}` : "";
+  const setupStep = searchParams.get("setup");
+  const isSetupMode = setupStep === "profile" || setupStep === "hours";
+  const setupCopy =
+    setupStep === "hours"
+      ? {
+          title: "Defina os horarios que geram sua agenda publica",
+          description: "A grade de horarios usa abertura, fechamento, intervalo e datas bloqueadas para evitar reservas impossiveis.",
+        }
+      : {
+          title: "Complete o perfil publico antes de divulgar o link",
+          description: "Nome, telefone, URL e bio deixam o cliente seguro de que esta agendando na barbearia certa.",
+        };
 
   useEffect(() => {
     setBarbershopName(profile?.barbershopName || "");
@@ -195,6 +209,24 @@ export default function ProfileSettings({ workspaceData = {} }) {
             </a>
           )}
         </div>
+
+        {isSetupMode && (
+          <div className="flex flex-col gap-3 rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-indigo-200">Etapa de ativacao</p>
+              <h2 className="mt-2 text-xl font-bold">{setupCopy.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-gray-300">{setupCopy.description}</p>
+            </div>
+            {profile?.profileComplete && profile?.businessHours?.start && profile?.businessHours?.end && (
+              <Link
+                to="/servicos?setup=services"
+                className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
+              >
+                Ir para servicos
+              </Link>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
           <section className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6 lg:p-8">

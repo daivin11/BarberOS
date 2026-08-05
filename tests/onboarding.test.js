@@ -58,7 +58,7 @@ describe("onboarding utils", () => {
 
     assert.equal(readiness.isReady, false);
     assert.deepEqual(readiness.missing.map((item) => item.id), ["barbers"]);
-    assert.equal(readiness.nextStep.to, "/barbeiros");
+    assert.equal(readiness.nextStep.to, "/barbeiros?setup=barbers");
   });
 
   it("marks the public booking link ready with the operational minimum", () => {

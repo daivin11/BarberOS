@@ -12,7 +12,7 @@ export const getActivationItems = ({
     impact: "Libera a pagina publica da barbearia.",
     actionLabel: "Revisar perfil",
     done: Boolean(profile?.profileComplete && profile?.slug && profile?.barbershopName),
-    to: "/perfil",
+    to: "/perfil?setup=profile",
   },
   {
     id: "hours",
@@ -21,7 +21,7 @@ export const getActivationItems = ({
     impact: "Evita horarios impossiveis no link publico.",
     actionLabel: "Configurar horarios",
     done: Boolean(profile?.businessHours?.start && profile?.businessHours?.end),
-    to: "/perfil",
+    to: "/perfil?setup=hours",
   },
   {
     id: "services",
@@ -30,7 +30,7 @@ export const getActivationItems = ({
     impact: "Sem servico publicado, o cliente nao consegue agendar.",
     actionLabel: "Adicionar servico",
     done: servicesCount > 0,
-    to: "/servicos",
+    to: "/servicos?setup=services",
   },
   {
     id: "barbers",
@@ -39,7 +39,7 @@ export const getActivationItems = ({
     impact: "Permite separar agenda por barbeiro.",
     actionLabel: "Adicionar barbeiro",
     done: barbersCount > 0,
-    to: "/barbeiros",
+    to: "/barbeiros?setup=barbers",
   },
   {
     id: "first-booking",
@@ -48,7 +48,7 @@ export const getActivationItems = ({
     impact: "Confirma que o fluxo operacional esta funcionando.",
     actionLabel: "Criar agendamento",
     done: appointmentsCount > 0,
-    to: "/agenda",
+    to: "/agenda?setup=first-booking",
   },
   {
     id: "clients",
@@ -57,7 +57,7 @@ export const getActivationItems = ({
     impact: "Ajuda a operar alem dos agendamentos publicos.",
     actionLabel: "Adicionar cliente",
     done: clientsCount > 0,
-    to: "/clientes",
+    to: "/clientes?setup=clients",
   },
 ];
 
@@ -88,7 +88,7 @@ export const getPublicBookingReadiness = ({
     missing.push({
       id: "profile",
       label: "Complete o perfil publico",
-      to: "/perfil",
+      to: "/perfil?setup=profile",
     });
   }
 
@@ -96,7 +96,7 @@ export const getPublicBookingReadiness = ({
     missing.push({
       id: "hours",
       label: "Defina horarios de funcionamento",
-      to: "/perfil",
+      to: "/perfil?setup=hours",
     });
   }
 
@@ -104,7 +104,7 @@ export const getPublicBookingReadiness = ({
     missing.push({
       id: "services",
       label: "Cadastre pelo menos um servico",
-      to: "/servicos",
+      to: "/servicos?setup=services",
     });
   }
 
@@ -112,7 +112,7 @@ export const getPublicBookingReadiness = ({
     missing.push({
       id: "barbers",
       label: "Cadastre pelo menos um barbeiro",
-      to: "/barbeiros",
+      to: "/barbeiros?setup=barbers",
     });
   }
 

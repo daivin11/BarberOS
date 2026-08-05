@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import AppointmentCard from "../components/AppointmentCard";
 import EmptyState from "../components/EmptyState";
 import {
@@ -65,10 +66,12 @@ export default function Schedule({
   updateAppointmentStatus,
   updateAppointment,
 }) {
+  const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState("active");
   const today = formatLocalDate();
   const [calendarDate, setCalendarDate] = useState(today);
   const needsData = !loading && (clients.length === 0 || services.length === 0 || barbers.length === 0);
+  const isSetupMode = searchParams.get("setup") === "first-booking";
   const appointmentWindowLabel = getAppointmentWindowLabel(appointmentWindow);
   const isCalendarAtStart = calendarDate <= appointmentWindow.startDate;
   const isCalendarAtEnd = calendarDate >= appointmentWindow.endDate;
@@ -233,6 +236,29 @@ export default function Schedule({
             }
             variant="warning"
           />
+        )}
+        {isSetupMode && !loading && !needsData && appointments.length === 0 && (
+          <div className="rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5">
+            <p className="text-sm uppercase tracking-[0.25em] text-indigo-200">Etapa de ativacao</p>
+            <h2 className="mt-2 text-xl font-bold">Crie um agendamento teste</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-300">
+              Selecione cliente, servico, barbeiro, data e horario para validar conflito de slots, status e lembrete por WhatsApp.
+            </p>
+          </div>
+        )}
+        {isSetupMode && !loading && appointments.length > 0 && (
+          <div className="flex flex-col gap-3 rounded-3xl border border-emerald-600/40 bg-emerald-950/40 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-emerald-200">Fluxo validado</p>
+              <p className="mt-1 text-sm text-gray-300">Agora revise o dashboard e compartilhe o link publico se ele estiver pronto.</p>
+            </div>
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
+            >
+              Voltar ao dashboard
+            </Link>
+          </div>
         )}
       </div>
 

@@ -612,6 +612,37 @@ const assertPublicLinkReadinessGuardsSharing = () => {
     }
   });
 };
+
+const assertSetupDeepLinksGuideFirstRun = () => {
+  const onboarding = readFileSync(join(root, "src", "utils", "onboarding.js"), "utf8");
+  const profileSettings = readFileSync(join(root, "src", "pages", "ProfileSettings.jsx"), "utf8");
+  const servicesPage = readFileSync(join(root, "src", "pages", "Services.jsx"), "utf8");
+  const barbersPage = readFileSync(join(root, "src", "pages", "Barbers.jsx"), "utf8");
+  const clientsPage = readFileSync(join(root, "src", "pages", "Clients.jsx"), "utf8");
+  const schedulePage = readFileSync(join(root, "src", "pages", "Schedule.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [onboarding, "src/utils/onboarding.js", "/perfil?setup=profile"],
+    [onboarding, "src/utils/onboarding.js", "/servicos?setup=services"],
+    [onboarding, "src/utils/onboarding.js", "/barbeiros?setup=barbers"],
+    [onboarding, "src/utils/onboarding.js", "/agenda?setup=first-booking"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "setupStep"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "Ir para servicos"],
+    [servicesPage, "src/pages/Services.jsx", "isSetupMode"],
+    [servicesPage, "src/pages/Services.jsx", "Ir para equipe"],
+    [barbersPage, "src/pages/Barbers.jsx", "isSetupMode"],
+    [barbersPage, "src/pages/Barbers.jsx", "Ir para agenda"],
+    [clientsPage, "src/pages/Clients.jsx", "isSetupMode"],
+    [schedulePage, "src/pages/Schedule.jsx", "Crie um agendamento teste"],
+    [schedulePage, "src/pages/Schedule.jsx", "Voltar ao dashboard"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`setup deep link guidance is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -660,6 +691,7 @@ assertBarberContractIsBounded();
 assertFirebaseAppCheckIsConfigurable();
 assertWorkspaceDataExportExists();
 assertPublicLinkReadinessGuardsSharing();
+assertSetupDeepLinksGuideFirstRun();
 
 if (failures.length > 0) {
   console.error("Production check failed:");

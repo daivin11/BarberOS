@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import { isActiveAppointment } from "../utils/appointments";
 import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
@@ -38,6 +39,7 @@ export default function Services({
   loading = false,
   notify = () => {},
 }) {
+  const [searchParams] = useSearchParams();
   const [serviceName, setServiceName] = useState("");
   const [servicePrice, setServicePrice] = useState("");
   const [serviceDuration, setServiceDuration] = useState("30");
@@ -47,6 +49,7 @@ export default function Services({
   const [editDuration, setEditDuration] = useState("30");
   const [confirmDeleteService, setConfirmDeleteService] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const isSetupMode = searchParams.get("setup") === "services";
 
   const appointmentsByService = useMemo(() => {
     return appointments.reduce((map, appointment) => {
@@ -167,6 +170,29 @@ export default function Services({
             </div>
           </div>
         </div>
+        {isSetupMode && services.length === 0 && !loading && (
+          <div className="rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5">
+            <p className="text-sm uppercase tracking-[0.25em] text-indigo-200">Etapa de ativacao</p>
+            <h2 className="mt-2 text-xl font-bold">Cadastre o primeiro servico para liberar o link publico</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-300">
+              Use uma sugestao pronta ou informe nome, preco e duracao. Depois disso, falta cadastrar a equipe.
+            </p>
+          </div>
+        )}
+        {isSetupMode && services.length > 0 && (
+          <div className="flex flex-col gap-3 rounded-3xl border border-emerald-600/40 bg-emerald-950/40 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-emerald-200">Servico pronto</p>
+              <p className="mt-1 text-sm text-gray-300">Agora cadastre pelo menos um barbeiro para receber agendamentos.</p>
+            </div>
+            <Link
+              to="/barbeiros?setup=barbers"
+              className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
+            >
+              Ir para equipe
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
