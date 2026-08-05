@@ -814,6 +814,27 @@ const assertClientListSupportsWhatsAppContact = () => {
     }
   });
 };
+
+const assertWhatsAppTemplatesAreDomainDriven = () => {
+  const whatsappPage = readFileSync(join(root, "src", "pages", "WhatsApp.jsx"), "utf8");
+  const whatsappTemplates = readFileSync(join(root, "src", "utils", "whatsappTemplates.js"), "utf8");
+  const whatsappTemplatesTest = readFileSync(join(root, "tests", "whatsappTemplates.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [whatsappPage, "src/pages/WhatsApp.jsx", "WHATSAPP_TEMPLATES"],
+    [whatsappPage, "src/pages/WhatsApp.jsx", "renderWhatsAppTemplate"],
+    [whatsappTemplates, "src/utils/whatsappTemplates.js", "Pedido de avaliacao"],
+    [whatsappTemplates, "src/utils/whatsappTemplates.js", "Reagendamento"],
+    [whatsappTemplates, "src/utils/whatsappTemplates.js", "WHATSAPP_TEMPLATE_VARIABLES"],
+    [whatsappTemplatesTest, "tests/whatsappTemplates.test.js", "keeps a useful catalog"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`WhatsApp template domain is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -870,6 +891,7 @@ assertFinanceShowsOperationalHealth();
 assertAdminDataSyncCanRetry();
 assertPublicBookingSubmitRespectsAvailability();
 assertClientListSupportsWhatsAppContact();
+assertWhatsAppTemplatesAreDomainDriven();
 
 if (failures.length > 0) {
   console.error("Production check failed:");

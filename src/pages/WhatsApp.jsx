@@ -1,51 +1,21 @@
 import { useMemo, useState } from "react";
 import { createWhatsAppUrl } from "../utils/phone";
-
-const templates = [
-  {
-    id: "reminder",
-    label: "Lembrete de agendamento",
-    intent: "Confirmacao",
-    message:
-      "Oi {clientName}, aqui e da barbearia. Lembrete rapido: seu horario esta marcado para {date} as {time}. Pode confirmar pra gente?",
-  },
-  {
-    id: "comeback",
-    label: "Retorno do cliente",
-    intent: "Reativacao",
-    message:
-      "Ola {clientName}, sentimos sua falta por aqui. Quer agendar um horario para renovar o visual esta semana?",
-  },
-  {
-    id: "postservice",
-    label: "Pos-atendimento",
-    intent: "Relacionamento",
-    message:
-      "Valeu pela confianca, {clientName}. Foi um prazer te atender. Quando quiser, estamos prontos para o proximo corte.",
-  },
-];
-
-const sampleData = {
-  clientName: "Gabriel",
-  date: "28/07",
-  time: "14:30",
-};
-
-const renderTemplate = (message) =>
-  message
-    .replaceAll("{clientName}", sampleData.clientName)
-    .replaceAll("{date}", sampleData.date)
-    .replaceAll("{time}", sampleData.time);
+import {
+  getWhatsAppTemplateById,
+  renderWhatsAppTemplate,
+  WHATSAPP_TEMPLATES,
+  WHATSAPP_TEMPLATE_VARIABLES,
+} from "../utils/whatsappTemplates";
 
 export default function WhatsApp() {
   const [copied, setCopied] = useState("");
-  const [selectedTemplateId, setSelectedTemplateId] = useState(templates[0].id);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(WHATSAPP_TEMPLATES[0].id);
 
   const selectedTemplate = useMemo(
-    () => templates.find((template) => template.id === selectedTemplateId) || templates[0],
+    () => getWhatsAppTemplateById(selectedTemplateId),
     [selectedTemplateId]
   );
-  const previewMessage = renderTemplate(selectedTemplate.message);
+  const previewMessage = renderWhatsAppTemplate(selectedTemplate.message);
   const whatsappUrl = createWhatsAppUrl({ message: previewMessage });
 
   function copyTemplate(text, id) {
@@ -69,7 +39,7 @@ export default function WhatsApp() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <section className="grid gap-4 lg:grid-cols-3 xl:grid-cols-1">
-          {templates.map((template) => {
+          {WHATSAPP_TEMPLATES.map((template) => {
             const selected = selectedTemplateId === template.id;
             return (
               <button
@@ -111,7 +81,8 @@ export default function WhatsApp() {
           </div>
 
           <div className="mt-6 grid gap-3">
-            <button type="button"
+            <button
+              type="button"
               onClick={() => copyTemplate(selectedTemplate.message, selectedTemplate.id)}
               className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
             >
@@ -128,9 +99,13 @@ export default function WhatsApp() {
           </div>
 
           <div className="mt-6 rounded-2xl border border-gray-800 bg-gray-950 p-4 text-sm text-gray-400">
-            Variaveis aceitas: <span className="text-gray-200">{"{clientName}"}</span>,{" "}
-            <span className="text-gray-200">{"{date}"}</span>,{" "}
-            <span className="text-gray-200">{"{time}"}</span>.
+            Variaveis aceitas:{" "}
+            {WHATSAPP_TEMPLATE_VARIABLES.map((variableName, index) => (
+              <span key={variableName}>
+                <span className="text-gray-200">{`{${variableName}}`}</span>
+                {index < WHATSAPP_TEMPLATE_VARIABLES.length - 1 ? ", " : "."}
+              </span>
+            ))}
           </div>
         </aside>
       </div>
