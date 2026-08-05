@@ -406,6 +406,7 @@ const assertServiceContractIsBounded = () => {
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
   const servicesPage = readFileSync(join(root, "src", "pages", "Services.jsx"), "utf8");
   const serviceUtils = readFileSync(join(root, "src", "utils", "services.js"), "utf8");
+  const serviceUtilsTest = readFileSync(join(root, "tests", "services.test.js"), "utf8");
 
   const requiredRuleSnippets = [
     "request.resource.data.price <= 100000",
@@ -426,6 +427,21 @@ const assertServiceContractIsBounded = () => {
   if (!serviceUtils.includes("priceMax: 100000") || !serviceUtils.includes("durationMax: 240")) {
     failures.push("service validation limits are missing: src/utils/services.js");
   }
+
+  const duplicateGuardSnippets = [
+    [adminApp, "src/AdminApp.jsx", "findDuplicateServiceByName"],
+    [servicesPage, "src/pages/Services.jsx", "duplicateNewService"],
+    [servicesPage, "src/pages/Services.jsx", "duplicateEditedService"],
+    [serviceUtils, "src/utils/services.js", "normalizeServiceNameKey"],
+    [serviceUtils, "src/utils/services.js", "findDuplicateServiceByName"],
+    [serviceUtilsTest, "tests/services.test.js", "finds duplicate active services"],
+  ];
+
+  duplicateGuardSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`service duplicate-name guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
 };
 
 const assertBarberContractIsBounded = () => {

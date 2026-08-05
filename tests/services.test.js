@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   SERVICE_LIMITS,
+  findDuplicateServiceByName,
   normalizeServiceInput,
+  normalizeServiceNameKey,
   validateServiceInput,
 } from "../src/utils/services.js";
 
@@ -12,6 +14,7 @@ describe("service utils", () => {
       normalizeServiceInput({ name: " Corte ", price: "45", duration: "30" }),
       { name: "Corte", price: 45, duration: 30 }
     );
+    assert.equal(normalizeServiceNameKey("  Corte   Masculino  "), "corte masculino");
   });
 
   it("accepts valid service input", () => {
@@ -21,5 +24,16 @@ describe("service utils", () => {
   it("rejects unsafe service price and duration", () => {
     assert.match(validateServiceInput({ name: "Corte", price: SERVICE_LIMITS.priceMax + 1, duration: 30 }), /Preco/);
     assert.match(validateServiceInput({ name: "Corte", price: 45, duration: 10 }), /Duracao/);
+  });
+
+  it("finds duplicate active services by normalized name", () => {
+    const services = [
+      { id: "1", name: "Corte Masculino" },
+      { id: "2", name: "Barba", isArchived: true },
+    ];
+
+    assert.equal(findDuplicateServiceByName(services, " corte masculino ")?.id, "1");
+    assert.equal(findDuplicateServiceByName(services, "CORTE MASCULINO", "1"), null);
+    assert.equal(findDuplicateServiceByName(services, "barba"), null);
   });
 });

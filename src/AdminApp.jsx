@@ -31,7 +31,7 @@ import {
   isValidAppointmentTime,
   timeToMinutes,
 } from "./utils/schedule";
-import { normalizeServiceInput, validateServiceInput } from "./utils/services";
+import { findDuplicateServiceByName, normalizeServiceInput, validateServiceInput } from "./utils/services";
 import { reportError, trackEvent } from "./utils/telemetry";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -619,6 +619,11 @@ export default function AdminApp() {
       return false;
     }
 
+    if (findDuplicateServiceByName(services, serviceInput.name)) {
+      notify("Ja existe um servico ativo com este nome.");
+      return false;
+    }
+
     try {
       const newService = {
         name: serviceInput.name,
@@ -654,6 +659,11 @@ export default function AdminApp() {
 
     if (validationError) {
       notify(validationError);
+      return false;
+    }
+
+    if (findDuplicateServiceByName(services, serviceInput.name, serviceId)) {
+      notify("Ja existe outro servico ativo com este nome.");
       return false;
     }
 
@@ -807,6 +817,11 @@ export default function AdminApp() {
     const archivedService = archivedServices.find((service) => service.id === serviceId);
     if (!archivedService) {
       notify("Servico arquivado nao encontrado.");
+      return false;
+    }
+
+    if (findDuplicateServiceByName(services, archivedService.name)) {
+      notify("Ja existe um servico ativo com este nome. Renomeie ou arquive o servico ativo antes de restaurar.");
       return false;
     }
 

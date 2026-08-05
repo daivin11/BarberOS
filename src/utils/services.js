@@ -13,6 +13,26 @@ export const normalizeServiceInput = ({ name, price, duration }) => ({
   duration: Number(duration) || 30,
 });
 
+export const normalizeServiceNameKey = (name = "") =>
+  String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+export const findDuplicateServiceByName = (services = [], name = "", ignoredServiceId = "") => {
+  const nameKey = normalizeServiceNameKey(name);
+  if (!nameKey) return null;
+
+  return (
+    services.find(
+      (service) =>
+        String(service.id || "") !== String(ignoredServiceId || "") &&
+        !service.isArchived &&
+        normalizeServiceNameKey(service.name) === nameKey
+    ) || null
+  );
+};
+
 export const validateServiceInput = ({ name, price, duration }) => {
   const service = normalizeServiceInput({ name, price, duration });
 

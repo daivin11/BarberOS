@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import { isActiveAppointment } from "../utils/appointments";
 import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
-import { SERVICE_LIMITS, validateServiceInput } from "../utils/services";
+import { SERVICE_LIMITS, findDuplicateServiceByName, validateServiceInput } from "../utils/services";
 
 const durationOptions = [15, 30, 45, 60, 90, 120];
 
@@ -50,6 +50,10 @@ export default function Services({
   const [confirmDeleteService, setConfirmDeleteService] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
   const isSetupMode = searchParams.get("setup") === "services";
+  const duplicateNewService = findDuplicateServiceByName(services, serviceName);
+  const duplicateEditedService = editingService
+    ? findDuplicateServiceByName(services, editName, editingService.id)
+    : null;
 
   const appointmentsByService = useMemo(() => {
     return appointments.reduce((map, appointment) => {
@@ -75,6 +79,11 @@ export default function Services({
     });
     if (validationError) {
       notify(validationError);
+      return;
+    }
+
+    if (duplicateNewService) {
+      notify("Ja existe um servico ativo com este nome.");
       return;
     }
 
@@ -117,6 +126,11 @@ export default function Services({
     });
     if (validationError) {
       notify(validationError);
+      return;
+    }
+
+    if (duplicateEditedService) {
+      notify("Ja existe outro servico ativo com este nome.");
       return;
     }
 
@@ -263,11 +277,21 @@ export default function Services({
             </label>
 
             <button type="button"
-              className="w-full rounded-2xl bg-white py-4 font-semibold text-black transition hover:bg-gray-200"
+              className={`w-full rounded-2xl py-4 font-semibold transition ${
+                duplicateNewService
+                  ? "cursor-not-allowed bg-gray-700 text-gray-400"
+                  : "bg-white text-black hover:bg-gray-200"
+              }`}
               onClick={handleAdd}
+              disabled={Boolean(duplicateNewService)}
             >
               Adicionar servico
             </button>
+            {duplicateNewService && (
+              <p className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100">
+                Ja existe um servico ativo chamado {duplicateNewService.name}.
+              </p>
+            )}
           </div>
         </section>
 
@@ -433,6 +457,11 @@ export default function Services({
                 ))}
               </select>
             </div>
+            {duplicateEditedService && (
+              <p className="mt-4 rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100">
+                Ja existe outro servico ativo chamado {duplicateEditedService.name}.
+              </p>
+            )}
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
@@ -445,7 +474,12 @@ export default function Services({
               <button
                 type="button"
                 onClick={handleEditSave}
-                className="rounded-3xl bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
+                disabled={Boolean(duplicateEditedService)}
+                className={`rounded-3xl px-6 py-3 text-sm font-semibold transition ${
+                  duplicateEditedService
+                    ? "cursor-not-allowed bg-gray-700 text-gray-400"
+                    : "bg-white text-black hover:bg-gray-200"
+                }`}
               >
                 Salvar alteracoes
               </button>
