@@ -35,6 +35,7 @@ export default function PublicBooking() {
   const [services, setServices] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [fatalError, setFatalError] = useState("");
   const [formError, setFormError] = useState("");
   const [name, setName] = useState("");
@@ -86,6 +87,7 @@ export default function PublicBooking() {
     Boolean(date) &&
     Boolean(time) &&
     isPrivacyConsentAccepted(privacyAccepted) &&
+    !slotsLoading &&
     timeSlots.includes(time) &&
     isTimeAvailable(time) &&
     !isBlockedDate &&
@@ -181,11 +183,18 @@ export default function PublicBooking() {
   }, [routeSlug]);
 
   useEffect(() => {
+    let isActive = true;
+
     const loadBookedSlots = async () => {
       if (!barber?.uid || !selectedBarber?.id || !date) {
         setBookedSlots([]);
+        setSlotsLoading(false);
         return;
       }
+
+      setSlotsLoading(true);
+      setBookedSlots([]);
+      setFormError("");
 
       try {
         const slotsQuery = query(
@@ -198,14 +207,22 @@ export default function PublicBooking() {
         );
         const slotsSnapshot = await getDocs(slotsQuery);
         const slotsList = slotsSnapshot.docs.map((slotDoc) => ({ id: slotDoc.id, ...slotDoc.data() }));
+        if (!isActive) return;
         setBookedSlots(slotsList);
       } catch (err) {
+        if (!isActive) return;
         reportError(err, { source: "public-booking", action: "load-slots" });
         setFormError("Nao foi possivel carregar os horarios ocupados. Tente trocar a data.");
+      } finally {
+        if (isActive) setSlotsLoading(false);
       }
     };
 
     loadBookedSlots();
+
+    return () => {
+      isActive = false;
+    };
   }, [barber?.uid, selectedBarber?.id, date]);
 
   const bookAppointment = async () => {
@@ -444,6 +461,11 @@ export default function PublicBooking() {
   const brandName = barber?.barbershopName || barber?.displayName || "Barbearia premium";
   const barberName = barber?.displayName || barber?.barbershopName || "Seu barbeiro";
   const brandTagline = barber?.bio || "Agende online o seu proximo corte de forma rapida e elegante.";
+  const availabilityLabel = slotsLoading
+    ? "Carregando"
+    : selectedBarber
+    ? `${availableSlots.length} ${availableSlots.length === 1 ? "disponivel" : "disponiveis"}`
+    : "Selecione um barbeiro";
   const today = formatLocalDate();
   return (
     <main className="min-h-screen bg-gray-950 px-4 py-5 text-white sm:px-6 sm:py-8 lg:px-10">
@@ -759,9 +781,7 @@ export default function PublicBooking() {
                         <p className="mt-2 text-base text-white">Horarios disponiveis para {new Date(date).toLocaleDateString("pt-BR")}</p>
                       </div>
                       <span className="rounded-full bg-gray-900 px-3 py-1 text-xs uppercase tracking-[0.2em] text-gray-400">
-                        {selectedBarber
-                          ? `${availableSlots.length} ${availableSlots.length === 1 ? "disponivel" : "disponiveis"}`
-                          : "Selecione um barbeiro"}
+                        {availabilityLabel}
                       </span>
                     </div>
 
@@ -775,6 +795,13 @@ export default function PublicBooking() {
                     ) : !selectedBarber ? (
                       <div className="rounded-3xl border border-dashed border-gray-700 bg-gray-950 p-5 text-sm text-gray-300">
                         Selecione um barbeiro primeiro para ver os horarios disponiveis.
+                      </div>
+                    ) : slotsLoading ? (
+                      <div className="rounded-3xl border border-dashed border-indigo-500/50 bg-indigo-950/40 p-5 text-sm text-indigo-100">
+                        <p className="font-semibold">Carregando horarios</p>
+                        <p className="mt-2 text-gray-300">
+                          Estamos atualizando a disponibilidade para esta data antes de liberar a solicitacao.
+                        </p>
                       </div>
                     ) : availableSlots.length > 0 ? (
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
@@ -833,7 +860,7 @@ export default function PublicBooking() {
                   onClick={bookAppointment}
                   disabled={!canSubmit}
                 >
-                  {submitLoading ? "Enviando..." : "Solicitar agendamento"}
+                  {submitLoading ? "Enviando..." : slotsLoading ? "Atualizando horarios..." : "Solicitar agendamento"}
                 </button>
               </div>
             </section>

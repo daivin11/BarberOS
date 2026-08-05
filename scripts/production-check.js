@@ -854,6 +854,11 @@ const assertPublicBookingSubmitRespectsAvailability = () => {
   const requiredSnippets = [
     [publicBooking, "src/pages/PublicBooking.jsx", "isTimeSlotAvailable"],
     [publicBooking, "src/pages/PublicBooking.jsx", "isTimeAvailable(time)"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "slotsLoading"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "let isActive = true"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "setBookedSlots([])"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "!slotsLoading"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "Carregando horarios"],
     [scheduleUtils, "src/utils/schedule.js", "export const isTimeSlotAvailable"],
     [scheduleTest, "tests/schedule.test.js", "detects whether a public booking slot is still available"],
   ];
