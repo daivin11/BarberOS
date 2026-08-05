@@ -37,6 +37,9 @@ jobs:
       - name: Run production checklist
         run: npm run check:production
 
+      - name: Validate hosting configuration
+        run: npm run check:hosting
+
       - name: Build application
         run: npm run build
 

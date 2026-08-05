@@ -65,12 +65,14 @@ npm run dev
 npm test
 npm run lint
 npm run check:production
+npm run check:hosting
 npm run build
 npm run check:bundle
 ```
 
 Os testes atuais cobrem regras puras de horarios, slots, conflito de agenda, trial, billing, telefones, auth actions, onboarding, validacao de perfil e utilitarios de dados.
 O check de producao bloqueia regressao obvia de marca antiga, alerts, placeholders, chaves hardcoded, regras Firestore perigosas e ausencia de protecoes criticas de dados.
+O check de hosting valida fallback SPA, headers de seguranca, cache imutavel de assets e assets publicos de lancamento no Firebase Hosting e Vercel.
 O check de bundle roda depois do build e impede crescimento excessivo de JS/CSS gzipado.
 
 ## CI
@@ -81,6 +83,7 @@ A cada push ou pull request para a branch principal, o GitHub Actions executa au
 - Testes com `npm test`
 - Analise de codigo com `npm run lint`
 - Check de producao com `npm run check:production`
+- Validacao de hosting com `npm run check:hosting`
 - Build de producao com `npm run build`
 - Budget de bundle com `npm run check:bundle`
 
@@ -138,7 +141,7 @@ Antes do primeiro deploy publico, confirme o dominio final, configure `VITE_AUTH
 ## Observacoes de producao
 
 - As configuracoes do Firebase usadas no front-end sao publicas por natureza; a seguranca depende principalmente das Firestore Rules.
-- Antes de publicar novas regras, rode `npm test`, `npm run lint`, `npm run check:production`, `npm run build`, `npm run check:bundle` e faca deploy restrito apenas do Firestore quando a alteracao for de banco.
+- Antes de publicar novas regras, rode `npm test`, `npm run lint`, `npm run check:production`, `npm run check:hosting`, `npm run build`, `npm run check:bundle` e faca deploy restrito apenas do Firestore quando a alteracao for de banco.
 - Antes de liberar trafego publico, configure Firebase App Check com reCAPTCHA v3, publique `VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY` no ambiente de deploy e ative enforcement gradualmente no Firebase Console.
 - Para ativar contato direto na tela de conta bloqueada, configure `VITE_SUPPORT_WHATSAPP`.
 - O gateway de pagamento ainda nao esta implementado. Campos de assinatura e solicitacoes de renovacao existem para operacao manual/admin/server-side; o usuario nao pode ativar plano pago pelo front-end.

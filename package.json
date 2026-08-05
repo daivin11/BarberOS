@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "node --test",
     "check:production": "node scripts/production-check.js",
+    "check:hosting": "node scripts/hosting-check.js",
     "check:bundle": "node scripts/bundle-budget.js",
     "preview": "vite preview"
   },
