@@ -144,13 +144,53 @@ service cloud.firestore {
         && slug is string
         && exists(/databases/$(database)/documents/publicProfiles/$(userId))
         && get(/databases/$(database)/documents/publicProfiles/$(userId)).data.slug == slug
-        && get(/databases/$(database)/documents/publicProfiles/$(userId)).data.profileComplete == true;
+        && get(/databases/$(database)/documents/publicProfiles/$(userId)).data.profileComplete == true
+        && hasActivePublicAccount(userId);
     }
 
     function hasCompletePublicProfile(userId) {
       return userId is string
         && exists(/databases/$(database)/documents/publicProfiles/$(userId))
-        && get(/databases/$(database)/documents/publicProfiles/$(userId)).data.profileComplete == true;
+        && get(/databases/$(database)/documents/publicProfiles/$(userId)).data.profileComplete == true
+        && hasActivePublicAccount(userId);
+    }
+
+    function hasActivePublicAccount(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && (
+          (
+            get(/databases/$(database)/documents/users/$(userId)).data.subscriptionStatus == 'active'
+            && (
+              !('subscriptionEndsAt' in get(/databases/$(database)/documents/users/$(userId)).data)
+              || get(/databases/$(database)/documents/users/$(userId)).data.subscriptionEndsAt > request.time
+            )
+          )
+          || (
+            get(/databases/$(database)/documents/users/$(userId)).data.subscriptionStatus == 'trialing'
+            && (
+              !('trialEndsAt' in get(/databases/$(database)/documents/users/$(userId)).data)
+              || get(/databases/$(database)/documents/users/$(userId)).data.trialEndsAt > request.time
+            )
+          )
+        );
+    }
+
+    function publicBillingMatchesUser(profileId) {
+      return exists(/databases/$(database)/documents/users/$(profileId))
+        && request.resource.data.plan == get(/databases/$(database)/documents/users/$(profileId)).data.plan
+        && request.resource.data.subscriptionStatus == get(/databases/$(database)/documents/users/$(profileId)).data.subscriptionStatus
+        && (
+          (!('trialEndsAt' in request.resource.data) && !('trialEndsAt' in get(/databases/$(database)/documents/users/$(profileId)).data))
+          || (('trialEndsAt' in get(/databases/$(database)/documents/users/$(profileId)).data) && request.resource.data.trialEndsAt == get(/databases/$(database)/documents/users/$(profileId)).data.trialEndsAt)
+        )
+        && (
+          (!('subscriptionEndsAt' in request.resource.data) && !('subscriptionEndsAt' in get(/databases/$(database)/documents/users/$(profileId)).data))
+          || (('subscriptionEndsAt' in get(/databases/$(database)/documents/users/$(profileId)).data) && request.resource.data.subscriptionEndsAt == get(/databases/$(database)/documents/users/$(profileId)).data.subscriptionEndsAt)
+        )
+        && (
+          (!('billingUpdatedAt' in request.resource.data) && !('billingUpdatedAt' in get(/databases/$(database)/documents/users/$(profileId)).data))
+          || (('billingUpdatedAt' in get(/databases/$(database)/documents/users/$(profileId)).data) && request.resource.data.billingUpdatedAt == get(/databases/$(database)/documents/users/$(profileId)).data.billingUpdatedAt)
+        );
     }
 
     function publicUserFields() {
@@ -304,13 +344,14 @@ service cloud.firestore {
     }
 
     match /publicProfiles/{profileId} {
-      allow get: if isOwner(profileId) || resource.data.profileComplete == true;
+      allow get: if isOwner(profileId) || (resource.data.profileComplete == true && hasActivePublicAccount(profileId));
       allow list: if (
         signedIn()
         && request.query.limit <= 2
       ) || (
         request.query.limit <= 1
         && resource.data.profileComplete == true
+        && hasActivePublicAccount(profileId)
       );
       allow create, update: if isOwner(profileId)
         && hasOnly([
@@ -324,11 +365,19 @@ service cloud.firestore {
           'businessHours',
           'blockedDates',
           'profileComplete',
+          'plan',
+          'subscriptionStatus',
+          'subscriptionEndsAt',
+          'billingUpdatedAt',
+          'trialEndsAt',
           'updatedAt'
         ])
         && validSlug(request.resource.data.slug)
         && validText(request.resource.data.displayName, 2, 80)
         && request.resource.data.profileComplete is bool
+        && validPlan(request.resource.data.plan)
+        && validSubscriptionStatus(request.resource.data.subscriptionStatus)
+        && publicBillingMatchesUser(profileId)
         && (!('barbershopName' in request.resource.data) || validText(request.resource.data.barbershopName, 2, 80))
         && (!('phone' in request.resource.data) || validPhone(request.resource.data.phone))
         && (!('bio' in request.resource.data) || validOptionalText(request.resource.data.bio, 500))

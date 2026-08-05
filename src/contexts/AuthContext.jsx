@@ -22,23 +22,33 @@ import { reportError, trackEvent } from "../utils/telemetry";
 
 const AuthContext = createContext();
 
-const normalizePublicProfile = (data = {}) => ({
-  slug: data.slug || "",
-  displayName: data.displayName || "",
-  barbershopName: data.barbershopName || "",
-  phone: data.phone || "",
-  bio: data.bio || "",
-  logoUrl: data.logoUrl || "",
-  avatar: data.avatar || "",
-  businessHours: data.businessHours || {
-    start: "09:00",
-    end: "18:00",
-    slotInterval: 30,
-  },
-  blockedDates: Array.isArray(data.blockedDates) ? data.blockedDates : [],
-  profileComplete: Boolean(data.profileComplete),
-  updatedAt: data.updatedAt || new Date(),
-});
+const normalizePublicProfile = (data = {}) => {
+  const publicProfile = {
+    slug: data.slug || "",
+    displayName: data.displayName || "",
+    barbershopName: data.barbershopName || "",
+    phone: data.phone || "",
+    bio: data.bio || "",
+    logoUrl: data.logoUrl || "",
+    avatar: data.avatar || "",
+    businessHours: data.businessHours || {
+      start: "09:00",
+      end: "18:00",
+      slotInterval: 30,
+    },
+    blockedDates: Array.isArray(data.blockedDates) ? data.blockedDates : [],
+    profileComplete: Boolean(data.profileComplete),
+    plan: data.plan || DEFAULT_PLAN,
+    subscriptionStatus: data.subscriptionStatus || DEFAULT_SUBSCRIPTION_STATUS,
+    updatedAt: data.updatedAt || new Date(),
+  };
+
+  if (data.trialEndsAt) publicProfile.trialEndsAt = data.trialEndsAt;
+  if (data.subscriptionEndsAt) publicProfile.subscriptionEndsAt = data.subscriptionEndsAt;
+  if (data.billingUpdatedAt) publicProfile.billingUpdatedAt = data.billingUpdatedAt;
+
+  return publicProfile;
+};
 
 const createInitialProfile = ({ uid, email, createdAt = new Date() }) => {
   const prefix = email.split("@")[0] || "barbeiro";

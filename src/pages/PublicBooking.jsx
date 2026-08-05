@@ -10,6 +10,7 @@ import { formatLocalDate } from "../utils/date";
 import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
 import { isValidBrazilianPhone, normalizePhone } from "../utils/phone";
 import { createPrivacyConsentSnapshot, isPrivacyConsentAccepted } from "../utils/privacyConsent";
+import { getAccountAccess } from "../utils/trial";
 import {
   createSlotId,
   defaultBusinessHours,
@@ -130,6 +131,11 @@ export default function PublicBooking() {
 
         const barberDoc = usersSnapshot.docs[0];
         const barberData = { id: barberDoc.id, uid: barberDoc.id, ...barberDoc.data() };
+        const accountAccess = getAccountAccess(barberData);
+        if (!accountAccess.active) {
+          setFatalError("O agendamento online desta barbearia esta temporariamente pausado. Fale diretamente com a equipe para marcar seu horario.");
+          return;
+        }
         setBarber(barberData);
 
         const servicesQuery = query(

@@ -122,6 +122,7 @@ Antes do primeiro deploy publico, confirme o dominio final, configure `VITE_AUTH
 - Landing page do produto
 - Registro, login e recuperacao de senha
 - Trial gratuito com bloqueio apos expiracao
+- Link publico pausado automaticamente quando trial/assinatura da conta nao esta ativo
 - Modelo inicial de assinatura com status `trialing`, `active`, `past_due` e `cancelled`
 - Solicitacao interna de renovacao/reativacao para contas bloqueadas
 - Perfil publico da barbearia

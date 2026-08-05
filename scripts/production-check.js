@@ -148,6 +148,8 @@ const assertPublicProfilesRequireCompletion = () => {
   const start = rules.indexOf("match /publicProfiles/{profileId} {");
   const end = rules.indexOf("match /clients/{clientId}", start);
   const publicProfilesBody = start >= 0 && end > start ? rules.slice(start, end) : "";
+  const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+  const authContext = readFileSync(join(root, "src", "contexts", "AuthContext.jsx"), "utf8");
 
   if (!publicProfilesBody.includes("resource.data.profileComplete == true")) {
     failures.push("publicProfiles public access does not require profileComplete: firestore.rules");
@@ -160,6 +162,24 @@ const assertPublicProfilesRequireCompletion = () => {
   if (publicProfilesBody.includes("allow list: if signedIn() ||")) {
     failures.push("publicProfiles authenticated list is unbounded: firestore.rules");
   }
+
+  const accountGuardSnippets = [
+    [rules, "firestore.rules", "function hasActivePublicAccount"],
+    [rules, "firestore.rules", "function publicBillingMatchesUser"],
+    [rules, "firestore.rules", "hasActivePublicAccount(profileId)"],
+    [rules, "firestore.rules", "hasActivePublicAccount(userId)"],
+    [rules, "firestore.rules", "request.resource.data.subscriptionStatus == get(/databases/$(database)/documents/users/$(profileId)).data.subscriptionStatus"],
+    [authContext, "src/contexts/AuthContext.jsx", "subscriptionStatus: data.subscriptionStatus || DEFAULT_SUBSCRIPTION_STATUS"],
+    [authContext, "src/contexts/AuthContext.jsx", "if (data.trialEndsAt) publicProfile.trialEndsAt = data.trialEndsAt"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "getAccountAccess(barberData)"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "agendamento online desta barbearia esta temporariamente pausado"],
+  ];
+
+  accountGuardSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`public booking account access guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
 };
 
 const assertPublicPhoneKeysSupportReturningClients = () => {
