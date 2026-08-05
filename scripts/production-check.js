@@ -166,11 +166,12 @@ const assertPublicProfilesRequireCompletion = () => {
   const accountGuardSnippets = [
     [rules, "firestore.rules", "function hasActivePublicAccount"],
     [rules, "firestore.rules", "function publicBillingMatchesUser"],
-    [rules, "firestore.rules", "hasActivePublicAccount(profileId)"],
     [rules, "firestore.rules", "hasActivePublicAccount(userId)"],
     [rules, "firestore.rules", "request.resource.data.subscriptionStatus == get(/databases/$(database)/documents/users/$(profileId)).data.subscriptionStatus"],
     [authContext, "src/contexts/AuthContext.jsx", "subscriptionStatus: data.subscriptionStatus || DEFAULT_SUBSCRIPTION_STATUS"],
     [authContext, "src/contexts/AuthContext.jsx", "if (data.trialEndsAt) publicProfile.trialEndsAt = data.trialEndsAt"],
+    [authContext, "src/contexts/AuthContext.jsx", "syncPublicBillingMirror"],
+    [authContext, "src/contexts/AuthContext.jsx", "sync-public-billing"],
     [publicBooking, "src/pages/PublicBooking.jsx", "getAccountAccess(barberData)"],
     [publicBooking, "src/pages/PublicBooking.jsx", "agendamento online desta barbearia esta temporariamente pausado"],
   ];

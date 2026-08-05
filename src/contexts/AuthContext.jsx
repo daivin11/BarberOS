@@ -126,6 +126,32 @@ const commitProfileUpdate = async ({ uid, profileData, publicProfile, previousSl
   });
 };
 
+const createPublicBillingMirror = (profile = {}) => {
+  const billingMirror = {
+    plan: profile.plan || DEFAULT_PLAN,
+    subscriptionStatus: profile.subscriptionStatus || DEFAULT_SUBSCRIPTION_STATUS,
+    updatedAt: new Date(),
+  };
+
+  if (profile.trialEndsAt) billingMirror.trialEndsAt = profile.trialEndsAt;
+  if (profile.subscriptionEndsAt) billingMirror.subscriptionEndsAt = profile.subscriptionEndsAt;
+  if (profile.billingUpdatedAt) billingMirror.billingUpdatedAt = profile.billingUpdatedAt;
+
+  return billingMirror;
+};
+
+const syncPublicBillingMirror = async ({ uid, profile }) => {
+  const publicProfileRef = doc(db, "publicProfiles", uid);
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      transaction.set(publicProfileRef, createPublicBillingMirror(profile), { merge: true });
+    });
+  } catch (err) {
+    reportError(err, { source: "auth", action: "sync-public-billing" });
+  }
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -138,7 +164,9 @@ export function AuthProvider({ children }) {
       const uid = firebaseUser.uid;
       const userDoc = await getDoc(doc(db, "users", uid));
       if (userDoc.exists()) {
-        setProfile({ id: userDoc.id, ...userDoc.data() });
+        const loadedProfile = { id: userDoc.id, ...userDoc.data() };
+        setProfile(loadedProfile);
+        await syncPublicBillingMirror({ uid, profile: loadedProfile });
       } else {
         const createdAt = new Date();
         const initialProfile = createInitialProfile({
