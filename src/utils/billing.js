@@ -7,6 +7,31 @@ export const PLAN_LABELS = {
 
 export const ALLOWED_PLANS = Object.keys(PLAN_LABELS);
 
+export const BILLING_PLANS = [
+  {
+    id: "starter",
+    label: PLAN_LABELS.starter,
+    price: "R$ 49/mes",
+    description: "Para barbeiro solo validando agenda online.",
+    features: ["Agenda online", "Clientes", "Servicos", "WhatsApp"],
+  },
+  {
+    id: "studio",
+    label: PLAN_LABELS.studio,
+    price: "R$ 89/mes",
+    description: "Para barbearias com equipe e operacao recorrente.",
+    features: ["Tudo do Starter", "Equipe", "Financeiro", "Auditoria"],
+    recommended: true,
+  },
+  {
+    id: "pro",
+    label: PLAN_LABELS.pro,
+    price: "R$ 149/mes",
+    description: "Para operacoes que precisam de mais controle e suporte.",
+    features: ["Tudo do Studio", "Prioridade no suporte", "Exportacao de dados", "Preparado para escala"],
+  },
+];
+
 export const BILLING_STATUS_LABELS = {
   missing_profile: "Perfil pendente",
   legacy_active: "Conta ativa",
@@ -75,6 +100,7 @@ export const createRenewalRequestPayload = ({
   userId,
   profile = {},
   accountAccess = {},
+  requestedPlan,
   now = new Date(),
 }) => {
   const cleanUserId = createRenewalRequestId(userId);
@@ -86,6 +112,7 @@ export const createRenewalRequestPayload = ({
     barbershopName,
     accountStatus: getRenewalRequestStatus(accountAccess.status),
     plan: getRenewalRequestPlan(accountAccess.plan),
+    requestedPlan: getRenewalRequestPlan(requestedPlan || accountAccess.plan || "studio"),
     timestamp: now,
     status: "pending",
     createdAt: now,

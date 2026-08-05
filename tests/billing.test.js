@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  BILLING_PLANS,
   createRenewalRequestId,
   createRenewalRequestPayload,
   getBillingStatusLabel,
@@ -16,6 +17,7 @@ describe("billing utils", () => {
     assert.equal(getPlanLabel("studio"), "Studio");
     assert.equal(getPlanLabel("custom"), "custom");
     assert.equal(getBillingStatusLabel("past_due"), "Pagamento pendente");
+    assert.equal(BILLING_PLANS.some((plan) => plan.id === "studio" && plan.recommended), true);
   });
 
   it("returns specific blocked copy for payment issues", () => {
@@ -34,6 +36,7 @@ describe("billing utils", () => {
       userId: "user-1",
       profile: { barbershopName: "BarberOS Studio" },
       accountAccess: { status: "trial_expired", plan: "trial" },
+      requestedPlan: "studio",
       now,
     });
 
@@ -42,12 +45,14 @@ describe("billing utils", () => {
       "barbershopName",
       "createdAt",
       "plan",
+      "requestedPlan",
       "status",
       "timestamp",
       "userId",
     ]);
     assert.equal(payload.userId, "user-1");
     assert.equal(payload.barbershopName, "BarberOS Studio");
+    assert.equal(payload.requestedPlan, "studio");
     assert.equal(payload.status, "pending");
     assert.equal(payload.createdAt, now);
   });

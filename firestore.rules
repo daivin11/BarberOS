@@ -576,13 +576,14 @@ service cloud.firestore {
     }
 
     match /renewalRequests/{requestId} {
-      allow create: if hasOnly(['userId', 'barbershopName', 'accountStatus', 'plan', 'timestamp', 'status', 'createdAt'])
+      allow create: if hasOnly(['userId', 'barbershopName', 'accountStatus', 'plan', 'requestedPlan', 'timestamp', 'status', 'createdAt'])
         && requestId == request.auth.uid
         && isOwner(request.resource.data.userId)
         && request.resource.data.status == 'pending'
         && validText(request.resource.data.barbershopName, 2, 80)
         && validAccountStatus(request.resource.data.accountStatus)
         && validPlan(request.resource.data.plan)
+        && validPlan(request.resource.data.requestedPlan)
         && request.resource.data.timestamp is timestamp
         && request.resource.data.createdAt is timestamp;
       allow read, update, delete: if false;

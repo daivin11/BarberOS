@@ -205,6 +205,7 @@ const assertFirestoreRulesUseBoundedPublicText = () => {
 const assertTrialExpiredUsesBillingDomain = () => {
   const trialExpired = readFileSync(join(root, "src", "pages", "TrialExpired.jsx"), "utf8");
   const billing = readFileSync(join(root, "src", "utils", "billing.js"), "utf8");
+  const rules = readFileSync(join(root, "firestore.rules"), "utf8");
 
   if (!trialExpired.includes("../utils/billing")) {
     failures.push("blocked account screen does not use billing domain helpers: src/pages/TrialExpired.jsx");
@@ -225,6 +226,21 @@ const assertTrialExpiredUsesBillingDomain = () => {
   ) {
     failures.push("billing domain helper is missing blocked copy or renewal payload creation: src/utils/billing.js");
   }
+
+  const requiredPlanSnippets = [
+    [trialExpired, "src/pages/TrialExpired.jsx", "BILLING_PLANS"],
+    [trialExpired, "src/pages/TrialExpired.jsx", "selectedPlan"],
+    [trialExpired, "src/pages/TrialExpired.jsx", "requestedPlan: selectedPlan"],
+    [billing, "src/utils/billing.js", "BILLING_PLANS"],
+    [billing, "src/utils/billing.js", "requestedPlan"],
+    [rules, "firestore.rules", "validPlan(request.resource.data.requestedPlan)"],
+  ];
+
+  requiredPlanSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`billing plan selection is missing in ${fileName}: ${snippet}`);
+    }
+  });
 };
 
 const assertBillingRulesAreServerControlled = () => {
@@ -238,6 +254,7 @@ const assertBillingRulesAreServerControlled = () => {
     "request.resource.data.billingUpdatedAt == resource.data.billingUpdatedAt",
     "validAccountStatus(request.resource.data.accountStatus)",
     "validPlan(request.resource.data.plan)",
+    "validPlan(request.resource.data.requestedPlan)",
     "requestId == request.auth.uid",
     "request.resource.data.timestamp is timestamp",
     "request.resource.data.createdAt is timestamp",

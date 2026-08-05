@@ -4,6 +4,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { useAuth } from "../hooks/useAuth";
 import { db } from "../services/firebase";
 import {
+  BILLING_PLANS,
   createRenewalRequestId,
   createRenewalRequestPayload,
   getBillingStatusLabel,
@@ -25,6 +26,7 @@ export default function TrialExpired() {
   const navigate = useNavigate();
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("studio");
   const trialEndsAt = toDate(profile?.trialEndsAt);
   const accountAccess = getAccountAccess(profile);
   const blockedContent = getBlockedAccountContent(accountAccess);
@@ -51,6 +53,7 @@ export default function TrialExpired() {
           userId: user.uid,
           profile,
           accountAccess,
+          requestedPlan: selectedPlan,
           now: timestamp,
         })
       );
@@ -97,6 +100,41 @@ export default function TrialExpired() {
               </div>
             </div>
 
+            <div className="mt-8">
+              <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Escolha um plano</p>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                {BILLING_PLANS.map((plan) => {
+                  const selected = selectedPlan === plan.id;
+                  return (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      onClick={() => setSelectedPlan(plan.id)}
+                      className={`rounded-2xl border p-4 text-left transition ${
+                        selected
+                          ? "border-indigo-400 bg-indigo-500/15 text-white"
+                          : "border-gray-800 bg-gray-950 text-gray-300 hover:border-gray-600"
+                      }`}
+                      aria-pressed={selected}
+                    >
+                      <span className="flex items-start justify-between gap-2">
+                        <span>
+                          <span className="block font-semibold">{plan.label}</span>
+                          <span className="mt-1 block text-sm text-gray-400">{plan.price}</span>
+                        </span>
+                        {plan.recommended && (
+                          <span className="rounded-full bg-white/10 px-2 py-1 text-[11px] font-semibold text-indigo-100">
+                            Popular
+                          </span>
+                        )}
+                      </span>
+                      <span className="mt-3 block text-sm leading-5 text-gray-400">{plan.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               {renewalWhatsappLink && (
                 <a
@@ -131,6 +169,13 @@ export default function TrialExpired() {
             <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Proximo passo</p>
             <h2 className="mt-4 text-2xl font-bold">{blockedContent.nextStepTitle}</h2>
             <p className="mt-4 text-gray-400">{blockedContent.nextStepDescription}</p>
+            <div className="mt-6 space-y-3">
+              {BILLING_PLANS.find((plan) => plan.id === selectedPlan)?.features.map((feature) => (
+                <div key={feature} className="rounded-2xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-gray-300">
+                  {feature}
+                </div>
+              ))}
+            </div>
           </aside>
         </section>
       </div>
