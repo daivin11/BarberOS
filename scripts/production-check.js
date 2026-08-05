@@ -953,6 +953,33 @@ const assertWhatsAppTemplatesAreDomainDriven = () => {
     }
   });
 };
+
+const assertLaunchMetadataIsReady = () => {
+  const indexHtml = readFileSync(join(root, "index.html"), "utf8");
+  const manifest = readFileSync(join(root, "public", "manifest.webmanifest"), "utf8");
+  const robots = readFileSync(join(root, "public", "robots.txt"), "utf8");
+  const ogImage = readFileSync(join(root, "public", "og-image.svg"), "utf8");
+
+  const requiredSnippets = [
+    [indexHtml, "index.html", 'meta name="application-name" content="BarberOS"'],
+    [indexHtml, "index.html", 'property="og:image" content="/og-image.svg"'],
+    [indexHtml, "index.html", 'name="twitter:card" content="summary_large_image"'],
+    [manifest, "public/manifest.webmanifest", '"purpose": "any maskable"'],
+    [manifest, "public/manifest.webmanifest", '"screenshots"'],
+    [robots, "public/robots.txt", "Disallow: /dashboard"],
+    [robots, "public/robots.txt", "Disallow: /agenda"],
+    [ogImage, "public/og-image.svg", "BarberOS"],
+    [ogImage, "public/og-image.svg", "1200"],
+    [ogImage, "public/og-image.svg", "630"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`launch metadata is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -1011,6 +1038,7 @@ assertPublicBookingSubmitRespectsAvailability();
 assertClientListSupportsWhatsAppContact();
 assertClientActionsHaveSubmitGuards();
 assertWhatsAppTemplatesAreDomainDriven();
+assertLaunchMetadataIsReady();
 
 if (failures.length > 0) {
   console.error("Production check failed:");

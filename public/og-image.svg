@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">BarberOS</title>
+  <desc id="desc">Sistema de agenda online e operacao para barbearias.</desc>
+  <rect width="1200" height="630" fill="#030712"/>
+  <rect x="64" y="64" width="1072" height="502" rx="48" fill="#111827" stroke="#253044" stroke-width="2"/>
+  <rect x="112" y="116" width="88" height="88" rx="28" fill="#635bff"/>
+  <text x="156" y="173" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="46" font-weight="800" text-anchor="middle">B</text>
+  <text x="232" y="152" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="44" font-weight="900">BarberOS</text>
+  <text x="232" y="196" fill="#9ca3af" font-family="Inter, Arial, sans-serif" font-size="24" letter-spacing="8">STUDIO SUITE</text>
+  <text x="112" y="306" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="900">Agenda online para</text>
+  <text x="112" y="386" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="900">barbearias modernas</text>
+  <text x="112" y="454" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="30">Clientes, equipe, servicos, WhatsApp e financeiro em um painel.</text>
+  <rect x="112" y="496" width="286" height="58" rx="18" fill="#ffffff"/>
+  <text x="255" y="534" fill="#030712" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800" text-anchor="middle">Comecar agora</text>
+  <rect x="780" y="136" width="276" height="342" rx="34" fill="#030712" stroke="#263247" stroke-width="2"/>
+  <rect x="820" y="180" width="196" height="28" rx="14" fill="#1f2937"/>
+  <rect x="820" y="232" width="154" height="28" rx="14" fill="#635bff"/>
+  <rect x="820" y="284" width="196" height="28" rx="14" fill="#1f2937"/>
+  <rect x="820" y="336" width="124" height="28" rx="14" fill="#10b981"/>
+  <rect x="820" y="388" width="196" height="28" rx="14" fill="#1f2937"/>
+</svg>

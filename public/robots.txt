@@ -1,2 +1,14 @@
 User-agent: *
+Disallow: /dashboard
+Disallow: /agenda
+Disallow: /clientes
+Disallow: /servicos
+Disallow: /barbeiros
+Disallow: /financeiro
+Disallow: /whatsapp
+Disallow: /perfil
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /trial-expired
 Allow: /
