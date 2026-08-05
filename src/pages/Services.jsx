@@ -48,6 +48,10 @@ export default function Services({
   const [editPrice, setEditPrice] = useState("");
   const [editDuration, setEditDuration] = useState("30");
   const [confirmDeleteService, setConfirmDeleteService] = useState(null);
+  const [savingService, setSavingService] = useState(false);
+  const [editingServiceSaving, setEditingServiceSaving] = useState(false);
+  const [archivingService, setArchivingService] = useState(false);
+  const [restoringServiceId, setRestoringServiceId] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const isSetupMode = searchParams.get("setup") === "services";
   const duplicateNewService = findDuplicateServiceByName(services, serviceName);
@@ -72,6 +76,8 @@ export default function Services({
     : 0;
 
   const handleAdd = async () => {
+    if (savingService) return;
+
     const validationError = validateServiceInput({
       name: serviceName,
       price: servicePrice,
@@ -87,13 +93,18 @@ export default function Services({
       return;
     }
 
-    const saved = await addService(serviceName.trim(), servicePrice, serviceDuration);
-    if (!saved) return;
+    setSavingService(true);
+    try {
+      const saved = await addService(serviceName.trim(), servicePrice, serviceDuration);
+      if (!saved) return;
 
-    setServiceName("");
-    setServicePrice("");
-    setServiceDuration("30");
-    setStatusMessage("Servico cadastrado com sucesso.");
+      setServiceName("");
+      setServicePrice("");
+      setServiceDuration("30");
+      setStatusMessage("Servico cadastrado com sucesso.");
+    } finally {
+      setSavingService(false);
+    }
   };
 
   const applyPreset = (preset) => {
@@ -119,6 +130,8 @@ export default function Services({
   };
 
   const handleEditSave = async () => {
+    if (editingServiceSaving) return;
+
     const validationError = validateServiceInput({
       name: editName,
       price: editPrice,
@@ -134,30 +147,47 @@ export default function Services({
       return;
     }
 
-    const saved = await updateService(editingService.id, {
-      name: editName.trim(),
-      price: Number(editPrice),
-      duration: Number(editDuration) || 30,
-    });
-    if (!saved) return;
+    setEditingServiceSaving(true);
+    try {
+      const saved = await updateService(editingService.id, {
+        name: editName.trim(),
+        price: Number(editPrice),
+        duration: Number(editDuration) || 30,
+      });
+      if (!saved) return;
 
-    setStatusMessage("Servico atualizado com sucesso.");
-    setTimeout(closeEdit, 800);
+      setStatusMessage("Servico atualizado com sucesso.");
+      setTimeout(closeEdit, 800);
+    } finally {
+      setEditingServiceSaving(false);
+    }
   };
 
   const futureAppointmentsForService = (serviceId) => appointmentsByService[String(serviceId)]?.future || 0;
 
   const restoreArchivedService = async (serviceId) => {
-    const restored = await restoreService?.(serviceId);
-    if (restored) setStatusMessage("Servico restaurado para o catalogo ativo.");
+    if (restoringServiceId) return;
+
+    setRestoringServiceId(serviceId);
+    try {
+      const restored = await restoreService?.(serviceId);
+      if (restored) setStatusMessage("Servico restaurado para o catalogo ativo.");
+    } finally {
+      setRestoringServiceId("");
+    }
   };
 
   const handleDeleteConfirmed = async () => {
-    if (!confirmDeleteService) return;
+    if (!confirmDeleteService || archivingService) return;
     if (futureAppointmentsForService(confirmDeleteService.id) > 0) return;
 
-    await deleteService(confirmDeleteService.id);
-    setConfirmDeleteService(null);
+    setArchivingService(true);
+    try {
+      const archived = await deleteService(confirmDeleteService.id);
+      if (archived !== false) setConfirmDeleteService(null);
+    } finally {
+      setArchivingService(false);
+    }
   };
 
   const deleteWarningCount = confirmDeleteService ? futureAppointmentsForService(confirmDeleteService.id) : 0;
@@ -278,14 +308,14 @@ export default function Services({
 
             <button type="button"
               className={`w-full rounded-2xl py-4 font-semibold transition ${
-                duplicateNewService
+                duplicateNewService || savingService
                   ? "cursor-not-allowed bg-gray-700 text-gray-400"
                   : "bg-white text-black hover:bg-gray-200"
               }`}
               onClick={handleAdd}
-              disabled={Boolean(duplicateNewService)}
+              disabled={Boolean(duplicateNewService) || savingService}
             >
-              Adicionar servico
+              {savingService ? "Salvando servico..." : "Adicionar servico"}
             </button>
             {duplicateNewService && (
               <p className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100">
@@ -395,9 +425,14 @@ export default function Services({
                   <button
                     type="button"
                     onClick={() => restoreArchivedService(service.id)}
-                    className="mt-4 w-full rounded-2xl border border-emerald-700 bg-emerald-950/40 px-3 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-500"
+                    disabled={Boolean(restoringServiceId)}
+                    className={`mt-4 w-full rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
+                      restoringServiceId
+                        ? "cursor-not-allowed border-gray-700 bg-gray-900 text-gray-500"
+                        : "border-emerald-700 bg-emerald-950/40 text-emerald-200 hover:border-emerald-500"
+                    }`}
                   >
-                    Restaurar servico
+                    {restoringServiceId === service.id ? "Restaurando..." : "Restaurar servico"}
                   </button>
                 </article>
               ))}
@@ -474,14 +509,14 @@ export default function Services({
               <button
                 type="button"
                 onClick={handleEditSave}
-                disabled={Boolean(duplicateEditedService)}
+                disabled={Boolean(duplicateEditedService) || editingServiceSaving}
                 className={`rounded-3xl px-6 py-3 text-sm font-semibold transition ${
-                  duplicateEditedService
+                  duplicateEditedService || editingServiceSaving
                     ? "cursor-not-allowed bg-gray-700 text-gray-400"
                     : "bg-white text-black hover:bg-gray-200"
                 }`}
               >
-                Salvar alteracoes
+                {editingServiceSaving ? "Salvando..." : "Salvar alteracoes"}
               </button>
             </div>
             {statusMessage && <p className="mt-4 text-sm text-emerald-300">{statusMessage}</p>}
@@ -528,14 +563,14 @@ export default function Services({
               <button
                 type="button"
                 onClick={handleDeleteConfirmed}
-                disabled={deleteWarningCount > 0}
+                disabled={deleteWarningCount > 0 || archivingService}
                 className={`rounded-3xl px-6 py-3 text-sm font-semibold transition ${
-                  deleteWarningCount > 0
+                  deleteWarningCount > 0 || archivingService
                     ? "cursor-not-allowed border border-gray-700 bg-gray-900 text-gray-500"
                     : "bg-red-500 text-white hover:bg-red-600"
                 }`}
               >
-                Confirmar arquivamento
+                {archivingService ? "Arquivando..." : "Confirmar arquivamento"}
               </button>
             </div>
           </div>
