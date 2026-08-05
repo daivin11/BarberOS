@@ -35,6 +35,7 @@ VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY=
 ```
 
 Opcional:
@@ -49,6 +50,7 @@ VITE_TELEMETRY_ENDPOINT=
 `VITE_ENABLE_CLIENT_LOGS` deixa eventos e erros do front-end visiveis para diagnostico. Por padrao fica desligado.
 Se `VITE_TELEMETRY_ENDPOINT` for informado, o app envia somente metadados seguros de erro/evento, sem nome, telefone, e-mail ou slug.
 `VITE_AUTH_ACTION_URL` define o dominio usado como URL de continuidade nos e-mails do Firebase Auth, como redefinicao de senha. Em producao, aponte para o dominio publico do BarberOS.
+`VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY` ativa Firebase App Check com reCAPTCHA v3 no front-end. Em producao, crie a chave no Firebase App Check e aplique enforcement em Auth/Firestore depois de validar o monitoramento.
 
 ## Desenvolvimento
 
@@ -137,6 +139,7 @@ Antes do primeiro deploy publico, confirme o dominio final, configure `VITE_AUTH
 
 - As configuracoes do Firebase usadas no front-end sao publicas por natureza; a seguranca depende principalmente das Firestore Rules.
 - Antes de publicar novas regras, rode `npm test`, `npm run lint`, `npm run check:production`, `npm run build`, `npm run check:bundle` e faca deploy restrito apenas do Firestore quando a alteracao for de banco.
+- Antes de liberar trafego publico, configure Firebase App Check com reCAPTCHA v3, publique `VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY` no ambiente de deploy e ative enforcement gradualmente no Firebase Console.
 - Para ativar contato direto na tela de conta bloqueada, configure `VITE_SUPPORT_WHATSAPP`.
 - O gateway de pagamento ainda nao esta implementado. Campos de assinatura e solicitacoes de renovacao existem para operacao manual/admin/server-side; o usuario nao pode ativar plano pago pelo front-end.
 - Para diagnostico em producao, ative `VITE_ENABLE_CLIENT_LOGS=true` apenas com um endpoint proprio e seguro em `VITE_TELEMETRY_ENDPOINT`.

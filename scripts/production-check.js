@@ -543,6 +543,27 @@ const assertAvailabilityContractIsBounded = () => {
     failures.push("schedule availability limits are missing: src/utils/schedule.js");
   }
 };
+
+const assertFirebaseAppCheckIsConfigurable = () => {
+  const firebaseService = readFileSync(join(root, "src", "services", "firebase.js"), "utf8");
+  const envExample = readFileSync(join(root, ".env.example"), "utf8");
+  const readme = readFileSync(join(root, "README.md"), "utf8");
+
+  const requiredSnippets = [
+    [firebaseService, "src/services/firebase.js", "initializeAppCheck"],
+    [firebaseService, "src/services/firebase.js", "ReCaptchaV3Provider"],
+    [firebaseService, "src/services/firebase.js", "VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY"],
+    [firebaseService, "src/services/firebase.js", "isTokenAutoRefreshEnabled: true"],
+    [envExample, ".env.example", "VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY="],
+    [readme, "README.md", "Firebase App Check"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`Firebase App Check is not production-configurable in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -588,6 +609,7 @@ assertOperationalAuditLogsAreEnabled();
 assertAppointmentsUseDateWindow();
 assertAvailabilityContractIsBounded();
 assertBarberContractIsBounded();
+assertFirebaseAppCheckIsConfigurable();
 
 if (failures.length > 0) {
   console.error("Production check failed:");
