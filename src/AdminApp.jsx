@@ -1459,7 +1459,7 @@ export default function AdminApp() {
         />
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col pb-24 lg:pb-0">
         {notification && (
           <div
             className={`fixed right-4 top-4 z-[60] max-w-sm rounded-2xl border px-4 py-3 text-sm shadow-2xl ${

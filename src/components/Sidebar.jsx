@@ -72,7 +72,8 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="w-full border-b border-gray-800 bg-gray-950/95 p-4 text-white lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:border-b-0 lg:border-r lg:p-6">
+    <>
+    <aside className="sticky top-0 z-40 w-full border-b border-gray-800 bg-gray-950/95 p-4 text-white backdrop-blur-xl lg:top-0 lg:h-screen lg:w-72 lg:border-b-0 lg:border-r lg:p-6">
       <div className="flex h-full min-h-0 flex-col">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -226,7 +227,7 @@ export default function Sidebar({
           {copyMessage && <p className="text-xs text-green-300">{copyMessage}</p>}
         </div>
 
-        <nav className="scrollbar-hidden mt-4 flex gap-2 overflow-x-auto pb-1 lg:mt-6 lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-y-auto lg:pb-0">
+        <nav className="scrollbar-hidden mt-6 hidden min-h-0 flex-1 flex-col gap-2 overflow-y-auto lg:flex">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -257,5 +258,29 @@ export default function Sidebar({
         </button>
       </div>
     </aside>
+    <nav
+      className="scrollbar-hidden fixed inset-x-0 bottom-0 z-40 flex gap-2 overflow-x-auto border-t border-gray-800 bg-gray-950/95 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 text-white shadow-2xl shadow-black/40 backdrop-blur-xl lg:hidden"
+      aria-label="Navegacao principal"
+    >
+      {navItems.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          className={({ isActive }) =>
+            `flex min-w-[76px] flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2 text-[11px] font-semibold transition ${
+              isActive
+                ? "bg-white text-black shadow-sm"
+                : "text-gray-300 hover:bg-gray-900 hover:text-white"
+            }`
+          }
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-current/10 bg-current/5 text-[10px] font-black">
+            {item.initials}
+          </span>
+          <span className="whitespace-nowrap">{item.label}</span>
+        </NavLink>
+      ))}
+    </nav>
+    </>
   );
 }

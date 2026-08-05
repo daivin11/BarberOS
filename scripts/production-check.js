@@ -728,6 +728,26 @@ const assertPublicLinkReadinessGuardsSharing = () => {
   });
 };
 
+const assertMobileAdminNavigationIsPersistent = () => {
+  const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
+  const sidebar = readFileSync(join(root, "src", "components", "Sidebar.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [adminApp, "src/AdminApp.jsx", "pb-24 lg:pb-0"],
+    [sidebar, "src/components/Sidebar.jsx", "fixed inset-x-0 bottom-0"],
+    [sidebar, "src/components/Sidebar.jsx", 'aria-label="Navegacao principal"'],
+    [sidebar, "src/components/Sidebar.jsx", "pb-[calc(0.75rem+env(safe-area-inset-bottom))]"],
+    [sidebar, "src/components/Sidebar.jsx", "lg:hidden"],
+    [sidebar, "src/components/Sidebar.jsx", "sticky top-0 z-40"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`mobile admin navigation is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 const assertSetupDeepLinksGuideFirstRun = () => {
   const onboarding = readFileSync(join(root, "src", "utils", "onboarding.js"), "utf8");
   const profileSettings = readFileSync(join(root, "src", "pages", "ProfileSettings.jsx"), "utf8");
@@ -1028,6 +1048,7 @@ assertBarberContractIsBounded();
 assertFirebaseAppCheckIsConfigurable();
 assertWorkspaceDataExportExists();
 assertPublicLinkReadinessGuardsSharing();
+assertMobileAdminNavigationIsPersistent();
 assertSetupDeepLinksGuideFirstRun();
 assertPublicBookingRequiresPrivacyConsent();
 assertPublicBookingShowsConfirmationSummary();
