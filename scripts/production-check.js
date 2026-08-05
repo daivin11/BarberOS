@@ -757,6 +757,25 @@ const assertAdminDataSyncCanRetry = () => {
     }
   });
 };
+
+const assertPublicBookingSubmitRespectsAvailability = () => {
+  const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+  const scheduleUtils = readFileSync(join(root, "src", "utils", "schedule.js"), "utf8");
+  const scheduleTest = readFileSync(join(root, "tests", "schedule.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [publicBooking, "src/pages/PublicBooking.jsx", "isTimeSlotAvailable"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "isTimeAvailable(time)"],
+    [scheduleUtils, "src/utils/schedule.js", "export const isTimeSlotAvailable"],
+    [scheduleTest, "tests/schedule.test.js", "detects whether a public booking slot is still available"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`public booking submit availability guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -811,6 +830,7 @@ assertPublicBookingShowsConfirmationSummary();
 assertPendingAppointmentsHaveResponseFlow();
 assertFinanceShowsOperationalHealth();
 assertAdminDataSyncCanRetry();
+assertPublicBookingSubmitRespectsAvailability();
 
 if (failures.length > 0) {
   console.error("Production check failed:");

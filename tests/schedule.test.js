@@ -5,8 +5,9 @@ import {
   createSlotId,
   getOccupiedTimes,
   getTimeSlots,
-  isValidDateString,
   isFutureAppointmentStart,
+  isTimeSlotAvailable,
+  isValidDateString,
   isValidAppointmentTime,
   isValidTimeString,
   normalizeBlockedDates,
@@ -59,6 +60,17 @@ describe("schedule utils", () => {
   it("detects overlapping appointment windows", () => {
     assert.equal(overlaps(540, 600, 570, 630), true);
     assert.equal(overlaps(540, 600, 600, 660), false);
+  });
+
+  it("detects whether a public booking slot is still available", () => {
+    const bookedSlots = [
+      { time: "10:00", startMinutes: 600, endMinutes: 660, duration: 60 },
+    ];
+
+    assert.equal(isTimeSlotAvailable({ time: "09:30", duration: 30, bookedSlots }), true);
+    assert.equal(isTimeSlotAvailable({ time: "10:30", duration: 30, bookedSlots }), false);
+    assert.equal(isTimeSlotAvailable({ time: "11:00", duration: 30, bookedSlots }), true);
+    assert.equal(isTimeSlotAvailable({ time: "bad", duration: 30, bookedSlots }), false);
   });
 
   it("validates schedule boundaries and configured interval", () => {

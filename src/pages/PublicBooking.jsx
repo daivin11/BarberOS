@@ -16,7 +16,7 @@ import {
   getOccupiedTimes,
   getTimeSlots,
   isFutureAppointmentStart,
-  overlaps,
+  isTimeSlotAvailable,
   timeToMinutes,
 } from "../utils/schedule";
 import { reportError, trackEvent } from "../utils/telemetry";
@@ -63,13 +63,10 @@ export default function PublicBooking() {
 
   // Check if a time slot is available
   const isTimeAvailable = (timeSlot) => {
-    const slotStart = timeToMinutes(timeSlot);
-    const slotEnd = slotStart + selectedDuration;
-
-    return !getBookedTimes().some((bookedSlot) => {
-      const bookedStart = bookedSlot.startMinutes ?? timeToMinutes(bookedSlot.time);
-      const bookedEnd = bookedSlot.endMinutes ?? bookedStart + Number(bookedSlot.duration || 30);
-      return overlaps(slotStart, slotEnd, bookedStart, bookedEnd);
+    return isTimeSlotAvailable({
+      time: timeSlot,
+      duration: selectedDuration,
+      bookedSlots: getBookedTimes(),
     });
   };
 
@@ -90,6 +87,7 @@ export default function PublicBooking() {
     Boolean(time) &&
     isPrivacyConsentAccepted(privacyAccepted) &&
     timeSlots.includes(time) &&
+    isTimeAvailable(time) &&
     !isBlockedDate &&
     isDateWithinAppointmentWindow(date, appointmentWindow) &&
     !submitLoading;

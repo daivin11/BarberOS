@@ -39,6 +39,19 @@ export const minutesToTime = (value) => {
 
 export const overlaps = (startA, endA, startB, endB) => startA < endB && endA > startB;
 
+export const isTimeSlotAvailable = ({ time, duration = 30, bookedSlots = [], interval } = {}) => {
+  if (!isValidTimeString(time)) return false;
+
+  const slotStart = timeToMinutes(time);
+  const slotEnd = slotStart + Number(duration || interval || defaultBusinessHours.slotInterval);
+
+  return !bookedSlots.some((bookedSlot) => {
+    const bookedStart = bookedSlot.startMinutes ?? timeToMinutes(bookedSlot.time);
+    const bookedEnd = bookedSlot.endMinutes ?? bookedStart + Number(bookedSlot.duration || 30);
+    return overlaps(slotStart, slotEnd, bookedStart, bookedEnd);
+  });
+};
+
 export const getOccupiedTimes = ({ startMinutes, endMinutes, interval = defaultBusinessHours.slotInterval }) => {
   const times = [];
   for (let current = startMinutes; current < endMinutes; current += interval) {
