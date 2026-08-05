@@ -15,7 +15,14 @@ import {
 } from "../utils/appointmentWindow";
 import { addLocalDays, formatLocalDate, parseLocalDate } from "../utils/date";
 import { formatCurrencyBRL, formatDuration } from "../utils/format";
-import { defaultBusinessHours, getTimeSlots, normalizeBusinessHours, overlaps, timeToMinutes } from "../utils/schedule";
+import {
+  defaultBusinessHours,
+  getTimeSlots,
+  isTimeSlotAvailable,
+  normalizeBusinessHours,
+  overlaps,
+  timeToMinutes,
+} from "../utils/schedule";
 
 const getDayLabel = (date) =>
   new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR", {
@@ -101,6 +108,29 @@ export default function Schedule({
         : [],
     [normalizedBusinessHours, selectedServiceData, selectedServiceDuration]
   );
+  const selectedBarberBookedSlots = useMemo(
+    () =>
+      selectedBarber && appointmentDate
+        ? activeAppointments.filter(
+            (appointment) =>
+              String(appointment.barberId) === String(selectedBarber) &&
+              appointment.date === appointmentDate
+          )
+        : [],
+    [activeAppointments, appointmentDate, selectedBarber]
+  );
+  const availableAppointmentTimeOptions = useMemo(
+    () =>
+      appointmentTimeOptions.filter((slot) =>
+        isTimeSlotAvailable({
+          time: slot,
+          duration: selectedServiceDuration,
+          bookedSlots: selectedBarberBookedSlots,
+          interval: normalizedBusinessHours.slotInterval,
+        })
+      ),
+    [appointmentTimeOptions, normalizedBusinessHours.slotInterval, selectedBarberBookedSlots, selectedServiceDuration]
+  );
   const selectedClientData = useMemo(
     () => clients.find((client) => String(client.id) === String(selectedClient)),
     [clients, selectedClient]
@@ -115,7 +145,7 @@ export default function Schedule({
     selectedBarber &&
     appointmentDate &&
     appointmentTime &&
-    appointmentTimeOptions.includes(appointmentTime) &&
+    availableAppointmentTimeOptions.includes(appointmentTime) &&
     isDateWithinAppointmentWindow(appointmentDate, appointmentWindow) &&
     !needsData;
   const assignedAppointments = useMemo(
@@ -543,7 +573,10 @@ export default function Schedule({
               <select
                 className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
                 value={selectedBarber}
-                onChange={(e) => setSelectedBarber(e.target.value)}
+                onChange={(e) => {
+                  setSelectedBarber(e.target.value);
+                  setAppointmentTime("");
+                }}
               >
                 <option value="">Selecione o barbeiro</option>
                 {barbers.map((barber) => (
@@ -563,7 +596,10 @@ export default function Schedule({
                   min={today > appointmentWindow.startDate ? today : appointmentWindow.startDate}
                   max={appointmentWindow.endDate}
                   value={appointmentDate}
-                  onChange={(e) => setAppointmentDate(e.target.value)}
+                  onChange={(e) => {
+                    setAppointmentDate(e.target.value);
+                    setAppointmentTime("");
+                  }}
                 />
               </label>
 
@@ -572,13 +608,21 @@ export default function Schedule({
                 <select
                   className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
                   value={appointmentTime}
-                  disabled={!selectedServiceData || appointmentTimeOptions.length === 0}
+                  disabled={!selectedServiceData || !selectedBarber || !appointmentDate || availableAppointmentTimeOptions.length === 0}
                   onChange={(e) => setAppointmentTime(e.target.value)}
                 >
                   <option value="">
-                    {selectedServiceData ? "Selecione o horario" : "Escolha um servico primeiro"}
+                    {!selectedServiceData
+                      ? "Escolha um servico primeiro"
+                      : !selectedBarber
+                      ? "Escolha um barbeiro primeiro"
+                      : !appointmentDate
+                      ? "Escolha uma data primeiro"
+                      : availableAppointmentTimeOptions.length === 0
+                      ? "Sem horarios disponiveis"
+                      : "Selecione o horario"}
                   </option>
-                  {appointmentTimeOptions.map((slot) => (
+                  {availableAppointmentTimeOptions.map((slot) => (
                     <option key={slot} value={slot}>
                       {slot}
                     </option>
