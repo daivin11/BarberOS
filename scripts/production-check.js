@@ -643,6 +643,30 @@ const assertSetupDeepLinksGuideFirstRun = () => {
     }
   });
 };
+
+const assertPublicBookingRequiresPrivacyConsent = () => {
+  const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+  const privacyConsent = readFileSync(join(root, "src", "utils", "privacyConsent.js"), "utf8");
+  const privacyConsentTest = readFileSync(join(root, "tests", "privacyConsent.test.js"), "utf8");
+  const rules = readFileSync(join(root, "firestore.rules"), "utf8");
+
+  const requiredSnippets = [
+    [publicBooking, "src/pages/PublicBooking.jsx", "privacyAccepted"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "isPrivacyConsentAccepted(privacyAccepted)"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "createPrivacyConsentSnapshot"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "Autorizo a barbearia"],
+    [privacyConsent, "src/utils/privacyConsent.js", "PRIVACY_CONSENT_VERSION"],
+    [privacyConsentTest, "tests/privacyConsent.test.js", "only treats explicit true as accepted"],
+    [rules, "firestore.rules", "request.resource.data.privacyConsent == true"],
+    [rules, "firestore.rules", "request.resource.data.privacyConsentAt is timestamp"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`public booking privacy consent is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -692,6 +716,7 @@ assertFirebaseAppCheckIsConfigurable();
 assertWorkspaceDataExportExists();
 assertPublicLinkReadinessGuardsSharing();
 assertSetupDeepLinksGuideFirstRun();
+assertPublicBookingRequiresPrivacyConsent();
 
 if (failures.length > 0) {
   console.error("Production check failed:");

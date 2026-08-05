@@ -8,6 +8,7 @@ import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "../u
 import { formatLocalDate } from "../utils/date";
 import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
 import { isValidBrazilianPhone, normalizePhone } from "../utils/phone";
+import { createPrivacyConsentSnapshot, isPrivacyConsentAccepted } from "../utils/privacyConsent";
 import {
   createSlotId,
   defaultBusinessHours,
@@ -42,6 +43,7 @@ export default function PublicBooking() {
   const [time, setTime] = useState("");
   const [success, setSuccess] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   const businessHours = barber?.businessHours || defaultBusinessHours;
   const blockedDates = Array.isArray(barber?.blockedDates) ? barber.blockedDates : [];
@@ -84,6 +86,7 @@ export default function PublicBooking() {
     isValidBrazilianPhone(cleanPhoneForSubmit) &&
     Boolean(date) &&
     Boolean(time) &&
+    isPrivacyConsentAccepted(privacyAccepted) &&
     timeSlots.includes(time) &&
     !isBlockedDate &&
     isDateWithinAppointmentWindow(date, appointmentWindow) &&
@@ -100,6 +103,7 @@ export default function PublicBooking() {
       setServices([]);
       setBookedSlots([]);
       setSuccess(false);
+      setPrivacyAccepted(false);
 
       if (!routeSlug) {
         setFatalError("Slug invalido ou ausente. Verifique o endereco publico do barbeiro.");
@@ -232,6 +236,11 @@ export default function PublicBooking() {
       return;
     }
 
+    if (!isPrivacyConsentAccepted(privacyAccepted)) {
+      setFormError("Aceite o uso dos seus dados para solicitar o agendamento.");
+      return;
+    }
+
     if (isBlockedDate) {
       setFormError("Esta data esta indisponivel. Escolha outro dia para agendar.");
       return;
@@ -330,6 +339,7 @@ export default function PublicBooking() {
         slotId,
         slotIds,
         createdAt,
+        ...createPrivacyConsentSnapshot({ accepted: privacyAccepted, acceptedAt: createdAt }),
       };
 
       await runTransaction(db, async (transaction) => {
@@ -388,6 +398,7 @@ export default function PublicBooking() {
       setSelectedService("");
       setDate("");
       setTime("");
+      setPrivacyAccepted(false);
 
       setBookedSlots((current) => [
         ...current,
@@ -646,6 +657,21 @@ export default function PublicBooking() {
                       setSuccess(false);
                     }}
                   />
+                </label>
+                <label className="flex items-start gap-3 rounded-3xl border border-gray-800 bg-gray-950 p-4 text-sm text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={privacyAccepted}
+                    onChange={(event) => {
+                      setPrivacyAccepted(event.target.checked);
+                      setFormError("");
+                      setSuccess(false);
+                    }}
+                    className="mt-1 h-4 w-4 rounded border-gray-700 bg-gray-900 text-indigo-500"
+                  />
+                  <span className="leading-6">
+                    Autorizo a barbearia a usar meu nome e telefone para solicitar, confirmar e acompanhar este agendamento.
+                  </span>
                 </label>
                 <div className="rounded-3xl border border-gray-800 bg-gray-950 p-4">
                   <p className="text-sm text-gray-400">Servico selecionado</p>

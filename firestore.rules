@@ -220,6 +220,9 @@ service cloud.firestore {
         'barberSlug',
         'slotId',
         'slotIds',
+        'privacyConsent',
+        'privacyConsentVersion',
+        'privacyConsentAt',
         'createdAt',
         'updatedAt'
       ];
@@ -434,6 +437,11 @@ service cloud.firestore {
           || (
             matchesPublicProfile(request.resource.data.userId, request.resource.data.barberSlug)
             && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.appointmentId == appointmentId
+            && request.resource.data.privacyConsent == true
+            && request.resource.data.privacyConsentVersion is string
+            && request.resource.data.privacyConsentVersion.size() >= 10
+            && request.resource.data.privacyConsentVersion.size() <= 40
+            && request.resource.data.privacyConsentAt is timestamp
           )
         )
         && hasOnly(appointmentFields())
