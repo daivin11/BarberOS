@@ -783,14 +783,20 @@ const assertAvailabilityContractIsBounded = () => {
 
 const assertFirebaseAppCheckIsConfigurable = () => {
   const firebaseService = readFileSync(join(root, "src", "services", "firebase.js"), "utf8");
+  const firebaseConfig = readFileSync(join(root, "src", "utils", "firebaseConfig.js"), "utf8");
+  const firebaseConfigTest = readFileSync(join(root, "tests", "firebaseConfig.test.js"), "utf8");
   const envExample = readFileSync(join(root, ".env.example"), "utf8");
   const readme = readFileSync(join(root, "README.md"), "utf8");
 
   const requiredSnippets = [
+    [firebaseService, "src/services/firebase.js", "validateFirebaseConfig"],
     [firebaseService, "src/services/firebase.js", "initializeAppCheck"],
     [firebaseService, "src/services/firebase.js", "ReCaptchaV3Provider"],
     [firebaseService, "src/services/firebase.js", "VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY"],
     [firebaseService, "src/services/firebase.js", "isTokenAutoRefreshEnabled: true"],
+    [firebaseConfig, "src/utils/firebaseConfig.js", "placeholderPattern"],
+    [firebaseConfig, "src/utils/firebaseConfig.js", "Firebase config invalid or missing"],
+    [firebaseConfigTest, "tests/firebaseConfig.test.js", "rejects placeholder values copied from env examples"],
     [envExample, ".env.example", "VITE_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY="],
     [readme, "README.md", "Firebase App Check"],
   ];
