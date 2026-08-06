@@ -469,11 +469,14 @@ service cloud.firestore {
         && request.resource.data.name.size() <= 80
         && request.resource.data.phone.size() >= 10
         && request.resource.data.phone.size() <= 13
+        && request.resource.data.createdAt is timestamp
         && request.resource.data.isArchived == false
         && activeClientHasPhoneKey(clientId);
       allow update: if isOwner(resource.data.userId)
         && hasOnly(['name', 'phone', 'phoneNormalized', 'createdAt', 'updatedAt', 'userId', 'barberSlug', 'isArchived', 'archivedAt'])
         && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt is timestamp
         && request.resource.data.name is string
         && request.resource.data.phone is string
         && request.resource.data.phoneNormalized is string
@@ -507,6 +510,7 @@ service cloud.firestore {
         && request.resource.data.clientId is string
         && request.resource.data.phoneNormalized.size() >= 10
         && request.resource.data.phoneNormalized.size() <= 13
+        && request.resource.data.createdAt is timestamp
         && clientPhoneKeyMatchesClient();
       allow update: if false;
       allow delete: if isOwner(resource.data.userId);

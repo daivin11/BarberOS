@@ -185,15 +185,15 @@ const assertPublicProfilesRequireCompletion = () => {
 
 const assertPublicPhoneKeysSupportReturningClients = () => {
   const rules = readFileSync(join(root, "firestore.rules"), "utf8");
-  const start = rules.indexOf("match /clientPhoneKeys/{phoneKeyId} {");
+  const start = rules.indexOf("match /clients/{clientId} {");
   const end = rules.indexOf("match /services/{serviceId}", start);
-  const phoneKeysBody = start >= 0 && end > start ? rules.slice(start, end) : "";
+  const clientPhoneContractBody = start >= 0 && end > start ? rules.slice(start, end) : "";
 
-  if (!phoneKeysBody.includes("hasCompletePublicProfile(resource.data.userId)")) {
+  if (!clientPhoneContractBody.includes("hasCompletePublicProfile(resource.data.userId)")) {
     failures.push("clientPhoneKeys public get does not support returning public-booking clients: firestore.rules");
   }
 
-  const requiredSnippets = [
+  const requiredGlobalSnippets = [
     "function clientPhoneKeyMatchesClient",
     "function activeClientHasPhoneKey",
     "function archivedClientReleasesPhoneKey",
@@ -201,16 +201,28 @@ const assertPublicPhoneKeysSupportReturningClients = () => {
     "existsAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId))",
     "existsAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient()))",
     "phoneNormalized == request.resource.data.phoneNormalized",
+  ];
+
+  requiredGlobalSnippets.forEach((snippet) => {
+    if (!rules.includes(snippet)) {
+      failures.push(`clientPhoneKeys write contract is not hardened: ${snippet}`);
+    }
+  });
+
+  const requiredScopedSnippets = [
     "isArchived == false",
     "activeClientHasPhoneKey(clientId)",
     "archivedClientReleasesPhoneKey()",
     "clientPhoneKeyMatchesClient()",
+    "request.resource.data.createdAt is timestamp",
+    "request.resource.data.createdAt == resource.data.createdAt",
+    "request.resource.data.updatedAt is timestamp",
     "allow update: if false;",
     "allow delete: if isOwner(resource.data.userId);",
   ];
 
-  requiredSnippets.forEach((snippet) => {
-    if (!rules.includes(snippet)) {
+  requiredScopedSnippets.forEach((snippet) => {
+    if (!clientPhoneContractBody.includes(snippet)) {
       failures.push(`clientPhoneKeys write contract is not hardened: ${snippet}`);
     }
   });
@@ -635,6 +647,9 @@ const assertOperationalDataUsesSoftArchive = () => {
     [rules, "firestore.rules", "match /barbers/{barberId}"],
     [rules, "firestore.rules", "allow delete: if false;"],
     [rules, "firestore.rules", "'isArchived', 'archivedAt'"],
+    [rules, "firestore.rules", "request.resource.data.createdAt == resource.data.createdAt"],
+    [rules, "firestore.rules", "request.resource.data.updatedAt is timestamp"],
+    [rules, "firestore.rules", "request.resource.data.createdAt is timestamp"],
     [rules, "firestore.rules", "function isPublishedOperationalResource"],
     [rules, "firestore.rules", "hasCompletePublicProfile(resource.data.userId) && isPublishedOperationalResource()"],
     [rules, "firestore.rules", "hasCompletePublicProfile(resource.data.ownerId) && isPublishedOperationalResource()"],
