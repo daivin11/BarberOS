@@ -141,6 +141,7 @@ export default function PublicBooking() {
         const servicesQuery = query(
           collection(db, "services"),
           where("userId", "==", barberData.uid),
+          where("isArchived", "==", false),
           orderBy("createdAt", "desc"),
           limit(PUBLIC_QUERY_LIMITS.services)
         );
@@ -153,6 +154,7 @@ export default function PublicBooking() {
         const barbersQuery = query(
           collection(db, "barbers"),
           where("ownerId", "==", barberData.uid),
+          where("isArchived", "==", false),
           orderBy("name"),
           limit(PUBLIC_QUERY_LIMITS.barbers)
         );

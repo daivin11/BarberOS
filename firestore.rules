@@ -217,6 +217,11 @@ service cloud.firestore {
         && !existsAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient()));
     }
 
+    function isPublishedOperationalResource() {
+      return (!('isArchived' in resource.data) || resource.data.isArchived == false)
+        && !('archivedAt' in resource.data);
+    }
+
     function publicUserFields() {
       return [
         'email',
@@ -492,11 +497,11 @@ service cloud.firestore {
     }
 
     match /services/{serviceId} {
-      allow get: if isOwner(resource.data.userId) || hasCompletePublicProfile(resource.data.userId);
+      allow get: if isOwner(resource.data.userId) || (hasCompletePublicProfile(resource.data.userId) && isPublishedOperationalResource());
       allow list: if (
           isOwner(resource.data.userId) && request.query.limit <= 300
         ) || (
-          hasCompletePublicProfile(resource.data.userId) && request.query.limit <= 100
+          hasCompletePublicProfile(resource.data.userId) && isPublishedOperationalResource() && request.query.limit <= 100
         );
       allow create: if hasOnly(['name', 'price', 'duration', 'createdAt', 'updatedAt', 'userId', 'isArchived'])
         && isOwner(request.resource.data.userId)
@@ -527,11 +532,11 @@ service cloud.firestore {
     }
 
     match /barbers/{barberId} {
-      allow get: if isOwner(resource.data.ownerId) || hasCompletePublicProfile(resource.data.ownerId);
+      allow get: if isOwner(resource.data.ownerId) || (hasCompletePublicProfile(resource.data.ownerId) && isPublishedOperationalResource());
       allow list: if (
           isOwner(resource.data.ownerId) && request.query.limit <= 100
         ) || (
-          hasCompletePublicProfile(resource.data.ownerId) && request.query.limit <= 50
+          hasCompletePublicProfile(resource.data.ownerId) && isPublishedOperationalResource() && request.query.limit <= 50
         );
       allow create: if hasOnly(['name', 'specialty', 'avatar', 'ownerId', 'createdAt', 'updatedAt', 'isArchived'])
         && isOwner(request.resource.data.ownerId)

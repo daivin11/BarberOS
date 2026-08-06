@@ -608,6 +608,7 @@ const assertOperationalDataUsesSoftArchive = () => {
   const clientsPage = readFileSync(join(root, "src", "pages", "Clients.jsx"), "utf8");
   const servicesPage = readFileSync(join(root, "src", "pages", "Services.jsx"), "utf8");
   const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+  const indexes = readFileSync(join(root, "firestore.indexes.json"), "utf8");
 
   const requiredSnippets = [
     [rules, "firestore.rules", "function validArchiveFields"],
@@ -616,6 +617,9 @@ const assertOperationalDataUsesSoftArchive = () => {
     [rules, "firestore.rules", "match /barbers/{barberId}"],
     [rules, "firestore.rules", "allow delete: if false;"],
     [rules, "firestore.rules", "'isArchived', 'archivedAt'"],
+    [rules, "firestore.rules", "function isPublishedOperationalResource"],
+    [rules, "firestore.rules", "hasCompletePublicProfile(resource.data.userId) && isPublishedOperationalResource()"],
+    [rules, "firestore.rules", "hasCompletePublicProfile(resource.data.ownerId) && isPublishedOperationalResource()"],
     [adminApp, "AdminApp.jsx", "transaction.update(doc(db, \"clients\", clientId)"],
     [adminApp, "AdminApp.jsx", "updateDoc(serviceRef, { isArchived: true"],
     [adminApp, "AdminApp.jsx", "!client.isArchived && !client.archivedAt"],
@@ -633,8 +637,10 @@ const assertOperationalDataUsesSoftArchive = () => {
     [barbersPage, "Barbers.jsx", "Restaurar barbeiro"],
     [barbersPage, "Barbers.jsx", "updateDoc(barberRef, { isArchived: true"],
     [barbersPage, "Barbers.jsx", "isArchived: false"],
+    [publicBooking, "PublicBooking.jsx", 'where("isArchived", "==", false)'],
     [publicBooking, "PublicBooking.jsx", "!service.isArchived && !service.archivedAt"],
     [publicBooking, "PublicBooking.jsx", "!barber.isArchived && !barber.archivedAt"],
+    [indexes, "firestore.indexes.json", '"fieldPath": "isArchived"'],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
