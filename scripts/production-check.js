@@ -776,6 +776,14 @@ const assertAvailabilityContractIsBounded = () => {
     failures.push("profile setup does not persist default availability when completing onboarding");
   }
 
+  if (
+    !profileSetup.includes("const isSubmitDisabled = loading || slugChecking") ||
+    !profileSetup.includes("Aguarde a verificacao do slug antes de continuar.") ||
+    !profileSetup.includes("aria-busy={loading ? \"true\" : \"false\"}")
+  ) {
+    failures.push("profile setup submit flow is not guarded while slug availability is checking");
+  }
+
   if (!scheduleUtils.includes("slotIntervals: [15, 30, 45, 60]") || !scheduleUtils.includes("blockedDatesMax: 120")) {
     failures.push("schedule availability limits are missing: src/utils/schedule.js");
   }

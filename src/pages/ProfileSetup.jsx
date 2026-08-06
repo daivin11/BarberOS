@@ -20,6 +20,7 @@ export default function ProfileSetup() {
   const [slugChecking, setSlugChecking] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const publicOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const isSubmitDisabled = loading || slugChecking;
 
   useEffect(() => {
     if (!profile) return;
@@ -96,6 +97,12 @@ export default function ProfileSetup() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (isSubmitDisabled) {
+      setSaveError(slugChecking ? "Aguarde a verificacao do slug antes de continuar." : "");
+      return;
+    }
+
     const normalized = normalizeSlug(slug);
     const trimmedName = barbershopName.trim();
     const trimmedPhone = phone.trim();
@@ -111,11 +118,13 @@ export default function ProfileSetup() {
 
     if (validationError) {
       setSaveError(validationError);
+      setSaveSuccess("");
       return;
     }
 
     if (slugError) {
       setSaveError("Corrija o slug antes de continuar.");
+      setSaveSuccess("");
       return;
     }
 
@@ -289,10 +298,15 @@ export default function ProfileSetup() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={isSubmitDisabled}
+                  aria-busy={loading ? "true" : "false"}
                   className="w-full rounded-3xl bg-gradient-to-r from-indigo-500 to-violet-500 py-4 font-semibold text-white shadow-lg transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {loading ? "Salvando perfil..." : "Salvar perfil e ir para dashboard"}
+                  {loading
+                    ? "Salvando perfil..."
+                    : slugChecking
+                      ? "Verificando URL publica..."
+                      : "Salvar perfil e ir para dashboard"}
                 </button>
               </form>
             </div>
