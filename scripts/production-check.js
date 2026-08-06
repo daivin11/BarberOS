@@ -592,7 +592,12 @@ const assertServiceContractIsBounded = () => {
     failures.push("service validation helper is not used by admin service flow");
   }
 
-  if (!serviceUtils.includes("priceMax: 100000") || !serviceUtils.includes("durationMax: 240")) {
+  if (
+    !serviceUtils.includes("priceMax: 100000") ||
+    !serviceUtils.includes("durationMax: 240") ||
+    !serviceUtils.includes("service.duration % 15 !== 0") ||
+    !serviceUtils.includes("!Number.isInteger(service.duration)")
+  ) {
     failures.push("service validation limits are missing: src/utils/services.js");
   }
 
@@ -610,6 +615,7 @@ const assertServiceContractIsBounded = () => {
     [servicesPage, "src/pages/Services.jsx", "getServiceCatalogPrice(service)"],
     [serviceUtilsTest, "tests/services.test.js", "finds duplicate active services"],
     [serviceUtilsTest, "tests/services.test.js", "returns a safe catalog price"],
+    [serviceUtilsTest, "tests/services.test.js", 'duration: "abc"'],
   ];
 
   duplicateGuardSnippets.forEach(([fileContent, fileName, snippet]) => {

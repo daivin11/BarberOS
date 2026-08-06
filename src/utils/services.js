@@ -8,9 +8,11 @@ export const SERVICE_LIMITS = {
 };
 
 export const normalizeServiceInput = ({ name, price, duration }) => ({
-  name: String(name || "").trim(),
+  name: String(name || "")
+    .trim()
+    .replace(/\s+/g, " "),
   price: Number(price),
-  duration: Number(duration) || 30,
+  duration: Number(duration),
 });
 
 export const getServiceCatalogPrice = (service = {}) => {
@@ -55,10 +57,12 @@ export const validateServiceInput = ({ name, price, duration }) => {
 
   if (
     !Number.isFinite(service.duration) ||
+    !Number.isInteger(service.duration) ||
     service.duration < SERVICE_LIMITS.durationMin ||
-    service.duration > SERVICE_LIMITS.durationMax
+    service.duration > SERVICE_LIMITS.durationMax ||
+    service.duration % 15 !== 0
   ) {
-    return "Duracao do servico precisa ficar entre 15 e 240 minutos.";
+    return "Duracao do servico precisa ser inteira, em blocos de 15 minutos, entre 15 e 240 minutos.";
   }
 
   return "";

@@ -12,8 +12,8 @@ import {
 describe("service utils", () => {
   it("normalizes service input for persistence", () => {
     assert.deepEqual(
-      normalizeServiceInput({ name: " Corte ", price: "45", duration: "30" }),
-      { name: "Corte", price: 45, duration: 30 }
+      normalizeServiceInput({ name: "  Corte   Masculino  ", price: "45", duration: "30" }),
+      { name: "Corte Masculino", price: 45, duration: 30 }
     );
     assert.equal(normalizeServiceNameKey("  Corte   Masculino  "), "corte masculino");
   });
@@ -25,6 +25,9 @@ describe("service utils", () => {
   it("rejects unsafe service price and duration", () => {
     assert.match(validateServiceInput({ name: "Corte", price: SERVICE_LIMITS.priceMax + 1, duration: 30 }), /Preco/);
     assert.match(validateServiceInput({ name: "Corte", price: 45, duration: 10 }), /Duracao/);
+    assert.match(validateServiceInput({ name: "Corte", price: 45, duration: "abc" }), /Duracao/);
+    assert.match(validateServiceInput({ name: "Corte", price: 45, duration: 30.5 }), /Duracao/);
+    assert.match(validateServiceInput({ name: "Corte", price: 45, duration: 20 }), /Duracao/);
   });
 
   it("returns a safe catalog price for legacy services", () => {
