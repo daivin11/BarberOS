@@ -193,6 +193,13 @@ service cloud.firestore {
         );
     }
 
+    function clientPhoneKeyMatchesClient() {
+      return existsAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId))
+        && getAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId)).data.userId == request.resource.data.userId
+        && getAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId)).data.phoneNormalized == request.resource.data.phoneNormalized
+        && getAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId)).data.isArchived == false;
+    }
+
     function publicUserFields() {
       return [
         'email',
@@ -456,8 +463,10 @@ service cloud.firestore {
         && request.resource.data.phoneNormalized is string
         && request.resource.data.clientId is string
         && request.resource.data.phoneNormalized.size() >= 10
-        && request.resource.data.phoneNormalized.size() <= 13;
-      allow update, delete: if isOwner(resource.data.userId);
+        && request.resource.data.phoneNormalized.size() <= 13
+        && clientPhoneKeyMatchesClient();
+      allow update: if false;
+      allow delete: if isOwner(resource.data.userId);
     }
 
     match /services/{serviceId} {

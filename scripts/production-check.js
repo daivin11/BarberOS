@@ -192,6 +192,22 @@ const assertPublicPhoneKeysSupportReturningClients = () => {
   if (!phoneKeysBody.includes("hasCompletePublicProfile(resource.data.userId)")) {
     failures.push("clientPhoneKeys public get does not support returning public-booking clients: firestore.rules");
   }
+
+  const requiredSnippets = [
+    "function clientPhoneKeyMatchesClient",
+    "existsAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId))",
+    "phoneNormalized == request.resource.data.phoneNormalized",
+    "isArchived == false",
+    "clientPhoneKeyMatchesClient()",
+    "allow update: if false;",
+    "allow delete: if isOwner(resource.data.userId);",
+  ];
+
+  requiredSnippets.forEach((snippet) => {
+    if (!rules.includes(snippet)) {
+      failures.push(`clientPhoneKeys write contract is not hardened: ${snippet}`);
+    }
+  });
 };
 
 const assertPublicBookingFiltersCompleteProfiles = () => {
