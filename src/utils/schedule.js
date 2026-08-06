@@ -11,6 +11,23 @@ export const BUSINESS_HOURS_LIMITS = {
   blockedDatesMax: 120,
 };
 
+export const getSafeScheduleDuration = (duration, fallbackDuration = defaultBusinessHours.slotInterval) => {
+  const value = Number(duration);
+  const fallback = Number(fallbackDuration) || defaultBusinessHours.slotInterval;
+
+  if (
+    Number.isFinite(value) &&
+    Number.isInteger(value) &&
+    value >= 15 &&
+    value <= 240 &&
+    value % 15 === 0
+  ) {
+    return value;
+  }
+
+  return fallback;
+};
+
 export const isValidTimeString = (value) => {
   if (!/^\d{2}:\d{2}$/.test(String(value || ""))) return false;
   const [hours, minutes] = String(value).split(":").map(Number);
@@ -43,11 +60,11 @@ export const isTimeSlotAvailable = ({ time, duration = 30, bookedSlots = [], int
   if (!isValidTimeString(time)) return false;
 
   const slotStart = timeToMinutes(time);
-  const slotEnd = slotStart + Number(duration || interval || defaultBusinessHours.slotInterval);
+  const slotEnd = slotStart + getSafeScheduleDuration(duration, interval || defaultBusinessHours.slotInterval);
 
   return !bookedSlots.some((bookedSlot) => {
     const bookedStart = bookedSlot.startMinutes ?? timeToMinutes(bookedSlot.time);
-    const bookedEnd = bookedSlot.endMinutes ?? bookedStart + Number(bookedSlot.duration || 30);
+    const bookedEnd = bookedSlot.endMinutes ?? bookedStart + getSafeScheduleDuration(bookedSlot.duration);
     return overlaps(slotStart, slotEnd, bookedStart, bookedEnd);
   });
 };
@@ -112,7 +129,7 @@ export const getTimeSlots = ({ businessHours = defaultBusinessHours, duration = 
   const slots = [];
   const start = timeToMinutes(normalized.start);
   const end = timeToMinutes(normalized.end);
-  const serviceDuration = Number(duration) || 30;
+  const serviceDuration = getSafeScheduleDuration(duration);
 
   for (let current = start; current + serviceDuration <= end; current += normalized.slotInterval) {
     slots.push(minutesToTime(current));
@@ -129,7 +146,7 @@ export const isValidAppointmentTime = ({ date, time, duration = 30, businessHour
   const openMinutes = timeToMinutes(normalized.start);
   const closeMinutes = timeToMinutes(normalized.end);
   const startMinutes = timeToMinutes(time);
-  const endMinutes = startMinutes + (Number(duration) || 30);
+  const endMinutes = startMinutes + getSafeScheduleDuration(duration);
 
   return (
     startMinutes >= openMinutes &&

@@ -4,6 +4,7 @@ import {
   BUSINESS_HOURS_LIMITS,
   createSlotId,
   getOccupiedTimes,
+  getSafeScheduleDuration,
   getTimeSlots,
   isFutureAppointmentStart,
   isTimeSlotAvailable,
@@ -62,6 +63,14 @@ describe("schedule utils", () => {
     assert.equal(overlaps(540, 600, 600, 660), false);
   });
 
+  it("sanitizes schedule durations before availability math", () => {
+    assert.equal(getSafeScheduleDuration(45), 45);
+    assert.equal(getSafeScheduleDuration("bad"), 30);
+    assert.equal(getSafeScheduleDuration(30.5), 30);
+    assert.equal(getSafeScheduleDuration(20), 30);
+    assert.equal(getSafeScheduleDuration(500), 30);
+  });
+
   it("detects whether a public booking slot is still available", () => {
     const bookedSlots = [
       { time: "10:00", startMinutes: 600, endMinutes: 660, duration: 60 },
@@ -71,6 +80,7 @@ describe("schedule utils", () => {
     assert.equal(isTimeSlotAvailable({ time: "10:30", duration: 30, bookedSlots }), false);
     assert.equal(isTimeSlotAvailable({ time: "11:00", duration: 30, bookedSlots }), true);
     assert.equal(isTimeSlotAvailable({ time: "bad", duration: 30, bookedSlots }), false);
+    assert.equal(isTimeSlotAvailable({ time: "09:30", duration: "bad", bookedSlots }), true);
   });
 
   it("validates schedule boundaries and configured interval", () => {
@@ -111,6 +121,16 @@ describe("schedule utils", () => {
         date: "2026-07-29",
         time: "17:30",
         duration: 60,
+        businessHours,
+        today: "2026-07-29",
+      }),
+      false
+    );
+    assert.equal(
+      isValidAppointmentTime({
+        date: "2026-07-29",
+        time: "17:45",
+        duration: "bad",
         businessHours,
         today: "2026-07-29",
       }),
