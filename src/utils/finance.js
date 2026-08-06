@@ -6,8 +6,10 @@ import {
   isCompletedAppointment,
 } from "./appointments.js";
 
-export const getServicePrice = (appointment) =>
-  Number(appointment?.service?.price ?? appointment?.servicePrice ?? 0);
+export const getServicePrice = (appointment) => {
+  const price = Number(appointment?.service?.price ?? appointment?.servicePrice ?? 0);
+  return Number.isFinite(price) && price >= 0 ? price : 0;
+};
 
 export const calculateFinanceMetrics = (appointments = []) => {
   const completedAppointments = appointments.filter(isCompletedAppointment);

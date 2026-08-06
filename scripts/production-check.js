@@ -969,10 +969,12 @@ const assertFinanceShowsOperationalHealth = () => {
     [financePage, "src/pages/Finance.jsx", "Proximos recebimentos"],
     [financePage, "src/pages/Finance.jsx", "getUpcomingRevenueAppointments"],
     [financeUtils, "src/utils/finance.js", "calculateFinanceMetrics"],
+    [financeUtils, "src/utils/finance.js", "Number.isFinite(price) && price >= 0 ? price : 0"],
     [financeUtils, "src/utils/finance.js", "pendingRevenue"],
     [financeUtils, "src/utils/finance.js", "completionRate"],
     [financeTest, "tests/finance.test.js", "calculates realized, projected, pending and lost revenue"],
     [financeTest, "tests/finance.test.js", "calculates operational conversion rates"],
+    [financeTest, "tests/finance.test.js", "ignores invalid legacy service prices"],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {

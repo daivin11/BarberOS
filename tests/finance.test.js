@@ -59,4 +59,17 @@ describe("finance utils", () => {
   it("accepts legacy flat service prices", () => {
     assert.equal(getServicePrice({ servicePrice: "35" }), 35);
   });
+
+  it("ignores invalid legacy service prices", () => {
+    assert.equal(getServicePrice({ service: { price: "valor aberto" } }), 0);
+    assert.equal(getServicePrice({ service: { price: -10 } }), 0);
+
+    const metrics = calculateFinanceMetrics([
+      appointment({ status: APPOINTMENT_STATUS.completed, price: "bad" }),
+      appointment({ status: APPOINTMENT_STATUS.completed, price: 50 }),
+    ]);
+
+    assert.equal(metrics.realizedRevenue, 50);
+    assert.equal(metrics.averageTicket, 25);
+  });
 });
