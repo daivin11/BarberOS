@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { getFriendlyAuthError } from "../utils/authErrors";
+import { validateLoginForm } from "../utils/authForms";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,13 @@ export default function Login() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const validationError = validateLoginForm({ email, password });
+
+    if (validationError) {
+      setErrorMessage(validationError);
+      return;
+    }
+
     setLoading(true);
     setErrorMessage("");
 
@@ -113,6 +121,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
+                  aria-busy={loading ? "true" : "false"}
                   className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 py-3 font-semibold text-white shadow transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "Entrando..." : "Entrar"}
