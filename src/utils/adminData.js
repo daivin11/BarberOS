@@ -2,6 +2,38 @@ import { normalizePhone } from "./phone.js";
 
 export { normalizePhone } from "./phone.js";
 
+export const CLIENT_LIMITS = {
+  nameMin: 2,
+  nameMax: 80,
+  phoneMin: 10,
+  phoneMax: 13,
+};
+
+export const normalizeClientInput = ({ name = "", phone = "" } = {}) => ({
+  name: String(name || "")
+    .trim()
+    .replace(/\s+/g, " "),
+  phone: normalizePhone(phone),
+});
+
+export const validateClientInput = ({ name = "", phone = "" } = {}) => {
+  const clientInput = normalizeClientInput({ name, phone });
+
+  if (!clientInput.name || !clientInput.phone) {
+    return "Preencha nome e telefone com DDD.";
+  }
+
+  if (clientInput.name.length < CLIENT_LIMITS.nameMin || clientInput.name.length > CLIENT_LIMITS.nameMax) {
+    return `Nome do cliente deve ter entre ${CLIENT_LIMITS.nameMin} e ${CLIENT_LIMITS.nameMax} caracteres.`;
+  }
+
+  if (clientInput.phone.length < CLIENT_LIMITS.phoneMin || clientInput.phone.length > CLIENT_LIMITS.phoneMax) {
+    return "Informe um telefone valido com DDD.";
+  }
+
+  return "";
+};
+
 export const createClientPhoneKeyId = ({ userId, phone }) =>
   `${userId}_${normalizePhone(phone)}`.replace(/[^a-zA-Z0-9_-]/g, "_");
 

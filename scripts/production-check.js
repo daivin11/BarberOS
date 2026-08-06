@@ -674,6 +674,8 @@ const assertOperationalDataUsesSoftArchive = () => {
   const clientsPage = readFileSync(join(root, "src", "pages", "Clients.jsx"), "utf8");
   const servicesPage = readFileSync(join(root, "src", "pages", "Services.jsx"), "utf8");
   const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+  const adminData = readFileSync(join(root, "src", "utils", "adminData.js"), "utf8");
+  const adminDataTest = readFileSync(join(root, "tests", "adminData.test.js"), "utf8");
   const indexes = readFileSync(join(root, "firestore.indexes.json"), "utf8");
 
   const requiredSnippets = [
@@ -698,6 +700,10 @@ const assertOperationalDataUsesSoftArchive = () => {
     [adminApp, "AdminApp.jsx", "const restoreService = async"],
     [adminApp, "AdminApp.jsx", "const restoreBarber = async"],
     [adminApp, "AdminApp.jsx", "archivedAt: deleteField()"],
+    [adminApp, "AdminApp.jsx", "normalizeClientInput"],
+    [adminApp, "AdminApp.jsx", "validateClientInput"],
+    [clientsPage, "Clients.jsx", "normalizeClientInput"],
+    [clientsPage, "Clients.jsx", "validateClientInput"],
     [clientsPage, "Clients.jsx", "Clientes arquivados"],
     [clientsPage, "Clients.jsx", "Restaurar cliente"],
     [servicesPage, "Services.jsx", "Servicos arquivados"],
@@ -707,8 +713,13 @@ const assertOperationalDataUsesSoftArchive = () => {
     [barbersPage, "Barbers.jsx", "updateDoc(barberRef, { isArchived: true"],
     [barbersPage, "Barbers.jsx", "isArchived: false"],
     [publicBooking, "PublicBooking.jsx", 'where("isArchived", "==", false)'],
+    [publicBooking, "PublicBooking.jsx", "validateClientInput"],
     [publicBooking, "PublicBooking.jsx", "!service.isArchived && !service.archivedAt"],
     [publicBooking, "PublicBooking.jsx", "!barber.isArchived && !barber.archivedAt"],
+    [adminData, "src/utils/adminData.js", "CLIENT_LIMITS"],
+    [adminData, "src/utils/adminData.js", "normalizeClientInput"],
+    [adminData, "src/utils/adminData.js", "validateClientInput"],
+    [adminDataTest, "tests/adminData.test.js", "validates the Firestore client field bounds"],
     [indexes, "firestore.indexes.json", '"fieldPath": "isArchived"'],
   ];
 

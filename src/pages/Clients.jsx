@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
+import { normalizeClientInput, validateClientInput } from "../utils/adminData";
 import { createWhatsAppUrl, formatBrazilianPhone, normalizePhone } from "../utils/phone";
 
 function getInitials(name = "CL") {
@@ -54,9 +55,11 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
   const handleAddClient = async () => {
     if (savingClient) return;
 
-    const cleanName = clientName.trim();
-    if (!cleanName || cleanPhone.length < 10) {
-      setFormError("Informe nome e telefone com DDD.");
+    const clientInput = normalizeClientInput({ name: clientName, phone: clientPhone });
+    const validationError = validateClientInput(clientInput);
+
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 
@@ -70,8 +73,8 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
 
     try {
       const success = editingClient
-        ? await updateClient(editingClient.id, { name: cleanName, phone: cleanPhone })
-        : await addClient(cleanName, cleanPhone);
+        ? await updateClient(editingClient.id, clientInput)
+        : await addClient(clientInput.name, clientInput.phone);
 
       if (success) {
         setClientName("");

@@ -1,18 +1,40 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  CLIENT_LIMITS,
   createClientPhoneKeyId,
   getDateValue,
+  normalizeClientInput,
   normalizePhone,
   sortAppointments,
   sortByCreatedAtDesc,
   sortByName,
+  validateClientInput,
 } from "../src/utils/adminData.js";
 
 describe("admin data utils", () => {
   it("normalizes Brazilian phone input to digits only", () => {
     assert.equal(normalizePhone("(11) 98888-7777"), "11988887777");
     assert.equal(normalizePhone(null), "");
+  });
+
+  it("normalizes client input before persistence", () => {
+    assert.deepEqual(
+      normalizeClientInput({ name: "  Ana   Silva  ", phone: "+55 (11) 98888-7777" }),
+      {
+        name: "Ana Silva",
+        phone: "5511988887777",
+      }
+    );
+  });
+
+  it("validates the Firestore client field bounds", () => {
+    assert.equal(
+      validateClientInput({ name: "A", phone: "11988887777" }),
+      `Nome do cliente deve ter entre ${CLIENT_LIMITS.nameMin} e ${CLIENT_LIMITS.nameMax} caracteres.`
+    );
+    assert.equal(validateClientInput({ name: "Ana Silva", phone: "123" }), "Informe um telefone valido com DDD.");
+    assert.equal(validateClientInput({ name: "Ana Silva", phone: "11988887777" }), "");
   });
 
   it("creates deterministic phone key ids safe for Firestore documents", () => {

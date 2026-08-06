@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { collection, getDocs, query, where, orderBy, runTransaction, doc, limit } from "firebase/firestore";
 import { db } from "../services/firebase";
-import { createClientPhoneKeyId } from "../utils/adminData";
+import { createClientPhoneKeyId, normalizeClientInput, validateClientInput } from "../utils/adminData";
 import { APPOINTMENT_STATUS } from "../utils/appointments";
 import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "../utils/appointmentWindow";
 import { createBookingConfirmation, getBookingConfirmationLines } from "../utils/bookingConfirmation";
@@ -249,16 +249,18 @@ export default function PublicBooking() {
       return;
     }
 
-    const cleanName = name.trim();
-    const cleanPhone = normalizePhone(phone);
+    const clientInput = normalizeClientInput({ name, phone });
+    const validationError = validateClientInput(clientInput);
+    const cleanName = clientInput.name;
+    const cleanPhone = clientInput.phone;
 
-    if (!cleanName || !cleanPhone || !selectedService || !date || !time) {
+    if (!selectedService || !date || !time) {
       setFormError("Preencha todos os campos para agendar o seu horario.");
       return;
     }
 
-    if (!isValidBrazilianPhone(cleanPhone)) {
-      setFormError("Informe um telefone valido com DDD.");
+    if (validationError || !isValidBrazilianPhone(cleanPhone)) {
+      setFormError(validationError || "Informe um telefone valido com DDD.");
       return;
     }
 

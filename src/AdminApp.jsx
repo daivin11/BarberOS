@@ -8,10 +8,12 @@ import { useAuth } from "./hooks/useAuth";
 import { isAccountActive } from "./utils/trial";
 import {
   createClientPhoneKeyId,
+  normalizeClientInput,
   normalizePhone,
   sortAppointments,
   sortByCreatedAtDesc,
   sortByName,
+  validateClientInput,
 } from "./utils/adminData";
 import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "./utils/appointmentWindow";
 import { createWhatsAppUrl } from "./utils/phone";
@@ -363,16 +365,18 @@ export default function AdminApp() {
   }, [user, updateLimitWarning, appointmentWindow.startDate, appointmentWindow.endDate, syncRetryToken]);
 
   const addClient = async (name, phone) => {
-    const cleanName = String(name || "").trim();
-    const cleanPhone = normalizePhone(phone);
+    const clientInput = normalizeClientInput({ name, phone });
+    const validationError = validateClientInput(clientInput);
+    const cleanName = clientInput.name;
+    const cleanPhone = clientInput.phone;
 
     if (!user) {
       notify("Sessao expirada. Entre novamente para cadastrar clientes.");
       return false;
     }
 
-    if (!cleanName || cleanPhone.length < 10) {
-      notify("Preencha nome e telefone do cliente");
+    if (validationError) {
+      notify(validationError);
       return false;
     }
 
@@ -439,8 +443,10 @@ export default function AdminApp() {
   };
 
   const updateClient = async (clientId, updates) => {
-    const cleanName = String(updates.name || "").trim();
-    const cleanPhone = normalizePhone(updates.phone);
+    const clientInput = normalizeClientInput(updates);
+    const validationError = validateClientInput(clientInput);
+    const cleanName = clientInput.name;
+    const cleanPhone = clientInput.phone;
     const currentClient = clients.find((client) => client.id === clientId);
 
     if (!user || !currentClient) {
@@ -448,8 +454,8 @@ export default function AdminApp() {
       return false;
     }
 
-    if (!cleanName || cleanPhone.length < 10) {
-      notify("Preencha nome e telefone com DDD.");
+    if (validationError) {
+      notify(validationError);
       return false;
     }
 
