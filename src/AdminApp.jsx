@@ -1185,6 +1185,7 @@ export default function AdminApp() {
     const nextSlotRefs = nextSlotIds.map((slotId) => doc(db, "bookingSlots", slotId));
     const previousSlotRefs = previousSlotIds.map((slotId) => doc(db, "bookingSlots", slotId));
 
+    const updatedAt = new Date();
     const nextAppointment = {
       ...currentAppointment,
       client,
@@ -1201,7 +1202,7 @@ export default function AdminApp() {
       endMinutes,
       slotId: nextSlotIds[0],
       slotIds: nextSlotIds,
-      updatedAt: new Date(),
+      updatedAt,
     };
 
     setAppointments((currentAppointments) =>
@@ -1238,7 +1239,8 @@ export default function AdminApp() {
             startMinutes,
             endMinutes,
             status: nextAppointment.status || APPOINTMENT_STATUS.pending,
-            updatedAt: new Date(),
+            createdAt: updatedAt,
+            updatedAt,
           });
         });
 

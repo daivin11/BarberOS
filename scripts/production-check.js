@@ -377,6 +377,12 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     "request.resource.data.endMinutes > request.resource.data.startMinutes",
     "request.resource.data.endMinutes == request.resource.data.startMinutes + request.resource.data.duration",
     "validTimeString(request.resource.data.rootTime)",
+    "request.resource.data.createdAt is timestamp",
+    "request.resource.data.date == resource.data.date",
+    "request.resource.data.time == resource.data.time",
+    "request.resource.data.startMinutes == resource.data.startMinutes",
+    "request.resource.data.endMinutes == resource.data.endMinutes",
+    "request.resource.data.updatedAt is timestamp",
   ];
 
   requiredSnippets.forEach((snippet) => {
@@ -391,6 +397,10 @@ const assertAppointmentRulesValidatePayloadShape = () => {
 
   if (!adminApp.includes("isTerminalAppointment(appointment)") || !adminApp.includes("isTerminalAppointment(currentAppointment)")) {
     failures.push("admin appointment flows do not block terminal appointment mutations");
+  }
+
+  if (!adminApp.includes("createdAt: updatedAt")) {
+    failures.push("admin appointment reschedule does not stamp recreated booking slots");
   }
 
   const submitGuardSnippets = [
