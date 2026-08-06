@@ -80,6 +80,18 @@ service cloud.firestore {
         && dates.size() <= 120;
     }
 
+    function validCompleteProfile(profileData) {
+      return profileData.profileComplete == false
+        || (
+          ('barbershopName' in profileData)
+          && validText(profileData.barbershopName, 2, 80)
+          && ('phone' in profileData)
+          && validPhone(profileData.phone)
+          && ('businessHours' in profileData)
+          && validBusinessHours(profileData.businessHours)
+        );
+    }
+
     function validArchiveFields() {
       return (!('isArchived' in request.resource.data) || request.resource.data.isArchived is bool)
         && (!('archivedAt' in request.resource.data) || request.resource.data.archivedAt is timestamp)
@@ -359,6 +371,8 @@ service cloud.firestore {
         && (!('businessHours' in request.resource.data) || validBusinessHours(request.resource.data.businessHours))
         && (!('blockedDates' in request.resource.data) || validBlockedDates(request.resource.data.blockedDates))
         && request.resource.data.profileComplete is bool
+        && validCompleteProfile(request.resource.data)
+        && request.resource.data.updatedAt is timestamp
         && request.resource.data.plan == resource.data.plan
         && request.resource.data.subscriptionStatus == resource.data.subscriptionStatus
         && (
@@ -422,6 +436,8 @@ service cloud.firestore {
         && validSlug(request.resource.data.slug)
         && validText(request.resource.data.displayName, 2, 80)
         && request.resource.data.profileComplete is bool
+        && validCompleteProfile(request.resource.data)
+        && request.resource.data.updatedAt is timestamp
         && validPlan(request.resource.data.plan)
         && validSubscriptionStatus(request.resource.data.subscriptionStatus)
         && publicBillingMatchesUser(profileId)

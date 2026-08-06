@@ -702,8 +702,10 @@ const assertAvailabilityContractIsBounded = () => {
   const requiredRuleSnippets = [
     "function validBusinessHours",
     "function validBlockedDates",
+    "function validCompleteProfile",
     "hours.slotInterval in [15, 30, 45, 60]",
     "dates.size() <= 120",
+    "validCompleteProfile(request.resource.data)",
     "validBusinessHours(request.resource.data.businessHours)",
     "validBlockedDates(request.resource.data.blockedDates)",
   ];
@@ -714,8 +716,14 @@ const assertAvailabilityContractIsBounded = () => {
     }
   });
 
+  const profileSetup = readFileSync(join(root, "src", "pages", "ProfileSetup.jsx"), "utf8");
+
   if (!profileSettings.includes("validateBusinessHoursInput") || !profileSettings.includes("normalizeBlockedDates")) {
     failures.push("profile settings do not validate availability before writing");
+  }
+
+  if (!profileSetup.includes("normalizeBusinessHours(defaultBusinessHours)")) {
+    failures.push("profile setup does not persist default availability when completing onboarding");
   }
 
   if (!scheduleUtils.includes("slotIntervals: [15, 30, 45, 60]") || !scheduleUtils.includes("blockedDatesMax: 120")) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { PROFILE_LIMITS, normalizeSlug, validatePublicProfileInput } from "../utils/profileValidation";
+import { defaultBusinessHours, normalizeBusinessHours } from "../utils/schedule";
 import { reportError, trackEvent } from "../utils/telemetry";
 
 export default function ProfileSetup() {
@@ -136,6 +137,7 @@ export default function ProfileSetup() {
         phone: trimmedPhone,
         bio: trimmedBio,
         logoUrl: trimmedLogoUrl,
+        businessHours: normalizeBusinessHours(defaultBusinessHours),
         profileComplete: true,
       });
       setSaveSuccess("Perfil salvo com sucesso.");
