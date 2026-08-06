@@ -54,6 +54,9 @@ export default function Barbers({
     () => countActiveAppointmentsByField(appointments, "barberId"),
     [appointments]
   );
+  const deleteBarberActiveCount = deleteBarber
+    ? activeAppointmentsByBarber[String(deleteBarber.id)] || 0
+    : 0;
 
   const syncBarbers = (nextBarbers) => {
     setBarbers(nextBarbers);
@@ -483,6 +486,16 @@ export default function Barbers({
             <p className="mt-3 text-sm leading-6 text-gray-400">
               Voce esta prestes a arquivar <span className="font-semibold text-white">{deleteBarber.name}</span>. Essa acao arquiva o profissional e so e permitida quando nao ha agendamentos ativos para ele.
             </p>
+            {deleteBarberActiveCount > 0 && (
+              <div className="mt-5 rounded-3xl border border-yellow-500 bg-yellow-950 p-4 text-yellow-200">
+                <p className="font-semibold">Arquivamento bloqueado</p>
+                <p className="mt-2 text-sm">
+                  Ha {pluralize(deleteBarberActiveCount, "agendamento")}{" "}
+                  {deleteBarberActiveCount === 1 ? "ativo" : "ativos"} para este barbeiro.
+                  Reagende, conclua ou cancele antes de arquivar.
+                </p>
+              </div>
+            )}
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
@@ -494,9 +507,11 @@ export default function Barbers({
               <button
                 type="button"
                 onClick={handleDeleteConfirmed}
-                disabled={archivingBarber}
+                disabled={archivingBarber || deleteBarberActiveCount > 0}
                 className={`rounded-3xl px-6 py-3 text-sm font-semibold text-white transition ${
-                  archivingBarber ? "cursor-not-allowed bg-red-900 text-red-200" : "bg-red-500 hover:bg-red-600"
+                  archivingBarber || deleteBarberActiveCount > 0
+                    ? "cursor-not-allowed bg-red-900 text-red-200"
+                    : "bg-red-500 hover:bg-red-600"
                 }`}
               >
                 {archivingBarber ? "Arquivando..." : "Confirmar arquivamento"}
