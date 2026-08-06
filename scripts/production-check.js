@@ -1149,6 +1149,24 @@ const assertLaunchMetadataIsReady = () => {
   });
 };
 
+const assertAppBootstrapIsGuarded = () => {
+  const main = readFileSync(join(root, "src", "main.jsx"), "utf8");
+  const domUtils = readFileSync(join(root, "src", "utils", "dom.js"), "utf8");
+  const domTest = readFileSync(join(root, "tests", "dom.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [main, "src/main.jsx", "getRequiredElementById(document, 'root')"],
+    [domUtils, "src/utils/dom.js", "Required DOM element not found"],
+    [domTest, "tests/dom.test.js", "throws a clear error when a required element is missing"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`app bootstrap is not guarded in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 const assertTelemetryRedactsPersonalData = () => {
   const telemetry = readFileSync(join(root, "src", "utils", "telemetry.js"), "utf8");
   const telemetryTest = readFileSync(join(root, "tests", "telemetry.test.js"), "utf8");
@@ -1249,6 +1267,7 @@ assertClientListSupportsWhatsAppContact();
 assertClientActionsHaveSubmitGuards();
 assertWhatsAppTemplatesAreDomainDriven();
 assertLaunchMetadataIsReady();
+assertAppBootstrapIsGuarded();
 assertTelemetryRedactsPersonalData();
 assertDateUtilsAvoidInvalidOutput();
 
