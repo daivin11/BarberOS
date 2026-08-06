@@ -13,6 +13,11 @@ export const normalizeServiceInput = ({ name, price, duration }) => ({
   duration: Number(duration) || 30,
 });
 
+export const getServiceCatalogPrice = (service = {}) => {
+  const price = Number(service.price ?? 0);
+  return Number.isFinite(price) && price >= SERVICE_LIMITS.priceMin ? price : 0;
+};
+
 export const normalizeServiceNameKey = (name = "") =>
   String(name || "")
     .trim()

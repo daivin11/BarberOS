@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import { isActiveAppointment } from "../utils/appointments";
 import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
-import { SERVICE_LIMITS, findDuplicateServiceByName, validateServiceInput } from "../utils/services";
+import { SERVICE_LIMITS, findDuplicateServiceByName, getServiceCatalogPrice, validateServiceInput } from "../utils/services";
 
 const durationOptions = [15, 30, 45, 60, 90, 120];
 
@@ -72,7 +72,7 @@ export default function Services({
   }, [appointments]);
 
   const averagePrice = services.length
-    ? Math.round(services.reduce((total, service) => total + Number(service.price || 0), 0) / services.length)
+    ? Math.round(services.reduce((total, service) => total + getServiceCatalogPrice(service), 0) / services.length)
     : 0;
 
   const handleAdd = async () => {

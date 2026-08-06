@@ -576,7 +576,10 @@ const assertServiceContractIsBounded = () => {
     [servicesPage, "src/pages/Services.jsx", "restoringServiceId"],
     [serviceUtils, "src/utils/services.js", "normalizeServiceNameKey"],
     [serviceUtils, "src/utils/services.js", "findDuplicateServiceByName"],
+    [serviceUtils, "src/utils/services.js", "getServiceCatalogPrice"],
+    [servicesPage, "src/pages/Services.jsx", "getServiceCatalogPrice(service)"],
     [serviceUtilsTest, "tests/services.test.js", "finds duplicate active services"],
+    [serviceUtilsTest, "tests/services.test.js", "returns a safe catalog price"],
   ];
 
   duplicateGuardSnippets.forEach(([fileContent, fileName, snippet]) => {

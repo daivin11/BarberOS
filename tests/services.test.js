@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   SERVICE_LIMITS,
   findDuplicateServiceByName,
+  getServiceCatalogPrice,
   normalizeServiceInput,
   normalizeServiceNameKey,
   validateServiceInput,
@@ -24,6 +25,12 @@ describe("service utils", () => {
   it("rejects unsafe service price and duration", () => {
     assert.match(validateServiceInput({ name: "Corte", price: SERVICE_LIMITS.priceMax + 1, duration: 30 }), /Preco/);
     assert.match(validateServiceInput({ name: "Corte", price: 45, duration: 10 }), /Duracao/);
+  });
+
+  it("returns a safe catalog price for legacy services", () => {
+    assert.equal(getServiceCatalogPrice({ price: "45" }), 45);
+    assert.equal(getServiceCatalogPrice({ price: "aberto" }), 0);
+    assert.equal(getServiceCatalogPrice({ price: -20 }), 0);
   });
 
   it("finds duplicate active services by normalized name", () => {
