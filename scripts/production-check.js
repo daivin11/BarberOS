@@ -1068,6 +1068,10 @@ const assertWhatsAppTemplatesAreDomainDriven = () => {
   const requiredSnippets = [
     [whatsappPage, "src/pages/WhatsApp.jsx", "WHATSAPP_TEMPLATES"],
     [whatsappPage, "src/pages/WhatsApp.jsx", "renderWhatsAppTemplate"],
+    [whatsappPage, "src/pages/WhatsApp.jsx", "typeof navigator === \"undefined\" || !navigator.clipboard?.writeText"],
+    [whatsappPage, "src/pages/WhatsApp.jsx", "reportError(error, { source: \"whatsapp\", action: \"copy-template\" })"],
+    [whatsappPage, "src/pages/WhatsApp.jsx", "whatsapp_template_copied"],
+    [whatsappPage, "src/pages/WhatsApp.jsx", "copie manualmente"],
     [whatsappTemplates, "src/utils/whatsappTemplates.js", "Pedido de avaliacao"],
     [whatsappTemplates, "src/utils/whatsappTemplates.js", "Reagendamento"],
     [whatsappTemplates, "src/utils/whatsappTemplates.js", "WHATSAPP_TEMPLATE_VARIABLES"],

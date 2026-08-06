@@ -6,6 +6,7 @@ import {
   WHATSAPP_TEMPLATES,
   WHATSAPP_TEMPLATE_VARIABLES,
 } from "../utils/whatsappTemplates";
+import { reportError, trackEvent } from "../utils/telemetry";
 
 export default function WhatsApp() {
   const [copied, setCopied] = useState("");
@@ -18,13 +19,23 @@ export default function WhatsApp() {
   const previewMessage = renderWhatsAppTemplate(selectedTemplate.message);
   const whatsappUrl = createWhatsAppUrl({ message: previewMessage });
 
-  function copyTemplate(text, id) {
-    navigator.clipboard.writeText(text).then(() => {
+  async function copyTemplate(text, id) {
+    if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+      setCopied("error");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
       setCopied(id);
+      trackEvent("whatsapp_template_copied", { source: "whatsapp", action: "copy-template" });
       window.setTimeout(() => {
         setCopied("");
       }, 2000);
-    });
+    } catch (error) {
+      reportError(error, { source: "whatsapp", action: "copy-template" });
+      setCopied("error");
+    }
   }
 
   return (
@@ -88,6 +99,11 @@ export default function WhatsApp() {
             >
               {copied === selectedTemplate.id ? "Copiado" : "Copiar modelo"}
             </button>
+            {copied === "error" && (
+              <p className="rounded-2xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-100" role="alert">
+                Nao foi possivel copiar automaticamente. Selecione o texto do preview e copie manualmente.
+              </p>
+            )}
             <a
               href={whatsappUrl}
               target="_blank"
