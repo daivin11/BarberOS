@@ -1137,6 +1137,24 @@ const assertTelemetryRedactsPersonalData = () => {
   });
 };
 
+const assertDateUtilsAvoidInvalidOutput = () => {
+  const dateUtils = readFileSync(join(root, "src", "utils", "date.js"), "utf8");
+  const dateTest = readFileSync(join(root, "tests", "date.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [dateUtils, "src/utils/date.js", "Number.isNaN(value.getTime())"],
+    [dateUtils, "src/utils/date.js", "if (!year || !month || !day) return new Date()"],
+    [dateTest, "tests/date.test.js", "does not return NaN date strings"],
+    [dateTest, "tests/date.test.js", "falls back to a valid date"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`date utility invalid-input guard is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -1198,6 +1216,7 @@ assertClientActionsHaveSubmitGuards();
 assertWhatsAppTemplatesAreDomainDriven();
 assertLaunchMetadataIsReady();
 assertTelemetryRedactsPersonalData();
+assertDateUtilsAvoidInvalidOutput();
 
 if (failures.length > 0) {
   console.error("Production check failed:");
