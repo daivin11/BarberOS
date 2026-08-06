@@ -76,4 +76,22 @@ describe("onboarding utils", () => {
     assert.equal(readiness.isReady, true);
     assert.equal(readiness.nextStep, null);
   });
+
+  it("blocks public link sharing for inactive accounts", () => {
+    const readiness = getPublicBookingReadiness({
+      profile: {
+        profileComplete: true,
+        slug: "barbearia-central",
+        barbershopName: "Barbearia Central",
+        businessHours: { start: "09:00", end: "18:00" },
+        subscriptionStatus: "past_due",
+        trialEndsAt: new Date("2026-07-01T12:00:00.000Z"),
+      },
+      servicesCount: 1,
+      barbersCount: 1,
+    });
+
+    assert.equal(readiness.isReady, false);
+    assert.equal(readiness.nextStep.id, "account");
+  });
 });

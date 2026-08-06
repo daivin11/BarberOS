@@ -1,3 +1,5 @@
+import { getAccountAccess } from "./trial.js";
+
 export const getActivationItems = ({
   profile,
   servicesCount = 0,
@@ -83,6 +85,15 @@ export const getPublicBookingReadiness = ({
   barbersCount = 0,
 } = {}) => {
   const missing = [];
+  const accountAccess = getAccountAccess(profile);
+
+  if (profile && !accountAccess.active) {
+    missing.push({
+      id: "account",
+      label: "Regularize a assinatura para reativar o link publico",
+      to: "/dashboard",
+    });
+  }
 
   if (!profile?.profileComplete || !profile?.slug || !profile?.barbershopName) {
     missing.push({

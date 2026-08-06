@@ -744,6 +744,8 @@ const assertPublicLinkReadinessGuardsSharing = () => {
 
   const requiredSnippets = [
     [onboarding, "src/utils/onboarding.js", "getPublicBookingReadiness"],
+    [onboarding, "src/utils/onboarding.js", "getAccountAccess(profile)"],
+    [onboarding, "src/utils/onboarding.js", "Regularize a assinatura para reativar o link publico"],
     [onboarding, "src/utils/onboarding.js", "servicesCount <= 0"],
     [onboarding, "src/utils/onboarding.js", "barbersCount <= 0"],
     [dashboardPage, "src/pages/Dashboard.jsx", "publicReadiness.isReady"],
@@ -751,6 +753,7 @@ const assertPublicLinkReadinessGuardsSharing = () => {
     [sidebar, "src/components/Sidebar.jsx", "Link em preparacao"],
     [sidebar, "src/components/Sidebar.jsx", "disabled={!publicReadiness.isReady}"],
     [onboardingTest, "tests/onboarding.test.js", "blocks public link sharing"],
+    [onboardingTest, "tests/onboarding.test.js", "blocks public link sharing for inactive accounts"],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
