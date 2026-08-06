@@ -44,6 +44,8 @@ export const createSlotId = ({ userId, barberId, date, time }) =>
   `${userId}_${barberId}_${date}_${time}`.replace(/[^a-zA-Z0-9_-]/g, "_");
 
 export const timeToMinutes = (value) => {
+  if (!isValidTimeString(value)) return 0;
+
   const [hours = "0", minutes = "0"] = String(value || "00:00").split(":");
   return Number(hours) * 60 + Number(minutes);
 };

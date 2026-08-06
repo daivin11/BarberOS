@@ -23,6 +23,8 @@ describe("schedule utils", () => {
   it("converts time strings to minutes", () => {
     assert.equal(timeToMinutes("09:30"), 570);
     assert.equal(timeToMinutes("18:00"), 1080);
+    assert.equal(timeToMinutes("not-a-time"), 0);
+    assert.equal(timeToMinutes("25:99"), 0);
   });
 
   it("creates deterministic safe slot ids", () => {
