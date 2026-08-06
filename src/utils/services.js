@@ -20,6 +20,22 @@ export const getServiceCatalogPrice = (service = {}) => {
   return Number.isFinite(price) && price >= SERVICE_LIMITS.priceMin ? price : 0;
 };
 
+export const getServiceCatalogDuration = (service = {}, fallbackDuration = 30) => {
+  const duration = Number(service.duration ?? fallbackDuration);
+
+  if (
+    Number.isFinite(duration) &&
+    Number.isInteger(duration) &&
+    duration >= SERVICE_LIMITS.durationMin &&
+    duration <= SERVICE_LIMITS.durationMax &&
+    duration % 15 === 0
+  ) {
+    return duration;
+  }
+
+  return fallbackDuration;
+};
+
 export const normalizeServiceNameKey = (name = "") =>
   String(name || "")
     .trim()

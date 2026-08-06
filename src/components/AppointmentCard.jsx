@@ -8,6 +8,7 @@ import {
 } from "../utils/appointments";
 import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "../utils/appointmentWindow";
 import { formatCurrencyBRL, formatDuration } from "../utils/format";
+import { getServiceCatalogDuration } from "../utils/services";
 
 export default function AppointmentCard({
   appointment,
@@ -256,7 +257,7 @@ export default function AppointmentCard({
                   <option value="">Selecione</option>
                   {services.map((service) => (
                     <option key={service.id} value={service.id}>
-                      {service.name} - {formatDuration(service.duration || 30)}
+                      {service.name} - {formatDuration(getServiceCatalogDuration(service))}
                     </option>
                   ))}
                 </select>

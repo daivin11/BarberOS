@@ -23,6 +23,7 @@ import {
   overlaps,
   timeToMinutes,
 } from "../utils/schedule";
+import { getServiceCatalogDuration, getServiceCatalogPrice } from "../utils/services";
 
 const getDayLabel = (date) =>
   new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR", {
@@ -97,7 +98,7 @@ export default function Schedule({
     () => services.find((service) => String(service.id) === String(selectedService)),
     [services, selectedService]
   );
-  const selectedServiceDuration = Number(selectedServiceData?.duration) || normalizedBusinessHours.slotInterval;
+  const selectedServiceDuration = getServiceCatalogDuration(selectedServiceData, normalizedBusinessHours.slotInterval);
   const appointmentTimeOptions = useMemo(
     () =>
       selectedServiceData
@@ -221,7 +222,7 @@ export default function Schedule({
     return calendarAppointments.find((appointment) => {
       if (String(appointment.barberId) !== String(barberId)) return false;
       const appointmentStart = appointment.startMinutes ?? timeToMinutes(appointment.time);
-      const appointmentEnd = appointment.endMinutes ?? appointmentStart + Number(appointment.duration || 30);
+      const appointmentEnd = appointment.endMinutes ?? appointmentStart + getServiceCatalogDuration({ duration: appointment.duration });
       return overlaps(slotStart, slotEnd, appointmentStart, appointmentEnd);
     });
   };
@@ -562,7 +563,7 @@ export default function Schedule({
                 <option value="">Selecione o servico</option>
                 {services.map((service) => (
                   <option key={service.id} value={service.id}>
-                    {service.name} - {formatDuration(service.duration || 30)} - {formatCurrencyBRL(service.price)}
+                    {service.name} - {formatDuration(getServiceCatalogDuration(service))} - {formatCurrencyBRL(getServiceCatalogPrice(service))}
                   </option>
                 ))}
               </select>
@@ -636,7 +637,7 @@ export default function Schedule({
               <p className="mt-2">{selectedClientData?.name || "Cliente nao selecionado"}</p>
               <p>
                 {selectedServiceData
-                  ? `${selectedServiceData.name} - ${formatDuration(selectedServiceData.duration || 30)}`
+                  ? `${selectedServiceData.name} - ${formatDuration(getServiceCatalogDuration(selectedServiceData))}`
                   : "Servico nao selecionado"}
               </p>
               <p>{selectedBarberData?.name || "Barbeiro nao selecionado"}</p>

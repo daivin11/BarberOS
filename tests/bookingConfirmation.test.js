@@ -35,4 +35,13 @@ describe("booking confirmation utils", () => {
     assert.match(lines[2][1], /^30 minutos - R\$\s45,00$/);
     assert.deepEqual(lines[5], ["Horario", "10:00"]);
   });
+
+  it("does not leak invalid legacy service values into confirmation copy", () => {
+    const confirmation = createBookingConfirmation({
+      service: { name: "Corte", price: "aberto", duration: "bad" },
+    });
+
+    assert.equal(confirmation.servicePrice, 0);
+    assert.equal(confirmation.serviceDuration, 30);
+  });
 });

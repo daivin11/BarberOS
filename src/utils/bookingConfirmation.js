@@ -1,4 +1,5 @@
 import { formatCurrencyBRL, formatDuration } from "./format.js";
+import { getServiceCatalogDuration, getServiceCatalogPrice } from "./services.js";
 
 export const createBookingConfirmation = ({
   clientName,
@@ -12,8 +13,8 @@ export const createBookingConfirmation = ({
   clientName: String(clientName || "").trim(),
   clientPhone: String(clientPhone || "").trim(),
   serviceName: service?.name || "Servico",
-  servicePrice: Number(service?.price || 0),
-  serviceDuration: Number(service?.duration || 30),
+  servicePrice: getServiceCatalogPrice(service),
+  serviceDuration: getServiceCatalogDuration(service),
   barberName: barber?.name || "Barbeiro",
   date: String(date || ""),
   time: String(time || ""),
@@ -26,7 +27,7 @@ export const getBookingConfirmationLines = (confirmation = {}) => [
   ["Servico", confirmation.serviceName || "Servico"],
   [
     "Duracao e valor",
-    `${formatDuration(confirmation.serviceDuration || 30)} - ${formatCurrencyBRL(confirmation.servicePrice || 0)}`,
+    `${formatDuration(getServiceCatalogDuration({ duration: confirmation.serviceDuration }))} - ${formatCurrencyBRL(getServiceCatalogPrice({ price: confirmation.servicePrice }))}`,
   ],
   ["Profissional", confirmation.barberName || "Barbeiro"],
   ["Data", confirmation.date || "Data nao informada"],

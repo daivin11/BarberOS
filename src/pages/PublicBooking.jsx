@@ -20,6 +20,7 @@ import {
   isTimeSlotAvailable,
   timeToMinutes,
 } from "../utils/schedule";
+import { getServiceCatalogDuration, getServiceCatalogPrice } from "../utils/services";
 import { reportError, trackEvent } from "../utils/telemetry";
 
 const PUBLIC_QUERY_LIMITS = {
@@ -54,7 +55,7 @@ export default function PublicBooking() {
   const isBlockedDate = date ? blockedDates.includes(date) : false;
   const appointmentWindow = createAppointmentDateWindow();
   const selectedServiceData = services.find((serviceItem) => serviceItem.id === selectedService);
-  const selectedDuration = Number(selectedServiceData?.duration) || 30;
+  const selectedDuration = getServiceCatalogDuration(selectedServiceData);
 
   // Get booked times for the selected date and selected barber
   const getBookedTimes = () => {
@@ -595,7 +596,7 @@ export default function PublicBooking() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     {services.map((service) => {
                       const selected = selectedService === service.id;
-                      const duration = formatDuration(service.duration || 30);
+                      const duration = formatDuration(getServiceCatalogDuration(service));
                       return (
                         <button
                           key={service.id}
@@ -738,7 +739,7 @@ export default function PublicBooking() {
                   </p>
                   {selectedServiceData && (
                     <p className="mt-2 text-sm text-gray-400">
-                      {formatDuration(selectedDuration)} - {formatCurrencyBRL(selectedServiceData.price)}
+                      {formatDuration(selectedDuration)} - {formatCurrencyBRL(getServiceCatalogPrice(selectedServiceData))}
                     </p>
                   )}
                 </div>

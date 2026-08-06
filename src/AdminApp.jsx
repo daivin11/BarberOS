@@ -34,7 +34,7 @@ import {
   isValidAppointmentTime,
   timeToMinutes,
 } from "./utils/schedule";
-import { findDuplicateServiceByName, normalizeServiceInput, validateServiceInput } from "./utils/services";
+import { findDuplicateServiceByName, getServiceCatalogDuration, normalizeServiceInput, validateServiceInput } from "./utils/services";
 import { reportError, trackEvent } from "./utils/telemetry";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -935,7 +935,7 @@ export default function AdminApp() {
       }
 
       const createdAt = new Date();
-      const duration = Number(service?.duration) || 30;
+      const duration = getServiceCatalogDuration(service);
       const startMinutes = timeToMinutes(appointmentTime);
       const endMinutes = startMinutes + duration;
       if (
@@ -1146,7 +1146,7 @@ export default function AdminApp() {
       return false;
     }
 
-    const duration = Number(service.duration) || 30;
+    const duration = getServiceCatalogDuration(service);
     const startMinutes = timeToMinutes(updates.time);
     const endMinutes = startMinutes + duration;
     if (

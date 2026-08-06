@@ -569,6 +569,11 @@ const assertServiceContractIsBounded = () => {
   const rules = readFileSync(join(root, "firestore.rules"), "utf8");
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
   const servicesPage = readFileSync(join(root, "src", "pages", "Services.jsx"), "utf8");
+  const schedulePage = readFileSync(join(root, "src", "pages", "Schedule.jsx"), "utf8");
+  const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+  const appointmentCard = readFileSync(join(root, "src", "components", "AppointmentCard.jsx"), "utf8");
+  const bookingConfirmation = readFileSync(join(root, "src", "utils", "bookingConfirmation.js"), "utf8");
+  const bookingConfirmationTest = readFileSync(join(root, "tests", "bookingConfirmation.test.js"), "utf8");
   const serviceUtils = readFileSync(join(root, "src", "utils", "services.js"), "utf8");
   const serviceUtilsTest = readFileSync(join(root, "tests", "services.test.js"), "utf8");
 
@@ -612,10 +617,21 @@ const assertServiceContractIsBounded = () => {
     [serviceUtils, "src/utils/services.js", "normalizeServiceNameKey"],
     [serviceUtils, "src/utils/services.js", "findDuplicateServiceByName"],
     [serviceUtils, "src/utils/services.js", "getServiceCatalogPrice"],
+    [serviceUtils, "src/utils/services.js", "getServiceCatalogDuration"],
     [servicesPage, "src/pages/Services.jsx", "getServiceCatalogPrice(service)"],
+    [servicesPage, "src/pages/Services.jsx", "getServiceCatalogDuration(service)"],
+    [schedulePage, "src/pages/Schedule.jsx", "getServiceCatalogDuration(selectedServiceData"],
+    [schedulePage, "src/pages/Schedule.jsx", "getServiceCatalogPrice(service)"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "getServiceCatalogDuration(selectedServiceData)"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "getServiceCatalogPrice(selectedServiceData)"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "getServiceCatalogDuration(service)"],
+    [bookingConfirmation, "src/utils/bookingConfirmation.js", "getServiceCatalogDuration(service)"],
+    [bookingConfirmation, "src/utils/bookingConfirmation.js", "getServiceCatalogPrice(service)"],
     [serviceUtilsTest, "tests/services.test.js", "finds duplicate active services"],
     [serviceUtilsTest, "tests/services.test.js", "returns a safe catalog price"],
+    [serviceUtilsTest, "tests/services.test.js", "returns a safe catalog duration"],
     [serviceUtilsTest, "tests/services.test.js", 'duration: "abc"'],
+    [bookingConfirmationTest, "tests/bookingConfirmation.test.js", "does not leak invalid legacy service values"],
   ];
 
   duplicateGuardSnippets.forEach(([fileContent, fileName, snippet]) => {
