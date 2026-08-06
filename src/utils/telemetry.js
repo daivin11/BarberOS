@@ -1,11 +1,23 @@
-const enabled = import.meta.env.VITE_ENABLE_CLIENT_LOGS === "true";
-const endpoint = import.meta.env.VITE_TELEMETRY_ENDPOINT || "";
+const env = import.meta.env || {};
+const enabled = env.VITE_ENABLE_CLIENT_LOGS === "true";
+const endpoint = env.VITE_TELEMETRY_ENDPOINT || "";
+
+export const sanitizeTelemetryText = (value, fallback = "") => {
+  const text = String(value || fallback);
+
+  return text
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]")
+    .replace(/https?:\/\/[^\s"'<>]+/gi, "[url]")
+    .replace(/\+?\d[\d\s().-]{7,}\d/g, "[phone]");
+};
 
 const safeErrorCode = (error) =>
   typeof error?.code === "string" ? error.code.slice(0, 80) : undefined;
 
 const safeErrorMessage = (error) =>
-  typeof error?.message === "string" ? error.message.slice(0, 160) : "Unknown error";
+  typeof error?.message === "string"
+    ? sanitizeTelemetryText(error.message).slice(0, 160)
+    : "Unknown error";
 
 const sanitizeProperties = (properties = {}) => {
   const allowed = {};
@@ -14,7 +26,7 @@ const sanitizeProperties = (properties = {}) => {
   allowList.forEach((key) => {
     const value = properties[key];
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-      allowed[key] = String(value).slice(0, 80);
+      allowed[key] = sanitizeTelemetryText(value).slice(0, 80);
     }
   });
 

@@ -1104,6 +1104,27 @@ const assertLaunchMetadataIsReady = () => {
   });
 };
 
+const assertTelemetryRedactsPersonalData = () => {
+  const telemetry = readFileSync(join(root, "src", "utils", "telemetry.js"), "utf8");
+  const telemetryTest = readFileSync(join(root, "tests", "telemetry.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [telemetry, "src/utils/telemetry.js", "sanitizeTelemetryText"],
+    [telemetry, "src/utils/telemetry.js", "[email]"],
+    [telemetry, "src/utils/telemetry.js", "[phone]"],
+    [telemetry, "src/utils/telemetry.js", "[url]"],
+    [telemetry, "src/utils/telemetry.js", "sanitizeTelemetryText(error.message)"],
+    [telemetry, "src/utils/telemetry.js", "sanitizeTelemetryText(value)"],
+    [telemetryTest, "tests/telemetry.test.js", "redacts personal data"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`telemetry personal-data redaction is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -1164,6 +1185,7 @@ assertClientListSupportsWhatsAppContact();
 assertClientActionsHaveSubmitGuards();
 assertWhatsAppTemplatesAreDomainDriven();
 assertLaunchMetadataIsReady();
+assertTelemetryRedactsPersonalData();
 
 if (failures.length > 0) {
   console.error("Production check failed:");
