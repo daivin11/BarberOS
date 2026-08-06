@@ -51,8 +51,13 @@ export const timeToMinutes = (value) => {
 };
 
 export const minutesToTime = (value) => {
-  const hours = Math.floor(value / 60);
-  const minutes = value % 60;
+  const safeValue = Number(value);
+  if (!Number.isFinite(safeValue) || !Number.isInteger(safeValue) || safeValue < 0 || safeValue >= 1440) {
+    return "00:00";
+  }
+
+  const hours = Math.floor(safeValue / 60);
+  const minutes = safeValue % 60;
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 };
 
@@ -72,8 +77,22 @@ export const isTimeSlotAvailable = ({ time, duration = 30, bookedSlots = [], int
 };
 
 export const getOccupiedTimes = ({ startMinutes, endMinutes, interval = defaultBusinessHours.slotInterval }) => {
+  const safeStart = Number(startMinutes);
+  const safeEnd = Number(endMinutes);
+  const safeInterval = getSafeScheduleDuration(interval);
+
+  if (
+    !Number.isFinite(safeStart) ||
+    !Number.isFinite(safeEnd) ||
+    safeStart < 0 ||
+    safeEnd <= safeStart ||
+    safeStart >= 1440
+  ) {
+    return [];
+  }
+
   const times = [];
-  for (let current = startMinutes; current < endMinutes; current += interval) {
+  for (let current = safeStart; current < safeEnd && current < 1440; current += safeInterval) {
     times.push(minutesToTime(current));
   }
   return times;

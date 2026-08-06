@@ -14,6 +14,7 @@ import {
   normalizeBlockedDates,
   normalizeBusinessHours,
   overlaps,
+  minutesToTime,
   timeToMinutes,
   validateBlockedDatesInput,
   validateBusinessHoursInput,
@@ -25,6 +26,14 @@ describe("schedule utils", () => {
     assert.equal(timeToMinutes("18:00"), 1080);
     assert.equal(timeToMinutes("not-a-time"), 0);
     assert.equal(timeToMinutes("25:99"), 0);
+  });
+
+  it("formats only valid day minutes", () => {
+    assert.equal(minutesToTime(570), "09:30");
+    assert.equal(minutesToTime(1439), "23:59");
+    assert.equal(minutesToTime(-1), "00:00");
+    assert.equal(minutesToTime(1440), "00:00");
+    assert.equal(minutesToTime(Number.POSITIVE_INFINITY), "00:00");
   });
 
   it("creates deterministic safe slot ids", () => {
@@ -58,6 +67,8 @@ describe("schedule utils", () => {
       }),
       ["09:00", "09:30"]
     );
+    assert.deepEqual(getOccupiedTimes({ startMinutes: Number.NaN, endMinutes: 600, interval: 30 }), []);
+    assert.deepEqual(getOccupiedTimes({ startMinutes: 600, endMinutes: 570, interval: 30 }), []);
   });
 
   it("detects overlapping appointment windows", () => {

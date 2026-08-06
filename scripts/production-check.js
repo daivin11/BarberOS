@@ -1100,8 +1100,11 @@ const assertPublicBookingSubmitRespectsAvailability = () => {
     [scheduleUtils, "src/utils/schedule.js", "getSafeScheduleDuration(duration"],
     [scheduleUtils, "src/utils/schedule.js", "getSafeScheduleDuration(bookedSlot.duration"],
     [scheduleUtils, "src/utils/schedule.js", "if (!isValidTimeString(value)) return 0"],
+    [scheduleUtils, "src/utils/schedule.js", "safeValue >= 1440"],
+    [scheduleUtils, "src/utils/schedule.js", "safeEnd <= safeStart"],
     [scheduleTest, "tests/schedule.test.js", "detects whether a public booking slot is still available"],
     [scheduleTest, "tests/schedule.test.js", "sanitizes schedule durations before availability math"],
+    [scheduleTest, "tests/schedule.test.js", "formats only valid day minutes"],
     [scheduleTest, "tests/schedule.test.js", "not-a-time"],
   ];
 
