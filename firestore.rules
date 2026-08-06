@@ -200,6 +200,23 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId)).data.isArchived == false;
     }
 
+    function clientPhoneKeyIdForClient() {
+      return request.resource.data.userId + '_' + request.resource.data.phoneNormalized;
+    }
+
+    function activeClientHasPhoneKey(clientId) {
+      return request.resource.data.isArchived == false
+        && existsAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient()))
+        && getAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient())).data.clientId == clientId
+        && getAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient())).data.userId == request.resource.data.userId
+        && getAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient())).data.phoneNormalized == request.resource.data.phoneNormalized;
+    }
+
+    function archivedClientReleasesPhoneKey() {
+      return request.resource.data.isArchived == true
+        && !existsAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient()));
+    }
+
     function publicUserFields() {
       return [
         'email',
@@ -431,7 +448,8 @@ service cloud.firestore {
         && request.resource.data.name.size() <= 80
         && request.resource.data.phone.size() >= 10
         && request.resource.data.phone.size() <= 13
-        && (!('isArchived' in request.resource.data) || request.resource.data.isArchived == false);
+        && request.resource.data.isArchived == false
+        && activeClientHasPhoneKey(clientId);
       allow update: if isOwner(resource.data.userId)
         && hasOnly(['name', 'phone', 'phoneNormalized', 'createdAt', 'updatedAt', 'userId', 'barberSlug', 'isArchived', 'archivedAt'])
         && request.resource.data.userId == resource.data.userId
@@ -443,7 +461,11 @@ service cloud.firestore {
         && request.resource.data.name.size() <= 80
         && request.resource.data.phone.size() >= 10
         && request.resource.data.phone.size() <= 13
-        && validArchiveFields();
+        && validArchiveFields()
+        && (
+          activeClientHasPhoneKey(clientId)
+          || archivedClientReleasesPhoneKey()
+        );
       allow delete: if false;
     }
 

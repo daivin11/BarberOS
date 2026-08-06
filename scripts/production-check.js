@@ -195,9 +195,15 @@ const assertPublicPhoneKeysSupportReturningClients = () => {
 
   const requiredSnippets = [
     "function clientPhoneKeyMatchesClient",
+    "function activeClientHasPhoneKey",
+    "function archivedClientReleasesPhoneKey",
+    "function clientPhoneKeyIdForClient",
     "existsAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId))",
+    "existsAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient()))",
     "phoneNormalized == request.resource.data.phoneNormalized",
     "isArchived == false",
+    "activeClientHasPhoneKey(clientId)",
+    "archivedClientReleasesPhoneKey()",
     "clientPhoneKeyMatchesClient()",
     "allow update: if false;",
     "allow delete: if isOwner(resource.data.userId);",
