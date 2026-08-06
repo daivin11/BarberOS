@@ -9,6 +9,7 @@ import { getAccountAccess } from "../utils/trial";
 import { formatLocalDate } from "../utils/date";
 import { pluralize } from "../utils/format";
 import { reportError, trackEvent } from "../utils/telemetry";
+import { copyTextToClipboard } from "../utils/clipboard";
 
 
 const activityLabels = {
@@ -132,15 +133,16 @@ export default function Dashboard({
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(publicUrl);
+    const copied = await copyTextToClipboard(publicUrl);
+    if (copied) {
       setCopyMessage("Link copiado!");
       trackEvent("public_link_copied", { source: "dashboard", action: "copy-public-link" });
       window.setTimeout(() => setCopyMessage(""), 2000);
-    } catch (err) {
-      reportError(err, { source: "dashboard", action: "copy-public-link" });
-      setCopyMessage("Erro ao copiar");
+      return;
     }
+
+    reportError(new Error("clipboard-unavailable"), { source: "dashboard", action: "copy-public-link" });
+    setCopyMessage("Erro ao copiar. Copie o link manualmente.");
   };
 
   const handleSaveSlug = async () => {

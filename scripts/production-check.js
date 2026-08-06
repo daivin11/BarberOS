@@ -1069,12 +1069,20 @@ const assertWhatsAppTemplatesAreDomainDriven = () => {
   const whatsappPage = readFileSync(join(root, "src", "pages", "WhatsApp.jsx"), "utf8");
   const whatsappTemplates = readFileSync(join(root, "src", "utils", "whatsappTemplates.js"), "utf8");
   const whatsappTemplatesTest = readFileSync(join(root, "tests", "whatsappTemplates.test.js"), "utf8");
+  const clipboardUtils = readFileSync(join(root, "src", "utils", "clipboard.js"), "utf8");
+  const clipboardTest = readFileSync(join(root, "tests", "clipboard.test.js"), "utf8");
+  const dashboardPage = readFileSync(join(root, "src", "pages", "Dashboard.jsx"), "utf8");
+  const sidebar = readFileSync(join(root, "src", "components", "Sidebar.jsx"), "utf8");
 
   const requiredSnippets = [
     [whatsappPage, "src/pages/WhatsApp.jsx", "WHATSAPP_TEMPLATES"],
     [whatsappPage, "src/pages/WhatsApp.jsx", "renderWhatsAppTemplate"],
-    [whatsappPage, "src/pages/WhatsApp.jsx", "typeof navigator === \"undefined\" || !navigator.clipboard?.writeText"],
-    [whatsappPage, "src/pages/WhatsApp.jsx", "reportError(error, { source: \"whatsapp\", action: \"copy-template\" })"],
+    [clipboardUtils, "src/utils/clipboard.js", "copyTextToClipboard"],
+    [clipboardUtils, "src/utils/clipboard.js", "typeof api?.writeText !== \"function\""],
+    [clipboardTest, "tests/clipboard.test.js", "returns false when clipboard is unavailable"],
+    [whatsappPage, "src/pages/WhatsApp.jsx", "copyTextToClipboard(text)"],
+    [dashboardPage, "src/pages/Dashboard.jsx", "copyTextToClipboard(publicUrl)"],
+    [sidebar, "src/components/Sidebar.jsx", "copyTextToClipboard(publicUrl)"],
     [whatsappPage, "src/pages/WhatsApp.jsx", "whatsapp_template_copied"],
     [whatsappPage, "src/pages/WhatsApp.jsx", "copie manualmente"],
     [whatsappTemplates, "src/utils/whatsappTemplates.js", "Pedido de avaliacao"],

@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { getActivationState, getPublicBookingReadiness } from "../utils/onboarding";
 import { reportError, trackEvent } from "../utils/telemetry";
+import { copyTextToClipboard } from "../utils/clipboard";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", initials: "DB" },
@@ -47,15 +48,16 @@ export default function Sidebar({
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(publicUrl);
+    const copied = await copyTextToClipboard(publicUrl);
+    if (copied) {
       setCopyMessage("Link copiado");
       trackEvent("public_link_copied", { source: "sidebar", action: "copy-public-link" });
       window.setTimeout(() => setCopyMessage(""), 2000);
-    } catch (error) {
-      reportError(error, { source: "sidebar", action: "copy-public-link" });
-      setCopyMessage("Erro ao copiar");
+      return;
     }
+
+    reportError(new Error("clipboard-unavailable"), { source: "sidebar", action: "copy-public-link" });
+    setCopyMessage("Erro ao copiar. Copie o link manualmente.");
   };
 
   const handleLogout = async () => {

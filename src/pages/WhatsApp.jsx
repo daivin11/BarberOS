@@ -7,6 +7,7 @@ import {
   WHATSAPP_TEMPLATE_VARIABLES,
 } from "../utils/whatsappTemplates";
 import { reportError, trackEvent } from "../utils/telemetry";
+import { copyTextToClipboard } from "../utils/clipboard";
 
 export default function WhatsApp() {
   const [copied, setCopied] = useState("");
@@ -20,22 +21,18 @@ export default function WhatsApp() {
   const whatsappUrl = createWhatsAppUrl({ message: previewMessage });
 
   async function copyTemplate(text, id) {
-    if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
-      setCopied("error");
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(text);
+    const copiedToClipboard = await copyTextToClipboard(text);
+    if (copiedToClipboard) {
       setCopied(id);
       trackEvent("whatsapp_template_copied", { source: "whatsapp", action: "copy-template" });
       window.setTimeout(() => {
         setCopied("");
       }, 2000);
-    } catch (error) {
-      reportError(error, { source: "whatsapp", action: "copy-template" });
-      setCopied("error");
+      return;
     }
+
+    reportError(new Error("clipboard-unavailable"), { source: "whatsapp", action: "copy-template" });
+    setCopied("error");
   }
 
   return (
