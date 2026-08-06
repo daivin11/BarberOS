@@ -119,16 +119,16 @@ service cloud.firestore {
         && serviceData.price is number
         && serviceData.price >= 0
         && serviceData.price <= 100000
-        && serviceData.duration is number
-        && serviceData.duration >= 15
-        && serviceData.duration <= 240
+        && validServiceDuration(serviceData.duration)
         && (!('userId' in serviceData) || serviceData.userId is string);
     }
 
+    function validServiceDuration(durationValue) {
+      return durationValue in [15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240];
+    }
+
     function validAppointmentTiming() {
-      return request.resource.data.duration is number
-        && request.resource.data.duration >= 15
-        && request.resource.data.duration <= 240
+      return validServiceDuration(request.resource.data.duration)
         && request.resource.data.startMinutes is number
         && request.resource.data.endMinutes is number
         && request.resource.data.startMinutes >= 0
@@ -139,9 +139,7 @@ service cloud.firestore {
     }
 
     function validBookingSlotTiming() {
-      return request.resource.data.duration is number
-        && request.resource.data.duration >= 15
-        && request.resource.data.duration <= 240
+      return validServiceDuration(request.resource.data.duration)
         && request.resource.data.startMinutes is number
         && request.resource.data.endMinutes is number
         && request.resource.data.startMinutes >= 0
@@ -531,9 +529,7 @@ service cloud.firestore {
         && request.resource.data.price is number
         && request.resource.data.price >= 0
         && request.resource.data.price <= 100000
-        && request.resource.data.duration is number
-        && request.resource.data.duration >= 15
-        && request.resource.data.duration <= 240
+        && validServiceDuration(request.resource.data.duration)
         && request.resource.data.createdAt is timestamp
         && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp)
         && request.resource.data.isArchived == false;
@@ -548,9 +544,7 @@ service cloud.firestore {
         && request.resource.data.price is number
         && request.resource.data.price >= 0
         && request.resource.data.price <= 100000
-        && request.resource.data.duration is number
-        && request.resource.data.duration >= 15
-        && request.resource.data.duration <= 240
+        && validServiceDuration(request.resource.data.duration)
         && validArchiveFields();
       allow delete: if false;
     }

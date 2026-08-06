@@ -374,6 +374,7 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     "function validTimeString",
     "function validClientSnapshot",
     "function validServiceSnapshot",
+    "function validServiceDuration",
     "function validAppointmentTiming",
     "function validBookingSlotTiming",
     "function appointmentRootSlotMatches",
@@ -386,6 +387,7 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     "request.resource.data.slotIds[0] == request.resource.data.slotId",
     "resource.data.status in ['pending', 'confirmed']",
     "request.resource.data.clientPhone.size() <= 13",
+    "validServiceDuration(request.resource.data.duration)",
     "request.resource.data.endMinutes > request.resource.data.startMinutes",
     "request.resource.data.endMinutes == request.resource.data.startMinutes + request.resource.data.duration",
     "validTimeString(request.resource.data.rootTime)",
@@ -579,8 +581,7 @@ const assertServiceContractIsBounded = () => {
 
   const requiredRuleSnippets = [
     "request.resource.data.price <= 100000",
-    "request.resource.data.duration >= 15",
-    "request.resource.data.duration <= 240",
+    "validServiceDuration(request.resource.data.duration)",
     "request.resource.data.createdAt is timestamp",
     "request.resource.data.createdAt == resource.data.createdAt",
     "request.resource.data.updatedAt is timestamp",
