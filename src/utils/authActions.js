@@ -13,12 +13,28 @@ const getConfiguredActionUrl = () => {
   return import.meta.env?.VITE_AUTH_ACTION_URL || "";
 };
 
+const getSafeBaseUrl = (...candidates) => {
+  for (const candidate of candidates) {
+    const value = String(candidate || "").trim();
+    if (!value) continue;
+
+    try {
+      const url = new URL(value);
+      if (["http:", "https:"].includes(url.protocol)) return url.origin;
+    } catch {
+      // Ignore invalid configured origins and try the next candidate.
+    }
+  }
+
+  return "";
+};
+
 export const getPasswordResetActionCodeSettings = ({
   origin,
   continuePath = DEFAULT_AUTH_CONTINUE_PATH,
   configuredActionUrl = getConfiguredActionUrl(),
 } = {}) => {
-  const baseUrl = configuredActionUrl || origin;
+  const baseUrl = getSafeBaseUrl(configuredActionUrl, origin);
   const normalizedPath = normalizeContinuePath(continuePath);
 
   try {

@@ -429,6 +429,25 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     }
   });
 };
+
+const assertAuthActionUrlsAreSafe = () => {
+  const authActions = readFileSync(join(root, "src", "utils", "authActions.js"), "utf8");
+  const authActionsTest = readFileSync(join(root, "tests", "authActions.test.js"), "utf8");
+
+  const requiredSnippets = [
+    [authActions, "src/utils/authActions.js", "getSafeBaseUrl"],
+    [authActions, "src/utils/authActions.js", "[\"http:\", \"https:\"].includes(url.protocol)"],
+    [authActions, "src/utils/authActions.js", "return url.origin"],
+    [authActionsTest, "tests/authActions.test.js", "ignores invalid configured action URLs"],
+    [authActionsTest, "tests/authActions.test.js", "javascript:alert(1)"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`auth action URL safety is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
 const assertAppointmentsUseDateWindow = () => {
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
   const appointmentWindow = readFileSync(join(root, "src", "utils", "appointmentWindow.js"), "utf8");
@@ -1198,6 +1217,7 @@ assertPublicBookingFiltersCompleteProfiles();
 assertFirestoreRulesUseBoundedPublicText();
 assertTrialExpiredUsesBillingDomain();
 assertBillingRulesAreServerControlled();
+assertAuthActionUrlsAreSafe();
 assertProfileWritesAreAtomic();
 assertAppointmentRulesValidatePayloadShape();
 assertServiceContractIsBounded();

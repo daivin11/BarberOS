@@ -19,10 +19,20 @@ describe("auth action settings", () => {
     assert.equal(
       getPasswordResetActionCodeSettings({
         origin: "https://preview.local",
-        configuredActionUrl: "https://app.barberos.com.br",
+        configuredActionUrl: "https://app.barberos.com.br/admin",
         continuePath: "/login?reset=1",
       }).url,
       "https://app.barberos.com.br/login?reset=1"
+    );
+  });
+
+  it("ignores invalid configured action URLs", () => {
+    assert.equal(
+      getPasswordResetActionCodeSettings({
+        origin: "https://barberos.app",
+        configuredActionUrl: "javascript:alert(1)",
+      }).url,
+      "https://barberos.app/login"
     );
   });
 
