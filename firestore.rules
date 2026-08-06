@@ -514,10 +514,14 @@ service cloud.firestore {
         && request.resource.data.duration is number
         && request.resource.data.duration >= 15
         && request.resource.data.duration <= 240
-        && (!('isArchived' in request.resource.data) || request.resource.data.isArchived == false);
+        && request.resource.data.createdAt is timestamp
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp)
+        && request.resource.data.isArchived == false;
       allow update: if isOwner(resource.data.userId)
         && hasOnly(['name', 'price', 'duration', 'createdAt', 'updatedAt', 'userId', 'isArchived', 'archivedAt'])
         && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt is timestamp
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 2
         && request.resource.data.name.size() <= 80
@@ -543,10 +547,14 @@ service cloud.firestore {
         && validText(request.resource.data.name, 2, 80)
         && (!('specialty' in request.resource.data) || validOptionalText(request.resource.data.specialty, 80))
         && (!('avatar' in request.resource.data) || validOptionalUrl(request.resource.data.avatar))
-        && (!('isArchived' in request.resource.data) || request.resource.data.isArchived == false);
+        && request.resource.data.createdAt is timestamp
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp)
+        && request.resource.data.isArchived == false;
       allow update: if isOwner(resource.data.ownerId)
         && hasOnly(['name', 'specialty', 'avatar', 'ownerId', 'createdAt', 'updatedAt', 'isArchived', 'archivedAt'])
         && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt is timestamp
         && validText(request.resource.data.name, 2, 80)
         && (!('specialty' in request.resource.data) || validOptionalText(request.resource.data.specialty, 80))
         && (!('avatar' in request.resource.data) || validOptionalUrl(request.resource.data.avatar))

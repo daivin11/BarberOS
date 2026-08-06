@@ -521,6 +521,10 @@ const assertServiceContractIsBounded = () => {
     "request.resource.data.price <= 100000",
     "request.resource.data.duration >= 15",
     "request.resource.data.duration <= 240",
+    "request.resource.data.createdAt is timestamp",
+    "request.resource.data.createdAt == resource.data.createdAt",
+    "request.resource.data.updatedAt is timestamp",
+    "request.resource.data.isArchived == false",
   ];
 
   requiredRuleSnippets.forEach((snippet) => {
@@ -568,6 +572,10 @@ const assertBarberContractIsBounded = () => {
     "validText(request.resource.data.name, 2, 80)",
     "validOptionalText(request.resource.data.specialty, 80)",
     "validOptionalUrl(request.resource.data.avatar)",
+    "request.resource.data.createdAt is timestamp",
+    "request.resource.data.createdAt == resource.data.createdAt",
+    "request.resource.data.updatedAt is timestamp",
+    "request.resource.data.isArchived == false",
   ];
 
   requiredRuleSnippets.forEach((snippet) => {
