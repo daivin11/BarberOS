@@ -37,11 +37,13 @@ export const validateClientInput = ({ name = "", phone = "" } = {}) => {
 export const createClientPhoneKeyId = ({ userId, phone }) =>
   `${userId}_${normalizePhone(phone)}`.replace(/[^a-zA-Z0-9_-]/g, "_");
 
+export const getClientPhone = (client = {}) => normalizePhone(client.phoneNormalized || client.phone);
+
 export const createClientSnapshot = (client = {}) => {
   const snapshot = {
     id: String(client.id || ""),
     name: String(client.name || "").trim().replace(/\s+/g, " "),
-    phone: normalizePhone(client.phoneNormalized || client.phone),
+    phone: getClientPhone(client),
   };
 
   if (client.createdAt) snapshot.createdAt = client.createdAt;

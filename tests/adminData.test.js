@@ -4,6 +4,7 @@ import {
   CLIENT_LIMITS,
   createClientSnapshot,
   createClientPhoneKeyId,
+  getClientPhone,
   getDateValue,
   normalizeClientInput,
   normalizePhone,
@@ -44,6 +45,11 @@ describe("admin data utils", () => {
       createClientPhoneKeyId({ userId: "owner/1", phone: "+55 (11) 98888-7777" }),
       "owner_1_5511988887777"
     );
+  });
+
+  it("reads client phone from normalized or legacy fields", () => {
+    assert.equal(getClientPhone({ phoneNormalized: "11988887777", phone: "(11) 0000-0000" }), "11988887777");
+    assert.equal(getClientPhone({ phone: "(11) 98888-7777" }), "11988887777");
   });
 
   it("creates appointment-safe client snapshots", () => {

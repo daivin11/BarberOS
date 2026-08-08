@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
-import { normalizeClientInput, validateClientInput } from "../utils/adminData";
+import { getClientPhone, normalizeClientInput, validateClientInput } from "../utils/adminData";
 import { createWhatsAppUrl, formatBrazilianPhone, normalizePhone } from "../utils/phone";
 
 function getInitials(name = "CL") {
@@ -47,7 +47,7 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
 
     return clients.filter((client) => {
       const name = String(client.name || "").toLowerCase();
-      const phone = String(client.phone || "");
+      const phone = getClientPhone(client);
       return name.includes(term) || phone.includes(term) || normalizePhone(phone).includes(normalizePhone(term));
     });
   }, [clients, search]);
@@ -90,7 +90,7 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
   const startEdit = (client) => {
     setEditingClient(client);
     setClientName(client.name || "");
-    setClientPhone(client.phone || "");
+    setClientPhone(getClientPhone(client));
     setFormError("");
     setStatusMessage("");
   };
@@ -299,7 +299,7 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-white">{client.name}</p>
-                      <p className="mt-1 text-sm text-gray-400">{formatBrazilianPhone(client.phone)}</p>
+                      <p className="mt-1 text-sm text-gray-400">{formatBrazilianPhone(getClientPhone(client))}</p>
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-3 gap-2">
@@ -355,7 +355,7 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-white">{client.name}</p>
-                      <p className="mt-1 text-sm text-gray-500">{formatBrazilianPhone(client.phone)}</p>
+                      <p className="mt-1 text-sm text-gray-500">{formatBrazilianPhone(getClientPhone(client))}</p>
                     </div>
                   </div>
                   <button
