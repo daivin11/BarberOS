@@ -425,6 +425,7 @@ export default function Schedule({
                   key={day.date}
                   type="button"
                   onClick={() => setCalendarDate(day.date)}
+                  aria-pressed={selected}
                   disabled={!isDateWithinAppointmentWindow(day.date, appointmentWindow)}
                   className={`min-h-[112px] rounded-2xl border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-40 ${
                     selected
@@ -724,6 +725,7 @@ export default function Schedule({
                   key={option.value}
                   type="button"
                   onClick={() => setStatusFilter(option.value)}
+                  aria-pressed={selected}
                   className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
                     selected
                       ? "bg-white text-black"

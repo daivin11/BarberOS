@@ -723,6 +723,7 @@ const assertScheduleRendersMultiSlotOccupancy = () => {
     [schedulePage, "src/pages/Schedule.jsx", "handleAddAppointment"],
     [schedulePage, "src/pages/Schedule.jsx", "Criando agendamento..."],
     [schedulePage, "src/pages/Schedule.jsx", "Confirmando..."],
+    [schedulePage, "src/pages/Schedule.jsx", "aria-pressed={selected}"],
     [schedulePage, "src/pages/Schedule.jsx", "aria-busy={creatingAppointment ? \"true\" : \"false\"}"],
     [schedulePage, "src/pages/Schedule.jsx", "aria-busy={confirmingPendingId === nextPendingAppointment.id ? \"true\" : \"false\"}"],
   ];
@@ -732,6 +733,10 @@ const assertScheduleRendersMultiSlotOccupancy = () => {
       failures.push(`schedule action submit guard is missing in ${fileName}: ${snippet}`);
     }
   });
+
+  if (countOccurrences(schedulePage, "aria-pressed={selected}") < 2) {
+    failures.push("schedule selectable day/status buttons do not expose selected state: src/pages/Schedule.jsx");
+  }
 };
 const assertDeletionGuardsQueryActiveAppointments = () => {
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
