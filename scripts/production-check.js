@@ -1410,6 +1410,35 @@ const assertClientActionsHaveSubmitGuards = () => {
   });
 };
 
+const assertProfileAndDashboardFeedbackIsAccessible = () => {
+  const dashboardPage = readFileSync(join(root, "src", "pages", "Dashboard.jsx"), "utf8");
+  const profileSetup = readFileSync(join(root, "src", "pages", "ProfileSetup.jsx"), "utf8");
+  const profileSettings = readFileSync(join(root, "src", "pages", "ProfileSettings.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [dashboardPage, "src/pages/Dashboard.jsx", "role=\"alert\""],
+    [dashboardPage, "src/pages/Dashboard.jsx", "aria-live=\"assertive\""],
+    [dashboardPage, "src/pages/Dashboard.jsx", "role=\"status\""],
+    [dashboardPage, "src/pages/Dashboard.jsx", "aria-live=\"polite\""],
+    [dashboardPage, "src/pages/Dashboard.jsx", "aria-busy={saving ? \"true\" : \"false\"}"],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "role=\"alert\""],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "aria-live=\"assertive\""],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "role=\"status\""],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "aria-live=\"polite\""],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "role=\"alert\""],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "aria-live=\"assertive\""],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "role=\"status\""],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "aria-live=\"polite\""],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "aria-busy={saving ? \"true\" : \"false\"}"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`profile/dashboard accessible feedback is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 const assertWhatsAppTemplatesAreDomainDriven = () => {
   const whatsappPage = readFileSync(join(root, "src", "pages", "WhatsApp.jsx"), "utf8");
   const whatsappTemplates = readFileSync(join(root, "src", "utils", "whatsappTemplates.js"), "utf8");
@@ -1587,6 +1616,7 @@ assertAdminDataSyncCanRetry();
 assertPublicBookingSubmitRespectsAvailability();
 assertClientListSupportsWhatsAppContact();
 assertClientActionsHaveSubmitGuards();
+assertProfileAndDashboardFeedbackIsAccessible();
 assertWhatsAppTemplatesAreDomainDriven();
 assertLaunchMetadataIsReady();
 assertAppBootstrapIsGuarded();

@@ -279,10 +279,20 @@ export default function ProfileSettings({ workspaceData = {} }) {
                   />
                 </div>
                 <div className="mt-2 min-h-5 text-sm">
-                  {slugChecking && <p className="text-indigo-300">Verificando disponibilidade...</p>}
-                  {slugError && <p className="text-red-400">{slugError}</p>}
+                  {slugChecking && (
+                    <p className="text-indigo-300" role="status" aria-live="polite">
+                      Verificando disponibilidade...
+                    </p>
+                  )}
+                  {slugError && (
+                    <p className="text-red-400" role="alert" aria-live="assertive">
+                      {slugError}
+                    </p>
+                  )}
                   {!slugChecking && !slugError && normalizedSlug && (
-                    <p className="text-green-300">Slug disponivel: {previewUrl}</p>
+                    <p className="text-green-300" role="status" aria-live="polite">
+                      Slug disponivel: {previewUrl}
+                    </p>
                   )}
                 </div>
               </label>
@@ -449,12 +459,21 @@ export default function ProfileSettings({ workspaceData = {} }) {
 
             <div className="mt-6 flex flex-col gap-3 border-t border-gray-800 pt-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-h-5 text-sm">
-                {saveError && <p className="text-red-400">{saveError}</p>}
-                {saveSuccess && <p className="text-green-400">{saveSuccess}</p>}
+                {saveError && (
+                  <p className="text-red-400" role="alert" aria-live="assertive">
+                    {saveError}
+                  </p>
+                )}
+                {saveSuccess && (
+                  <p className="text-green-400" role="status" aria-live="polite">
+                    {saveSuccess}
+                  </p>
+                )}
               </div>
               <button
                 type="submit"
                 disabled={saving || slugChecking}
+                aria-busy={saving ? "true" : "false"}
                 className="inline-flex items-center justify-center rounded-3xl bg-gradient-to-r from-indigo-500 to-violet-500 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? "Salvando..." : "Salvar configuracoes"}

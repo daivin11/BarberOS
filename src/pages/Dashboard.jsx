@@ -388,10 +388,20 @@ export default function Dashboard({
                   </label>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-1 text-sm">
-                      {slugChecking && <p className="text-indigo-300">Verificando disponibilidade...</p>}
-                      {slugError && <p className="text-red-400">{slugError}</p>}
+                      {slugChecking && (
+                        <p className="text-indigo-300" role="status" aria-live="polite">
+                          Verificando disponibilidade...
+                        </p>
+                      )}
+                      {slugError && (
+                        <p className="text-red-400" role="alert" aria-live="assertive">
+                          {slugError}
+                        </p>
+                      )}
                       {!slugError && !slugChecking && slugInput && (
-                        <p className="text-green-300">Slug disponivel</p>
+                        <p className="text-green-300" role="status" aria-live="polite">
+                          Slug disponivel
+                        </p>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -399,6 +409,7 @@ export default function Dashboard({
                         type="button"
                         onClick={handleSaveSlug}
                         disabled={saving || !!slugError || !slugInput}
+                        aria-busy={saving ? "true" : "false"}
                         className="rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {saving ? "Salvando..." : "Salvar alteracao"}
@@ -418,15 +429,27 @@ export default function Dashboard({
                       </button>
                     </div>
                   </div>
-                  {saveError && <p className="text-sm text-red-400">{saveError}</p>}
-                  {saveSuccess && <p className="text-sm text-green-400">{saveSuccess}</p>}
+                  {saveError && (
+                    <p className="text-sm text-red-400" role="alert" aria-live="assertive">
+                      {saveError}
+                    </p>
+                  )}
+                  {saveSuccess && (
+                    <p className="text-sm text-green-400" role="status" aria-live="polite">
+                      {saveSuccess}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="mt-4 rounded-2xl border border-gray-800 bg-gray-950 p-4 text-sm text-gray-400">
                   {publicLinkStatusCopy}
                 </div>
               )}
-              {copyMessage && <p className="mt-3 text-sm text-green-300">{copyMessage}</p>}
+              {copyMessage && (
+                <p className="mt-3 text-sm text-green-300" role="status" aria-live="polite">
+                  {copyMessage}
+                </p>
+              )}
             </div>
           </div>
 

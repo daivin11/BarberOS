@@ -307,8 +307,16 @@ export default function ProfileSetup() {
                   />
                 </label>
 
-                {saveError && <p className="text-sm text-red-400">{saveError}</p>}
-                {saveSuccess && <p className="text-sm text-green-400">{saveSuccess}</p>}
+                {saveError && (
+                  <p className="text-sm text-red-400" role="alert" aria-live="assertive">
+                    {saveError}
+                  </p>
+                )}
+                {saveSuccess && (
+                  <p className="text-sm text-green-400" role="status" aria-live="polite">
+                    {saveSuccess}
+                  </p>
+                )}
 
                 <button
                   type="submit"
