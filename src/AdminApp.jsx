@@ -1515,14 +1515,19 @@ export default function AdminApp() {
                 ? "border-emerald-500/60 bg-emerald-950 text-emerald-100"
                 : "border-red-500/60 bg-red-950 text-red-100"
             }`}
-            role="status"
+            role={notification.type === "success" ? "status" : "alert"}
+            aria-live={notification.type === "success" ? "polite" : "assertive"}
           >
             {notification.message}
           </div>
         )}
 
         {shouldShowSidebar && dataErrorMessages.length > 0 && (
-          <div className="border-b border-yellow-800 bg-yellow-950/80 px-4 py-3 text-sm text-yellow-100 sm:px-6 lg:px-8">
+          <div
+            className="border-b border-yellow-800 bg-yellow-950/80 px-4 py-3 text-sm text-yellow-100 sm:px-6 lg:px-8"
+            role="alert"
+            aria-live="assertive"
+          >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p>{dataErrorMessages[0]}</p>
               <button
@@ -1537,7 +1542,11 @@ export default function AdminApp() {
         )}
 
         {shouldShowSidebar && dataErrorMessages.length === 0 && dataWarningMessages.length > 0 && (
-          <div className="border-b border-yellow-800 bg-yellow-950/80 px-4 py-3 text-sm text-yellow-100 sm:px-6 lg:px-8">
+          <div
+            className="border-b border-yellow-800 bg-yellow-950/80 px-4 py-3 text-sm text-yellow-100 sm:px-6 lg:px-8"
+            role="status"
+            aria-live="polite"
+          >
             {dataWarningMessages[0]}
           </div>
         )}
