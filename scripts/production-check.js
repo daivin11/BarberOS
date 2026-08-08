@@ -758,6 +758,7 @@ const assertBarberContractIsBounded = () => {
     [barbersPage, "src/pages/Barbers.jsx", "savingBarber"],
     [barbersPage, "src/pages/Barbers.jsx", "archivingBarber"],
     [barbersPage, "src/pages/Barbers.jsx", "restoringBarberId"],
+    [barbersPage, "src/pages/Barbers.jsx", "sortByName(upsertById(barbers"],
     [barberUtils, "src/utils/barbers.js", "normalizeBarberNameKey"],
     [barberUtils, "src/utils/barbers.js", "findDuplicateBarberByName"],
     [barberUtilsTest, "tests/barbers.test.js", "finds duplicate active barbers"],

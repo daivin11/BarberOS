@@ -4,6 +4,7 @@ import { collection, addDoc, updateDoc, doc, getDocs, query, where, limit } from
 import { db } from "../services/firebase";
 import EmptyState from "../components/EmptyState";
 import { useAuth } from "../hooks/useAuth";
+import { sortByName, upsertById } from "../utils/adminData";
 import { ACTIVE_APPOINTMENT_STATUSES, countActiveAppointmentsByField } from "../utils/appointments";
 import { findDuplicateBarberByName, normalizeBarberInput, validateBarberInput } from "../utils/barbers";
 import { pluralize } from "../utils/format";
@@ -113,9 +114,7 @@ export default function Barbers({
       if (editingBarber) {
         const barberRef = doc(db, "barbers", editingBarber.id);
         await updateDoc(barberRef, barberData);
-        const nextBarbers = barbers.map((barber) =>
-          barber.id === editingBarber.id ? { ...barber, ...barberData } : barber
-        );
+        const nextBarbers = sortByName(upsertById(barbers, { id: editingBarber.id, ...barberData }));
         syncBarbers(nextBarbers);
         setStatusMessage("Barbeiro atualizado com sucesso.");
         await recordAuditLog?.({
@@ -133,7 +132,7 @@ export default function Barbers({
           createdAt,
           isArchived: false,
         });
-        syncBarbers([{ id: docRef.id, ...barberData, createdAt }, ...barbers]);
+        syncBarbers(sortByName(upsertById(barbers, { id: docRef.id, ...barberData, createdAt })));
         setStatusMessage("Barbeiro cadastrado com sucesso.");
         await recordAuditLog?.({
           action: "barber_created",
