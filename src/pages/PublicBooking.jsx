@@ -500,7 +500,13 @@ export default function PublicBooking() {
         {loading ? (
           <div className="rounded-3xl border border-gray-800 bg-gray-900 p-8 text-center text-gray-400 sm:p-10">Carregando...</div>
         ) : fatalError ? (
-          <div className="rounded-3xl border border-red-600 bg-red-950 p-8 text-center text-red-400 sm:p-10">{fatalError}</div>
+          <div
+            className="rounded-3xl border border-red-600 bg-red-950 p-8 text-center text-red-400 sm:p-10"
+            role="alert"
+            aria-live="assertive"
+          >
+            {fatalError}
+          </div>
         ) : (
           <div className="grid gap-8 xl:grid-cols-[1.4fr_1fr]">
             <section className="space-y-6">
@@ -642,7 +648,11 @@ export default function PublicBooking() {
               </div>
 
               {success && bookingConfirmation && (
-                <div className="mb-6 rounded-3xl border border-emerald-500/70 bg-emerald-950 p-5 text-emerald-100" role="status">
+                <div
+                  className="mb-6 rounded-3xl border border-emerald-500/70 bg-emerald-950 p-5 text-emerald-100"
+                  role="status"
+                  aria-live="polite"
+                >
                   <p className="text-sm uppercase tracking-[0.25em] text-emerald-300">Solicitacao enviada</p>
                   <h3 className="mt-2 text-xl font-bold text-white">Seu horario esta aguardando confirmacao</h3>
                   <p className="mt-2 text-sm leading-6 text-emerald-100/80">
@@ -663,14 +673,22 @@ export default function PublicBooking() {
               )}
 
               {setupUnavailable && (
-                <div className="mb-6 rounded-3xl border border-yellow-500/70 bg-yellow-950/80 p-4 text-sm text-yellow-100">
+                <div
+                  className="mb-6 rounded-3xl border border-yellow-500/70 bg-yellow-950/80 p-4 text-sm text-yellow-100"
+                  role="status"
+                  aria-live="polite"
+                >
                   Esta barbearia ainda esta finalizando a configuracao online. Tente novamente mais tarde ou fale
                   diretamente com a equipe.
                 </div>
               )}
 
               {formError && (
-                <div className="mb-6 rounded-3xl border border-red-800 bg-red-950/70 p-4 text-sm text-red-100" role="alert">
+                <div
+                  className="mb-6 rounded-3xl border border-red-800 bg-red-950/70 p-4 text-sm text-red-100"
+                  role="alert"
+                  aria-live="assertive"
+                >
                   {formError}
                 </div>
               )}

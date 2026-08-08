@@ -1106,6 +1106,8 @@ const assertPublicBookingShowsConfirmationSummary = () => {
     [publicBooking, "src/pages/PublicBooking.jsx", "getBookingConfirmationLines"],
     [publicBooking, "src/pages/PublicBooking.jsx", "Seu horario esta aguardando confirmacao"],
     [publicBooking, "src/pages/PublicBooking.jsx", "Proximo passo"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "aria-live=\"polite\""],
+    [publicBooking, "src/pages/PublicBooking.jsx", "aria-live=\"assertive\""],
     [bookingConfirmation, "src/utils/bookingConfirmation.js", "createBookingConfirmation"],
     [bookingConfirmation, "src/utils/bookingConfirmation.js", "getBookingConfirmationLines"],
     [bookingConfirmationTest, "tests/bookingConfirmation.test.js", "formats confirmation lines"],
