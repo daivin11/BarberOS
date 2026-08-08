@@ -96,8 +96,17 @@ export default function WhatsApp() {
             >
               {copied === selectedTemplate.id ? "Copiado" : "Copiar modelo"}
             </button>
+            {copied === selectedTemplate.id && (
+              <p className="text-sm text-emerald-300" role="status" aria-live="polite">
+                Modelo copiado para a area de transferencia.
+              </p>
+            )}
             {copied === "error" && (
-              <p className="rounded-2xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-100" role="alert">
+              <p
+                className="rounded-2xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-100"
+                role="alert"
+                aria-live="assertive"
+              >
                 Nao foi possivel copiar automaticamente. Selecione o texto do preview e copie manualmente.
               </p>
             )}
