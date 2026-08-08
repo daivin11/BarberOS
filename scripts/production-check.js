@@ -1452,6 +1452,25 @@ const assertProfileAndDashboardFeedbackIsAccessible = () => {
   });
 };
 
+const assertSharedNavigationFeedbackIsAccessible = () => {
+  const sidebar = readFileSync(join(root, "src", "components", "Sidebar.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [sidebar, "src/components/Sidebar.jsx", "copyMessageType"],
+    [sidebar, "src/components/Sidebar.jsx", "setCopyMessageType(\"alert\")"],
+    [sidebar, "src/components/Sidebar.jsx", "setCopyMessageType(\"status\")"],
+    [sidebar, "src/components/Sidebar.jsx", "role={copyMessageType === \"alert\" ? \"alert\" : \"status\"}"],
+    [sidebar, "src/components/Sidebar.jsx", "aria-live={copyMessageType === \"alert\" ? \"assertive\" : \"polite\"}"],
+    [sidebar, "src/components/Sidebar.jsx", "aria-busy={logoutLoading ? \"true\" : \"false\"}"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`shared navigation accessible feedback is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 const assertWhatsAppTemplatesAreDomainDriven = () => {
   const whatsappPage = readFileSync(join(root, "src", "pages", "WhatsApp.jsx"), "utf8");
   const whatsappTemplates = readFileSync(join(root, "src", "utils", "whatsappTemplates.js"), "utf8");
@@ -1630,6 +1649,7 @@ assertPublicBookingSubmitRespectsAvailability();
 assertClientListSupportsWhatsAppContact();
 assertClientActionsHaveSubmitGuards();
 assertProfileAndDashboardFeedbackIsAccessible();
+assertSharedNavigationFeedbackIsAccessible();
 assertWhatsAppTemplatesAreDomainDriven();
 assertLaunchMetadataIsReady();
 assertAppBootstrapIsGuarded();

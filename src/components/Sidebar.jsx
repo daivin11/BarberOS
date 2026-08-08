@@ -25,6 +25,7 @@ export default function Sidebar({
   const { profile, logout } = useAuth();
   const navigate = useNavigate();
   const [copyMessage, setCopyMessage] = useState("");
+  const [copyMessageType, setCopyMessageType] = useState("status");
   const [logoutLoading, setLogoutLoading] = useState(false);
   const publicPath = profile?.slug ? `/${profile.slug}` : "";
   const publicUrl = publicPath ? `${window.location.origin}${publicPath}` : "";
@@ -45,12 +46,14 @@ export default function Sidebar({
   const copyPublicLink = async () => {
     if (!publicUrl || !publicReadiness.isReady) {
       setCopyMessage(publicReadiness.nextStep?.label || "Complete o link publico antes de copiar");
+      setCopyMessageType("status");
       return;
     }
 
     const copied = await copyTextToClipboard(publicUrl);
     if (copied) {
       setCopyMessage("Link copiado");
+      setCopyMessageType("status");
       trackEvent("public_link_copied", { source: "sidebar", action: "copy-public-link" });
       window.setTimeout(() => setCopyMessage(""), 2000);
       return;
@@ -58,6 +61,7 @@ export default function Sidebar({
 
     reportError(new Error("clipboard-unavailable"), { source: "sidebar", action: "copy-public-link" });
     setCopyMessage("Erro ao copiar. Copie o link manualmente.");
+    setCopyMessageType("alert");
   };
 
   const handleLogout = async () => {
@@ -68,6 +72,7 @@ export default function Sidebar({
     } catch (error) {
       reportError(error, { source: "sidebar", action: "logout" });
       setCopyMessage("Erro ao sair");
+      setCopyMessageType("alert");
     } finally {
       setLogoutLoading(false);
     }
@@ -92,6 +97,7 @@ export default function Sidebar({
             type="button"
             onClick={handleLogout}
             disabled={logoutLoading}
+            aria-busy={logoutLoading ? "true" : "false"}
             className="shrink-0 rounded-2xl border border-gray-800 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-300 transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60 lg:hidden"
           >
             {logoutLoading ? "..." : "Sair"}
@@ -168,7 +174,15 @@ export default function Sidebar({
                   </Link>
                 )}
               </div>
-              {copyMessage && <p className="text-xs text-green-300">{copyMessage}</p>}
+              {copyMessage && (
+                <p
+                  className={`text-xs ${copyMessageType === "alert" ? "text-red-300" : "text-green-300"}`}
+                  role={copyMessageType === "alert" ? "alert" : "status"}
+                  aria-live={copyMessageType === "alert" ? "assertive" : "polite"}
+                >
+                  {copyMessage}
+                </p>
+              )}
             </div>
           ) : (
             <p className="mt-4 text-sm text-gray-400">
@@ -226,7 +240,15 @@ export default function Sidebar({
             </div>
           )}
 
-          {copyMessage && <p className="text-xs text-green-300">{copyMessage}</p>}
+          {copyMessage && (
+            <p
+              className={`text-xs ${copyMessageType === "alert" ? "text-red-300" : "text-green-300"}`}
+              role={copyMessageType === "alert" ? "alert" : "status"}
+              aria-live={copyMessageType === "alert" ? "assertive" : "polite"}
+            >
+              {copyMessage}
+            </p>
+          )}
         </div>
 
         <nav className="scrollbar-hidden mt-6 hidden min-h-0 flex-1 flex-col gap-2 overflow-y-auto lg:flex">
@@ -254,6 +276,7 @@ export default function Sidebar({
           type="button"
           onClick={handleLogout}
           disabled={logoutLoading}
+          aria-busy={logoutLoading ? "true" : "false"}
           className="mt-4 hidden w-full rounded-2xl border border-gray-800 bg-gray-900 px-4 py-3 text-left text-sm font-semibold text-gray-300 transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60 lg:mt-6 lg:block"
         >
           {logoutLoading ? "Saindo..." : "Sair"}
