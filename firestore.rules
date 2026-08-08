@@ -461,14 +461,9 @@ service cloud.firestore {
           resource.data.profileComplete == true
           && hasActivePublicAccount(profileId)
         );
-      allow list: if (
-        signedIn()
-        && request.query.limit <= 2
-      ) || (
-        request.query.limit <= 1
+      allow list: if request.query.limit <= 1
         && resource.data.profileComplete == true
-        && hasActivePublicAccount(profileId)
-      );
+        && hasActivePublicAccount(profileId);
       allow create, update: if isOwner(profileId)
         && hasOnly([
           'slug',

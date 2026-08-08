@@ -9,11 +9,6 @@ import { auth } from "../services/firebase";
 import {
   doc,
   getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  limit,
   runTransaction,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
@@ -261,16 +256,12 @@ export function AuthProvider({ children }) {
 
   const isSlugAvailable = async (slugValue, currentUid) => {
     try {
-      const usersRef = collection(db, "publicProfiles");
       const slugKeySnapshot = await getDoc(doc(db, "publicSlugKeys", slugValue));
       if (slugKeySnapshot.exists() && slugKeySnapshot.data().uid !== currentUid) {
         return false;
       }
 
-      const slugQuery = query(usersRef, where("slug", "==", slugValue), limit(2));
-      const snapshot = await getDocs(slugQuery);
-      const matchingDocs = snapshot.docs.filter((doc) => doc.id !== currentUid);
-      return matchingDocs.length === 0;
+      return true;
     } catch (err) {
       reportError(err, { source: "auth", action: "check-slug" });
       throw err;

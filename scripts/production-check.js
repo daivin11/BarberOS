@@ -167,6 +167,10 @@ const assertPublicProfilesRequireCompletion = () => {
     failures.push("publicProfiles authenticated list is unbounded: firestore.rules");
   }
 
+  if (publicProfilesBody.includes("signedIn()") && publicProfilesBody.includes("request.query.limit <= 2")) {
+    failures.push("publicProfiles still allows authenticated list access for slug checks: firestore.rules");
+  }
+
   const accountGuardSnippets = [
     [rules, "firestore.rules", "function hasActivePublicAccount"],
     [rules, "firestore.rules", "function publicBillingMatchesUser"],
@@ -176,6 +180,7 @@ const assertPublicProfilesRequireCompletion = () => {
     [authContext, "src/contexts/AuthContext.jsx", "if (data.trialEndsAt) publicProfile.trialEndsAt = data.trialEndsAt"],
     [authContext, "src/contexts/AuthContext.jsx", "syncPublicBillingMirror"],
     [authContext, "src/contexts/AuthContext.jsx", "sync-public-billing"],
+    [authContext, "src/contexts/AuthContext.jsx", "getDoc(doc(db, \"publicSlugKeys\", slugValue))"],
     [publicBooking, "src/pages/PublicBooking.jsx", "getAccountAccess(barberData)"],
     [publicBooking, "src/pages/PublicBooking.jsx", "agendamento online desta barbearia esta temporariamente pausado"],
   ];
