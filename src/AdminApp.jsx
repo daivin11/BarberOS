@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect, useCallback, useMemo } from "react";
+import { Suspense, lazy, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
@@ -135,8 +135,7 @@ export default function AdminApp() {
   const [syncRetryToken, setSyncRetryToken] = useState(0);
   const [notification, setNotification] = useState(null);
   const appointmentWindow = useMemo(() => createAppointmentDateWindow(), []);
-
-  
+  const notificationTimerRef = useRef(null);
 
   const [selectedClient, setSelectedClient] = useState("");
   const [selectedService, setSelectedService] = useState("");
@@ -146,10 +145,24 @@ export default function AdminApp() {
 
   const notify = (message, type = "error") => {
     setNotification({ message, type });
-    window.setTimeout(() => {
+
+    if (notificationTimerRef.current) {
+      window.clearTimeout(notificationTimerRef.current);
+    }
+
+    notificationTimerRef.current = window.setTimeout(() => {
       setNotification((current) => (current?.message === message ? null : current));
+      notificationTimerRef.current = null;
     }, 4000);
   };
+
+  useEffect(() => {
+    return () => {
+      if (notificationTimerRef.current) {
+        window.clearTimeout(notificationTimerRef.current);
+      }
+    };
+  }, []);
 
   const updateLimitWarning = useCallback((key, snapshotSize) => {
     setDataWarnings((currentWarnings) => {
