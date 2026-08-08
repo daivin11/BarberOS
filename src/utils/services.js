@@ -37,7 +37,7 @@ export const getServiceCatalogDuration = (service = {}, fallbackDuration = 30) =
     Number.isInteger(duration) &&
     duration >= SERVICE_LIMITS.durationMin &&
     duration <= SERVICE_LIMITS.durationMax &&
-    duration % 15 === 0
+    duration % SERVICE_LIMITS.durationStep === 0
   ) {
     return duration;
   }

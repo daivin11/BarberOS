@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { SERVICE_LIMITS } from "../src/utils/services.js";
 import {
   BUSINESS_HOURS_LIMITS,
   createSlotId,
@@ -78,10 +79,11 @@ describe("schedule utils", () => {
 
   it("sanitizes schedule durations before availability math", () => {
     assert.equal(getSafeScheduleDuration(45), 45);
+    assert.equal(getSafeScheduleDuration(SERVICE_LIMITS.durationMax), SERVICE_LIMITS.durationMax);
     assert.equal(getSafeScheduleDuration("bad"), 30);
     assert.equal(getSafeScheduleDuration(30.5), 30);
     assert.equal(getSafeScheduleDuration(20), 30);
-    assert.equal(getSafeScheduleDuration(500), 30);
+    assert.equal(getSafeScheduleDuration(SERVICE_LIMITS.durationMax + SERVICE_LIMITS.durationStep), 30);
   });
 
   it("detects whether a public booking slot is still available", () => {

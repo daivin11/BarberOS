@@ -1,4 +1,5 @@
 import { formatLocalDate } from "./date.js";
+import { SERVICE_LIMITS } from "./services.js";
 
 export const defaultBusinessHours = {
   start: "09:00",
@@ -18,9 +19,9 @@ export const getSafeScheduleDuration = (duration, fallbackDuration = defaultBusi
   if (
     Number.isFinite(value) &&
     Number.isInteger(value) &&
-    value >= 15 &&
-    value <= 240 &&
-    value % 15 === 0
+    value >= SERVICE_LIMITS.durationMin &&
+    value <= SERVICE_LIMITS.durationMax &&
+    value % SERVICE_LIMITS.durationStep === 0
   ) {
     return value;
   }
