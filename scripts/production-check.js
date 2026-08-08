@@ -155,6 +155,10 @@ const assertPublicProfilesRequireCompletion = () => {
     failures.push("publicProfiles public access does not require profileComplete: firestore.rules");
   }
 
+  if (!publicProfilesBody.includes("hasActivePublicAccount(profileId)")) {
+    failures.push("publicProfiles public access does not require an active account: firestore.rules");
+  }
+
   if (/allow\s+get\s*:\s*if\s+true/.test(publicProfilesBody)) {
     failures.push("publicProfiles get is fully public: firestore.rules");
   }

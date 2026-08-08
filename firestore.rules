@@ -436,13 +436,18 @@ service cloud.firestore {
     }
 
     match /publicProfiles/{profileId} {
-      allow get: if isOwner(profileId) || resource.data.profileComplete == true;
+      allow get: if isOwner(profileId)
+        || (
+          resource.data.profileComplete == true
+          && hasActivePublicAccount(profileId)
+        );
       allow list: if (
         signedIn()
         && request.query.limit <= 2
       ) || (
         request.query.limit <= 1
         && resource.data.profileComplete == true
+        && hasActivePublicAccount(profileId)
       );
       allow create, update: if isOwner(profileId)
         && hasOnly([
