@@ -1290,6 +1290,8 @@ const assertFinanceShowsOperationalHealth = () => {
     [financePage, "src/pages/Finance.jsx", "Receita pendente"],
     [financePage, "src/pages/Finance.jsx", "Proximos recebimentos"],
     [financePage, "src/pages/Finance.jsx", "getUpcomingRevenueAppointments"],
+    [financePage, "src/pages/Finance.jsx", "aria-pressed={statusFilter === filter.value}"],
+    [financePage, "src/pages/Finance.jsx", "aria-busy={loading ? \"true\" : \"false\"}"],
     [financeUtils, "src/utils/finance.js", "calculateFinanceMetrics"],
     [financeUtils, "src/utils/finance.js", "Number.isFinite(price) && price >= 0 ? price : 0"],
     [financeUtils, "src/utils/finance.js", "pendingRevenue"],

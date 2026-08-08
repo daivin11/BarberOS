@@ -220,6 +220,7 @@ export default function Finance({ appointments = [], loading = false, appointmen
                 key={filter.value}
                 type="button"
                 onClick={() => setStatusFilter(filter.value)}
+                aria-pressed={statusFilter === filter.value}
                 className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
                   statusFilter === filter.value
                     ? "bg-white text-black"
@@ -232,70 +233,72 @@ export default function Finance({ appointments = [], loading = false, appointmen
           </div>
         </div>
 
-        {loading ? (
-          <EmptyState
-            eyebrow="Sincronizando"
-            title="Carregando financeiro..."
-            description="Estamos buscando os agendamentos para calcular receita realizada, previsao e perdas."
-          />
-        ) : !selectedMonthIsLoaded ? (
-          <EmptyState
-            eyebrow="Periodo fora da janela"
-            title="Este mes nao foi carregado"
-            description="Escolha um mes dentro da janela operacional para auditar receita com dados sincronizados."
-          />
-        ) : appointments.length === 0 ? (
-          <EmptyState
-            eyebrow="Sem receita"
-            title="Sem dados financeiros ainda"
-            description="Crie agendamentos e marque atendimentos como concluidos para formar receita realizada, previsao e perdas por cancelamento."
-            actionLabel="Ir para agenda"
-            actionTo="/agenda"
-          />
-        ) : monthAppointments.length === 0 ? (
-          <EmptyState
-            eyebrow="Periodo vazio"
-            title="Sem movimentacao neste mes"
-            description="Troque o mes para revisar outro periodo ou crie novos agendamentos para alimentar o financeiro."
-          />
-        ) : filteredAppointments.length === 0 ? (
-          <EmptyState
-            eyebrow="Filtro"
-            title="Nada neste filtro"
-            description="Troque o status para revisar outras movimentacoes deste periodo."
-          />
-        ) : (
-          <div className="grid gap-3">
-            {filteredAppointments.map((appointment) => {
-              const clientName = appointment?.client?.name || appointment?.clientName || "Cliente";
-              const serviceName = appointment?.service?.name || "Servico";
-              const servicePrice = getServicePrice(appointment);
-              const status = getAppointmentStatus(appointment);
+        <div aria-busy={loading ? "true" : "false"}>
+          {loading ? (
+            <EmptyState
+              eyebrow="Sincronizando"
+              title="Carregando financeiro..."
+              description="Estamos buscando os agendamentos para calcular receita realizada, previsao e perdas."
+            />
+          ) : !selectedMonthIsLoaded ? (
+            <EmptyState
+              eyebrow="Periodo fora da janela"
+              title="Este mes nao foi carregado"
+              description="Escolha um mes dentro da janela operacional para auditar receita com dados sincronizados."
+            />
+          ) : appointments.length === 0 ? (
+            <EmptyState
+              eyebrow="Sem receita"
+              title="Sem dados financeiros ainda"
+              description="Crie agendamentos e marque atendimentos como concluidos para formar receita realizada, previsao e perdas por cancelamento."
+              actionLabel="Ir para agenda"
+              actionTo="/agenda"
+            />
+          ) : monthAppointments.length === 0 ? (
+            <EmptyState
+              eyebrow="Periodo vazio"
+              title="Sem movimentacao neste mes"
+              description="Troque o mes para revisar outro periodo ou crie novos agendamentos para alimentar o financeiro."
+            />
+          ) : filteredAppointments.length === 0 ? (
+            <EmptyState
+              eyebrow="Filtro"
+              title="Nada neste filtro"
+              description="Troque o status para revisar outras movimentacoes deste periodo."
+            />
+          ) : (
+            <div className="grid gap-3">
+              {filteredAppointments.map((appointment) => {
+                const clientName = appointment?.client?.name || appointment?.clientName || "Cliente";
+                const serviceName = appointment?.service?.name || "Servico";
+                const servicePrice = getServicePrice(appointment);
+                const status = getAppointmentStatus(appointment);
 
-              return (
-                <article
-                  key={appointment.id || `${appointment.date}-${appointment.time}-${serviceName}`}
-                  className="rounded-2xl border border-gray-800 bg-gray-950 p-4"
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="font-semibold text-white">{clientName}</p>
-                      <p className="mt-1 text-sm text-gray-400">
-                        {serviceName} - {formatCurrencyBRL(servicePrice)}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {appointment.date || "Data nao disponivel"} as {appointment.time || "Horario nao disponivel"}
-                      </p>
+                return (
+                  <article
+                    key={appointment.id || `${appointment.date}-${appointment.time}-${serviceName}`}
+                    className="rounded-2xl border border-gray-800 bg-gray-950 p-4"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="font-semibold text-white">{clientName}</p>
+                        <p className="mt-1 text-sm text-gray-400">
+                          {serviceName} - {formatCurrencyBRL(servicePrice)}
+                        </p>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {appointment.date || "Data nao disponivel"} as {appointment.time || "Horario nao disponivel"}
+                        </p>
+                      </div>
+                      <span className={`w-fit rounded-full border px-3 py-1.5 text-xs font-semibold ${getAppointmentStatusClass(status)}`}>
+                        {getAppointmentStatusLabel(status)}
+                      </span>
                     </div>
-                    <span className={`w-fit rounded-full border px-3 py-1.5 text-xs font-semibold ${getAppointmentStatusClass(status)}`}>
-                      {getAppointmentStatusLabel(status)}
-                    </span>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );
