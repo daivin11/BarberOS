@@ -748,6 +748,12 @@ export default function AdminApp() {
   };
 
   const deleteService = async (serviceId) => {
+    const currentService = services.find((service) => service.id === serviceId);
+    if (!currentService) {
+      notify("Servico nao encontrado.");
+      return false;
+    }
+
     const hasActiveAppointmentInView = appointments.some((appointment) => {
       const serviceIdFromAppointment = getAppointmentServiceId(appointment);
       return String(serviceIdFromAppointment) === String(serviceId) && isActiveAppointment(appointment);
@@ -769,22 +775,29 @@ export default function AdminApp() {
       notify("Nao foi possivel verificar agendamentos ativos deste servico. Tente novamente.");
       return false;
     }
+    const previousServices = services;
+    const previousArchivedServices = archivedServices;
+
     try {
       const archivedAt = new Date();
+      const archivedService = { ...currentService, isArchived: true, archivedAt, updatedAt: archivedAt };
       const serviceRef = doc(db, "services", serviceId);
       await updateDoc(serviceRef, { isArchived: true, archivedAt, updatedAt: archivedAt });
       setServices((prev) => prev.filter((service) => service.id !== serviceId));
+      setArchivedServices((prev) => sortByCreatedAtDesc(upsertById(prev, archivedService)));
       trackEvent("service_archived", { source: "admin", action: "archive-service" });
       await recordAuditLog({
         action: "service_archived",
         entityType: "service",
         entityId: serviceId,
-        entityLabel: services.find((service) => service.id === serviceId)?.name || "Servico",
+        entityLabel: currentService.name || "Servico",
         summary: "Servico arquivado do catalogo ativo.",
       });
       return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "archive-service" });
+      setServices(previousServices);
+      setArchivedServices(previousArchivedServices);
       notify("Erro ao arquivar servico. Tente novamente.");
       return false;
     }
