@@ -72,6 +72,7 @@ export default function Dashboard({
   const [saving, setSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const slugCheckRequestRef = useRef(0);
+  const copyMessageTimerRef = useRef(null);
 
   const currentSlug = profile?.slug || "";
   const publicOrigin = typeof window !== "undefined" ? window.location.origin : "";
@@ -135,6 +136,12 @@ export default function Dashboard({
     };
   }, [slugInput, isEditingSlug, isSlugAvailable, user]);
 
+  useEffect(() => {
+    return () => {
+      if (copyMessageTimerRef.current) window.clearTimeout(copyMessageTimerRef.current);
+    };
+  }, []);
+
   const handleSlugInputChange = (event) => {
     setSlugInput(event.target.value);
     setSlugError("");
@@ -152,7 +159,11 @@ export default function Dashboard({
     if (copied) {
       setCopyMessage("Link copiado!");
       trackEvent("public_link_copied", { source: "dashboard", action: "copy-public-link" });
-      window.setTimeout(() => setCopyMessage(""), 2000);
+      if (copyMessageTimerRef.current) window.clearTimeout(copyMessageTimerRef.current);
+      copyMessageTimerRef.current = window.setTimeout(() => {
+        setCopyMessage("");
+        copyMessageTimerRef.current = null;
+      }, 2000);
       return;
     }
 

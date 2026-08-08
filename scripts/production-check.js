@@ -1473,6 +1473,33 @@ const assertSharedNavigationFeedbackIsAccessible = () => {
   });
 };
 
+const assertTransientUiTimersAreCleared = () => {
+  const dashboardPage = readFileSync(join(root, "src", "pages", "Dashboard.jsx"), "utf8");
+  const profileSetup = readFileSync(join(root, "src", "pages", "ProfileSetup.jsx"), "utf8");
+  const servicesPage = readFileSync(join(root, "src", "pages", "Services.jsx"), "utf8");
+  const sidebar = readFileSync(join(root, "src", "components", "Sidebar.jsx"), "utf8");
+  const whatsappPage = readFileSync(join(root, "src", "pages", "WhatsApp.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [dashboardPage, "src/pages/Dashboard.jsx", "copyMessageTimerRef"],
+    [dashboardPage, "src/pages/Dashboard.jsx", "window.clearTimeout(copyMessageTimerRef.current)"],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "redirectTimerRef"],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "window.clearTimeout(redirectTimerRef.current)"],
+    [servicesPage, "src/pages/Services.jsx", "closeEditTimerRef"],
+    [servicesPage, "src/pages/Services.jsx", "window.clearTimeout(closeEditTimerRef.current)"],
+    [sidebar, "src/components/Sidebar.jsx", "copyMessageTimerRef"],
+    [sidebar, "src/components/Sidebar.jsx", "window.clearTimeout(copyMessageTimerRef.current)"],
+    [whatsappPage, "src/pages/WhatsApp.jsx", "copiedTimerRef"],
+    [whatsappPage, "src/pages/WhatsApp.jsx", "window.clearTimeout(copiedTimerRef.current)"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`transient UI timer cleanup is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 const assertWhatsAppTemplatesAreDomainDriven = () => {
   const whatsappPage = readFileSync(join(root, "src", "pages", "WhatsApp.jsx"), "utf8");
   const whatsappTemplates = readFileSync(join(root, "src", "utils", "whatsappTemplates.js"), "utf8");
@@ -1656,6 +1683,7 @@ assertClientListSupportsWhatsAppContact();
 assertClientActionsHaveSubmitGuards();
 assertProfileAndDashboardFeedbackIsAccessible();
 assertSharedNavigationFeedbackIsAccessible();
+assertTransientUiTimersAreCleared();
 assertWhatsAppTemplatesAreDomainDriven();
 assertLaunchMetadataIsReady();
 assertAppBootstrapIsGuarded();

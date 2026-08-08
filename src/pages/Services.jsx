@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import { isActiveAppointment } from "../utils/appointments";
@@ -59,6 +59,7 @@ export default function Services({
   const [archivingService, setArchivingService] = useState(false);
   const [restoringServiceId, setRestoringServiceId] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const closeEditTimerRef = useRef(null);
   const isSetupMode = searchParams.get("setup") === "services";
   const duplicateNewService = findDuplicateServiceByName(services, serviceName);
   const duplicateEditedService = editingService
@@ -76,6 +77,12 @@ export default function Services({
       return map;
     }, {});
   }, [appointments]);
+
+  useEffect(() => {
+    return () => {
+      if (closeEditTimerRef.current) window.clearTimeout(closeEditTimerRef.current);
+    };
+  }, []);
 
   const averagePrice = services.length
     ? Math.round(services.reduce((total, service) => total + getServiceCatalogPrice(service), 0) / services.length)
@@ -163,7 +170,11 @@ export default function Services({
       if (!saved) return;
 
       setStatusMessage("Servico atualizado com sucesso.");
-      setTimeout(closeEdit, 800);
+      if (closeEditTimerRef.current) window.clearTimeout(closeEditTimerRef.current);
+      closeEditTimerRef.current = window.setTimeout(() => {
+        closeEdit();
+        closeEditTimerRef.current = null;
+      }, 800);
     } finally {
       setEditingServiceSaving(false);
     }

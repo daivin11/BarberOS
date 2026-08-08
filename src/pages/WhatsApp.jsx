@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createWhatsAppUrl } from "../utils/phone";
 import {
   getWhatsAppTemplateById,
@@ -12,6 +12,7 @@ import { copyTextToClipboard } from "../utils/clipboard";
 export default function WhatsApp() {
   const [copied, setCopied] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState(WHATSAPP_TEMPLATES[0].id);
+  const copiedTimerRef = useRef(null);
 
   const selectedTemplate = useMemo(
     () => getWhatsAppTemplateById(selectedTemplateId),
@@ -20,13 +21,21 @@ export default function WhatsApp() {
   const previewMessage = renderWhatsAppTemplate(selectedTemplate.message);
   const whatsappUrl = createWhatsAppUrl({ message: previewMessage });
 
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) window.clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
+
   async function copyTemplate(text, id) {
     const copiedToClipboard = await copyTextToClipboard(text);
     if (copiedToClipboard) {
       setCopied(id);
       trackEvent("whatsapp_template_copied", { source: "whatsapp", action: "copy-template" });
-      window.setTimeout(() => {
+      if (copiedTimerRef.current) window.clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = window.setTimeout(() => {
         setCopied("");
+        copiedTimerRef.current = null;
       }, 2000);
       return;
     }

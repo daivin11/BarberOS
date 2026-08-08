@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { getActivationState, getPublicBookingReadiness } from "../utils/onboarding";
@@ -27,6 +27,7 @@ export default function Sidebar({
   const [copyMessage, setCopyMessage] = useState("");
   const [copyMessageType, setCopyMessageType] = useState("status");
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const copyMessageTimerRef = useRef(null);
   const publicPath = profile?.slug ? `/${profile.slug}` : "";
   const publicUrl = publicPath ? `${window.location.origin}${publicPath}` : "";
   const businessName = profile?.barbershopName || profile?.displayName || "Sua barbearia";
@@ -43,6 +44,12 @@ export default function Sidebar({
     barbersCount,
   });
 
+  useEffect(() => {
+    return () => {
+      if (copyMessageTimerRef.current) window.clearTimeout(copyMessageTimerRef.current);
+    };
+  }, []);
+
   const copyPublicLink = async () => {
     if (!publicUrl || !publicReadiness.isReady) {
       setCopyMessage(publicReadiness.nextStep?.label || "Complete o link publico antes de copiar");
@@ -55,7 +62,11 @@ export default function Sidebar({
       setCopyMessage("Link copiado");
       setCopyMessageType("status");
       trackEvent("public_link_copied", { source: "sidebar", action: "copy-public-link" });
-      window.setTimeout(() => setCopyMessage(""), 2000);
+      if (copyMessageTimerRef.current) window.clearTimeout(copyMessageTimerRef.current);
+      copyMessageTimerRef.current = window.setTimeout(() => {
+        setCopyMessage("");
+        copyMessageTimerRef.current = null;
+      }, 2000);
       return;
     }
 

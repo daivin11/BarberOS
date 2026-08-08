@@ -20,6 +20,7 @@ export default function ProfileSetup() {
   const [slugChecking, setSlugChecking] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const slugCheckRequestRef = useRef(0);
+  const redirectTimerRef = useRef(null);
   const publicOrigin = typeof window !== "undefined" ? window.location.origin : "";
   const isSubmitDisabled = loading || slugChecking;
 
@@ -69,6 +70,12 @@ export default function ProfileSetup() {
       clearTimeout(timeout);
     };
   }, [slug, isSlugAvailable, user]);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user && !profileLoading) {
@@ -165,7 +172,11 @@ export default function ProfileSetup() {
       });
       setSaveSuccess("Perfil salvo com sucesso.");
       trackEvent("profile_setup_completed", { source: "profile-setup", action: "save-profile" });
-      window.setTimeout(() => navigate("/dashboard"), 900);
+      if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = window.setTimeout(() => {
+        navigate("/dashboard");
+        redirectTimerRef.current = null;
+      }, 900);
     } catch (err) {
       reportError(err, { source: "profile-setup", action: "save-profile" });
       if (err.message === "slug-unavailable") {
