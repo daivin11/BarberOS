@@ -616,6 +616,7 @@ service cloud.firestore {
         )
         && hasOnly(appointmentFields())
         && request.resource.data.userId is string
+        && (!('id' in request.resource.data) || request.resource.data.id == appointmentId)
         && validText(request.resource.data.clientName, 2, 80)
         && request.resource.data.clientPhone is string
         && request.resource.data.clientPhone.size() >= 10

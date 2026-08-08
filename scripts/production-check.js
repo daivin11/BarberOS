@@ -387,6 +387,7 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     "bookingSlotReleasedByAppointment(slotId)",
     "validClientSnapshot(request.resource.data.client)",
     "validServiceSnapshot(request.resource.data['service'])",
+    "(!('id' in request.resource.data) || request.resource.data.id == appointmentId)",
     "request.resource.data.slotIds.size() <= 16",
     "request.resource.data.slotIds[0] == request.resource.data.slotId",
     "slotId in getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.slotIds",
