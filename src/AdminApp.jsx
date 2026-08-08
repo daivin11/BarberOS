@@ -14,6 +14,7 @@ import {
   sortAppointments,
   sortByCreatedAtDesc,
   sortByName,
+  upsertById,
   validateClientInput,
 } from "./utils/adminData";
 import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "./utils/appointmentWindow";
@@ -444,7 +445,7 @@ export default function AdminApp() {
       });
 
       const clientWithId = { id: clientRef.id, ...newClient };
-      setClients((prevClients) => [...prevClients, clientWithId]);
+      setClients((prevClients) => sortByName(upsertById(prevClients, clientWithId)));
       trackEvent("client_created", { source: "admin", action: "add-client" });
       await recordAuditLog({
         action: "client_created",
@@ -666,7 +667,7 @@ export default function AdminApp() {
 
       const docRef = await addDoc(collection(db, "services"), newService);
       const serviceWithId = { id: docRef.id, ...newService };
-      setServices((prev) => [...prev, serviceWithId]);
+      setServices((prev) => sortByCreatedAtDesc(upsertById(prev, serviceWithId)));
       trackEvent("service_created", { source: "admin", action: "add-service" });
       await recordAuditLog({
         action: "service_created",
@@ -1054,7 +1055,7 @@ export default function AdminApp() {
 
       const appointmentWithId = { id: appointmentRef.id, ...newAppointment };
 
-      setAppointments([...appointments, appointmentWithId]);
+      setAppointments((currentAppointments) => sortAppointments(upsertById(currentAppointments, appointmentWithId)));
       setSelectedClient("");
       setSelectedService("");
       setSelectedBarber("");

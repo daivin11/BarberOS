@@ -1170,8 +1170,16 @@ const assertFinanceShowsOperationalHealth = () => {
 
 const assertAdminDataSyncCanRetry = () => {
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
+  const adminDataUtils = readFileSync(join(root, "src", "utils", "adminData.js"), "utf8");
+  const adminDataTest = readFileSync(join(root, "tests", "adminData.test.js"), "utf8");
 
   const requiredSnippets = [
+    [adminDataUtils, "src/utils/adminData.js", "export const upsertById"],
+    [adminDataTest, "tests/adminData.test.js", "upserts synced local items without duplicating ids"],
+    [adminApp, "src/AdminApp.jsx", "upsertById"],
+    [adminApp, "src/AdminApp.jsx", "sortByName(upsertById(prevClients, clientWithId))"],
+    [adminApp, "src/AdminApp.jsx", "sortByCreatedAtDesc(upsertById(prev, serviceWithId))"],
+    [adminApp, "src/AdminApp.jsx", "sortAppointments(upsertById(currentAppointments, appointmentWithId))"],
     [adminApp, "src/AdminApp.jsx", "dataErrors"],
     [adminApp, "src/AdminApp.jsx", "setDataSyncError"],
     [adminApp, "src/AdminApp.jsx", "clearDataSyncError"],

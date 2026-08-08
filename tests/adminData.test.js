@@ -10,6 +10,7 @@ import {
   sortAppointments,
   sortByCreatedAtDesc,
   sortByName,
+  upsertById,
   validateClientInput,
 } from "../src/utils/adminData.js";
 
@@ -98,5 +99,22 @@ describe("admin data utils", () => {
     ]);
 
     assert.deepEqual(sorted.map((item) => item.id), ["first", "early", "late"]);
+  });
+
+  it("upserts synced local items without duplicating ids", () => {
+    const nextItems = upsertById(
+      [
+        { id: "1", name: "Ana", phone: "11988887777" },
+        { id: "2", name: "Bruno", phone: "21988887777" },
+      ],
+      { id: "1", name: "Ana Maria" }
+    );
+
+    assert.deepEqual(nextItems, [
+      { id: "1", name: "Ana Maria", phone: "11988887777" },
+      { id: "2", name: "Bruno", phone: "21988887777" },
+    ]);
+    assert.deepEqual(upsertById(nextItems, { id: "3", name: "Caio" }).map((item) => item.id), ["1", "2", "3"]);
+    assert.deepEqual(upsertById(nextItems, { name: "Sem id" }), nextItems);
   });
 });

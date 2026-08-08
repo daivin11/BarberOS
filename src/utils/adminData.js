@@ -73,3 +73,17 @@ export const sortAppointments = (items) =>
     const secondValue = `${second.date || ""} ${second.time || ""}`;
     return firstValue.localeCompare(secondValue);
   });
+
+export const upsertById = (items = [], nextItem = {}) => {
+  const nextId = String(nextItem.id || "");
+  if (!nextId) return [...items];
+
+  let replaced = false;
+  const nextItems = items.map((item) => {
+    if (String(item.id || "") !== nextId) return item;
+    replaced = true;
+    return { ...item, ...nextItem };
+  });
+
+  return replaced ? nextItems : [...nextItems, nextItem];
+};
