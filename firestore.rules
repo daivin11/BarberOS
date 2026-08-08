@@ -782,21 +782,26 @@ service cloud.firestore {
         ])
         && request.resource.data.userId == resource.data.userId
         && request.resource.data.appointmentId == resource.data.appointmentId
-        && request.resource.data.barberId == resource.data.barberId
-        && request.resource.data.date == resource.data.date
-        && request.resource.data.time == resource.data.time
-        && (!('rootTime' in resource.data) || request.resource.data.rootTime == resource.data.rootTime)
-        && request.resource.data.duration == resource.data.duration
-        && request.resource.data.startMinutes == resource.data.startMinutes
-        && request.resource.data.endMinutes == resource.data.endMinutes
         && (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt)
         && request.resource.data.updatedAt is timestamp
         && validText(request.resource.data.barberName, 2, 80)
         && validDateString(request.resource.data.date)
         && validTimeString(request.resource.data.time)
-        && (!('rootTime' in request.resource.data) || validTimeString(request.resource.data.rootTime))
+        && validTimeString(request.resource.data.rootTime)
         && validBookingSlotTiming()
-        && request.resource.data.status in ['pending', 'confirmed', 'completed', 'cancelled'];
+        && request.resource.data.status in ['pending', 'confirmed', 'completed', 'cancelled']
+        && (
+          (
+            request.resource.data.barberId == resource.data.barberId
+            && request.resource.data.date == resource.data.date
+            && request.resource.data.time == resource.data.time
+            && request.resource.data.rootTime == resource.data.rootTime
+            && request.resource.data.duration == resource.data.duration
+            && request.resource.data.startMinutes == resource.data.startMinutes
+            && request.resource.data.endMinutes == resource.data.endMinutes
+          )
+          || bookingSlotMatchesAppointment(slotId)
+        );
       allow delete: if isOwner(resource.data.userId)
         && bookingSlotReleasedByAppointment(slotId);
     }

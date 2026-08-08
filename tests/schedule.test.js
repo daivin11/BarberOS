@@ -4,6 +4,7 @@ import { SERVICE_LIMITS } from "../src/utils/services.js";
 import {
   BUSINESS_HOURS_LIMITS,
   createSlotId,
+  createSlotWritePlan,
   getOccupiedTimes,
   getSafeScheduleDuration,
   getTimeSlots,
@@ -70,6 +71,20 @@ describe("schedule utils", () => {
     );
     assert.deepEqual(getOccupiedTimes({ startMinutes: Number.NaN, endMinutes: 600, interval: 30 }), []);
     assert.deepEqual(getOccupiedTimes({ startMinutes: 600, endMinutes: 570, interval: 30 }), []);
+  });
+
+  it("plans booking slot writes without rewriting unchanged slots", () => {
+    assert.deepEqual(
+      createSlotWritePlan({
+        previousSlotIds: ["09:00", "09:30", "10:00"],
+        nextSlotIds: ["09:00", "09:30", "10:30"],
+      }),
+      {
+        slotIdsToCreate: ["10:30"],
+        slotIdsToUpdate: ["09:00", "09:30"],
+        slotIdsToDelete: ["10:00"],
+      }
+    );
   });
 
   it("detects overlapping appointment windows", () => {

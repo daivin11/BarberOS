@@ -29,6 +29,7 @@ import { createAppointmentWhatsAppMessage } from "./utils/appointmentMessages";
 import { findDuplicateBarberByName } from "./utils/barbers";
 import {
   createSlotId,
+  createSlotWritePlan,
   getOccupiedTimes,
   getSlotInterval,
   isFutureAppointmentStart,
@@ -1209,9 +1210,28 @@ export default function AdminApp() {
     const previousSlotIds =
       currentAppointment.slotIds ||
       (currentAppointment.slotId ? [currentAppointment.slotId] : []);
-    const previousSlotIdSet = new Set(previousSlotIds);
-    const nextSlotRefs = nextSlotIds.map((slotId) => doc(db, "bookingSlots", slotId));
-    const previousSlotRefs = previousSlotIds.map((slotId) => doc(db, "bookingSlots", slotId));
+    const { slotIdsToCreate, slotIdsToUpdate, slotIdsToDelete } = createSlotWritePlan({
+      previousSlotIds,
+      nextSlotIds,
+    });
+    const slotDataById = new Map(
+      nextSlotIds.map((slotId, index) => [
+        slotId,
+        {
+          appointmentId,
+          userId: user.uid,
+          barberId: barber.id,
+          barberName: barber.name,
+          date: updates.date,
+          time: occupiedTimes[index],
+          rootTime: updates.time,
+          duration,
+          startMinutes,
+          endMinutes,
+          status: currentAppointment.status || APPOINTMENT_STATUS.pending,
+        },
+      ])
+    );
 
     const updatedAt = new Date();
     const nextAppointment = {
@@ -1241,32 +1261,28 @@ export default function AdminApp() {
 
     try {
       await runTransaction(db, async (transaction) => {
-        for (let index = 0; index < nextSlotRefs.length; index += 1) {
-          const slotRef = nextSlotRefs[index];
-          const slotId = nextSlotIds[index];
-          if (previousSlotIdSet.has(slotId)) continue;
-
+        for (const slotId of slotIdsToCreate) {
+          const slotRef = doc(db, "bookingSlots", slotId);
           const slotSnapshot = await transaction.get(slotRef);
           if (slotSnapshot.exists()) {
             throw new Error("slot-unavailable");
           }
         }
 
-        previousSlotRefs.forEach((slotRef) => transaction.delete(slotRef));
+        slotIdsToDelete.forEach((slotId) => {
+          transaction.delete(doc(db, "bookingSlots", slotId));
+        });
 
-        nextSlotRefs.forEach((slotRef, index) => {
-          transaction.set(slotRef, {
-            appointmentId,
-            userId: user.uid,
-            barberId: barber.id,
-            barberName: barber.name,
-            date: updates.date,
-            time: occupiedTimes[index],
-            rootTime: updates.time,
-            duration,
-            startMinutes,
-            endMinutes,
-            status: nextAppointment.status || APPOINTMENT_STATUS.pending,
+        slotIdsToUpdate.forEach((slotId) => {
+          transaction.update(doc(db, "bookingSlots", slotId), {
+            ...slotDataById.get(slotId),
+            updatedAt,
+          });
+        });
+
+        slotIdsToCreate.forEach((slotId) => {
+          transaction.set(doc(db, "bookingSlots", slotId), {
+            ...slotDataById.get(slotId),
             createdAt: updatedAt,
             updatedAt,
           });

@@ -99,6 +99,17 @@ export const getOccupiedTimes = ({ startMinutes, endMinutes, interval = defaultB
   return times;
 };
 
+export const createSlotWritePlan = ({ previousSlotIds = [], nextSlotIds = [] } = {}) => {
+  const previousSlotIdSet = new Set(previousSlotIds.map(String));
+  const nextSlotIdSet = new Set(nextSlotIds.map(String));
+
+  return {
+    slotIdsToCreate: nextSlotIds.filter((slotId) => !previousSlotIdSet.has(String(slotId))),
+    slotIdsToUpdate: nextSlotIds.filter((slotId) => previousSlotIdSet.has(String(slotId))),
+    slotIdsToDelete: previousSlotIds.filter((slotId) => !nextSlotIdSet.has(String(slotId))),
+  };
+};
+
 export const getSlotInterval = (profileOrBusinessHours) =>
   Number(profileOrBusinessHours?.businessHours?.slotInterval || profileOrBusinessHours?.slotInterval) ||
   defaultBusinessHours.slotInterval;
