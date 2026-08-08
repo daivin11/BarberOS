@@ -623,6 +623,8 @@ export default function AdminApp() {
       const archivedAt = new Date();
       await runTransaction(db, async (transaction) => {
         transaction.update(doc(db, "clients", clientId), {
+          phone: cleanPhone,
+          phoneNormalized: cleanPhone,
           isArchived: true,
           archivedAt,
           updatedAt: archivedAt,
@@ -805,6 +807,8 @@ export default function AdminApp() {
     const restoredAt = new Date();
     const restoredClient = {
       ...archivedClient,
+      phone: cleanPhone,
+      phoneNormalized: cleanPhone,
       isArchived: false,
       archivedAt: undefined,
       updatedAt: restoredAt,
@@ -828,6 +832,8 @@ export default function AdminApp() {
         }
 
         transaction.update(clientRef, {
+          phone: cleanPhone,
+          phoneNormalized: cleanPhone,
           isArchived: false,
           archivedAt: deleteField(),
           updatedAt: restoredAt,

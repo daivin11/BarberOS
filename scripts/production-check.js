@@ -1352,6 +1352,10 @@ const assertAdminDataSyncCanRetry = () => {
       failures.push(`admin data sync retry is missing in ${fileName}: ${snippet}`);
     }
   });
+
+  if (countOccurrences(adminApp, "phoneNormalized: cleanPhone") < 6) {
+    failures.push("client phone normalization is not preserved across create, update, archive and restore flows: src/AdminApp.jsx");
+  }
 };
 
 const assertPublicBookingSubmitRespectsAvailability = () => {
