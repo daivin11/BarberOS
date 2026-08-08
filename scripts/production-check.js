@@ -1101,11 +1101,25 @@ const assertAdminDataSyncCanRetry = () => {
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
 
   const requiredSnippets = [
+    [adminApp, "src/AdminApp.jsx", "dataErrors"],
+    [adminApp, "src/AdminApp.jsx", "setDataSyncError"],
+    [adminApp, "src/AdminApp.jsx", "clearDataSyncError"],
+    [adminApp, "src/AdminApp.jsx", "dataErrorMessages"],
     [adminApp, "src/AdminApp.jsx", "syncRetryToken"],
     [adminApp, "src/AdminApp.jsx", "retryDataSync"],
     [adminApp, "src/AdminApp.jsx", "setSyncRetryToken((currentToken) => currentToken + 1)"],
     [adminApp, "src/AdminApp.jsx", "Tentar novamente"],
     [adminApp, "src/AdminApp.jsx", "admin_data_sync_retry"],
+    [adminApp, "src/AdminApp.jsx", "setDataSyncError(\"clients\""],
+    [adminApp, "src/AdminApp.jsx", "clearDataSyncError(\"clients\")"],
+    [adminApp, "src/AdminApp.jsx", "setDataSyncError(\"services\""],
+    [adminApp, "src/AdminApp.jsx", "clearDataSyncError(\"services\")"],
+    [adminApp, "src/AdminApp.jsx", "setDataSyncError(\"barbers\""],
+    [adminApp, "src/AdminApp.jsx", "clearDataSyncError(\"barbers\")"],
+    [adminApp, "src/AdminApp.jsx", "setDataSyncError(\"appointments\""],
+    [adminApp, "src/AdminApp.jsx", "clearDataSyncError(\"appointments\")"],
+    [adminApp, "src/AdminApp.jsx", "setDataSyncError(\"auditLogs\""],
+    [adminApp, "src/AdminApp.jsx", "clearDataSyncError(\"auditLogs\")"],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {

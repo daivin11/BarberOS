@@ -122,7 +122,7 @@ export default function AdminApp() {
   const [appointmentsLoading, setAppointmentsLoading] = useState(true);
   const [auditLogs, setAuditLogs] = useState([]);
   const [auditLogsLoading, setAuditLogsLoading] = useState(true);
-  const [dataError, setDataError] = useState("");
+  const [dataErrors, setDataErrors] = useState({});
   const [dataWarnings, setDataWarnings] = useState({});
   const [syncRetryToken, setSyncRetryToken] = useState(0);
   const [notification, setNotification] = useState(null);
@@ -157,8 +157,21 @@ export default function AdminApp() {
     });
   }, []);
 
+  const clearDataSyncError = useCallback((key) => {
+    setDataErrors((currentErrors) => {
+      if (!currentErrors[key]) return currentErrors;
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[key];
+      return nextErrors;
+    });
+  }, []);
+
+  const setDataSyncError = useCallback((key, message) => {
+    setDataErrors((currentErrors) => ({ ...currentErrors, [key]: message }));
+  }, []);
+
   const retryDataSync = useCallback(() => {
-    setDataError("");
+    setDataErrors({});
     setDataWarnings({});
     setClientsLoading(true);
     setServicesLoading(true);
@@ -225,7 +238,7 @@ export default function AdminApp() {
       setAppointmentsLoading(false);
       setAuditLogs([]);
       setAuditLogsLoading(false);
-      setDataError("");
+      setDataErrors({});
       setDataWarnings({});
       return;
     }
@@ -279,11 +292,11 @@ export default function AdminApp() {
         setArchivedClients(sortByName(allClients.filter((client) => client.isArchived || client.archivedAt)));
         updateLimitWarning("clients", clientsSnapshot.size);
         setClientsLoading(false);
-        setDataError("");
+        clearDataSyncError("clients");
       },
       (error) => {
         reportError(error, { source: "admin", action: "watch-clients" });
-        setDataError("Nao foi possivel sincronizar clientes. Recarregue a pagina ou tente novamente em instantes.");
+        setDataSyncError("clients", "Nao foi possivel sincronizar clientes. Recarregue a pagina ou tente novamente em instantes.");
         setClientsLoading(false);
       }
     );
@@ -296,12 +309,12 @@ export default function AdminApp() {
         setArchivedServices(sortByCreatedAtDesc(allServices.filter((service) => service.isArchived || service.archivedAt)));
         updateLimitWarning("services", servicesSnapshot.size);
         setServicesLoading(false);
-        setDataError("");
+        clearDataSyncError("services");
       },
       (error) => {
         reportError(error, { source: "admin", action: "watch-services" });
         setServicesLoading(false);
-        setDataError("Nao foi possivel sincronizar servicos. Recarregue a pagina ou tente novamente em instantes.");
+        setDataSyncError("services", "Nao foi possivel sincronizar servicos. Recarregue a pagina ou tente novamente em instantes.");
       }
     );
 
@@ -313,12 +326,12 @@ export default function AdminApp() {
         setArchivedBarbers(sortByName(allBarbers.filter((barber) => barber.isArchived || barber.archivedAt)));
         updateLimitWarning("barbers", barbersSnapshot.size);
         setBarbersLoading(false);
-        setDataError("");
+        clearDataSyncError("barbers");
       },
       (error) => {
         reportError(error, { source: "admin", action: "watch-barbers" });
         setBarbersLoading(false);
-        setDataError("Nao foi possivel sincronizar a equipe. Recarregue a pagina ou tente novamente em instantes.");
+        setDataSyncError("barbers", "Nao foi possivel sincronizar a equipe. Recarregue a pagina ou tente novamente em instantes.");
       }
     );
 
@@ -329,12 +342,12 @@ export default function AdminApp() {
         setAppointments(sortAppointments(appointmentsList));
         updateLimitWarning("appointments", appointmentsSnapshot.size);
         setAppointmentsLoading(false);
-        setDataError("");
+        clearDataSyncError("appointments");
       },
       (error) => {
         reportError(error, { source: "admin", action: "watch-appointments" });
         setAppointmentsLoading(false);
-        setDataError("Nao foi possivel sincronizar a agenda. Recarregue a pagina ou tente novamente em instantes.");
+        setDataSyncError("appointments", "Nao foi possivel sincronizar a agenda. Recarregue a pagina ou tente novamente em instantes.");
       }
     );
 
@@ -346,12 +359,12 @@ export default function AdminApp() {
         setAuditLogs(auditLogsList);
         updateLimitWarning("auditLogs", auditLogsSnapshot.size);
         setAuditLogsLoading(false);
-        setDataError("");
+        clearDataSyncError("auditLogs");
       },
       (error) => {
         reportError(error, { source: "admin", action: "watch-audit-logs" });
         setAuditLogsLoading(false);
-        setDataError("Nao foi possivel sincronizar atividades recentes. Recarregue a pagina ou tente novamente em instantes.");
+        setDataSyncError("auditLogs", "Nao foi possivel sincronizar atividades recentes. Recarregue a pagina ou tente novamente em instantes.");
       }
     );
 
@@ -362,7 +375,15 @@ export default function AdminApp() {
       unsubscribeAppointments();
       unsubscribeAuditLogs();
     };
-  }, [user, updateLimitWarning, appointmentWindow.startDate, appointmentWindow.endDate, syncRetryToken]);
+  }, [
+    user,
+    updateLimitWarning,
+    clearDataSyncError,
+    setDataSyncError,
+    appointmentWindow.startDate,
+    appointmentWindow.endDate,
+    syncRetryToken,
+  ]);
 
   const addClient = async (name, phone) => {
     const clientInput = normalizeClientInput({ name, phone });
@@ -1316,6 +1337,7 @@ export default function AdminApp() {
   const isAdminRoute = adminRoutes.some(route => location.pathname === route);
   const shouldShowSidebar = user && isAdminRoute;
   const routeAuth = { user, profile, authLoading, profileLoading };
+  const dataErrorMessages = Object.values(dataErrors);
   const dataWarningMessages = Object.values(dataWarnings);
 
   const renderRoute = () => {
@@ -1481,10 +1503,10 @@ export default function AdminApp() {
           </div>
         )}
 
-        {shouldShowSidebar && dataError && (
+        {shouldShowSidebar && dataErrorMessages.length > 0 && (
           <div className="border-b border-yellow-800 bg-yellow-950/80 px-4 py-3 text-sm text-yellow-100 sm:px-6 lg:px-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p>{dataError}</p>
+              <p>{dataErrorMessages[0]}</p>
               <button
                 type="button"
                 onClick={retryDataSync}
@@ -1496,7 +1518,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {shouldShowSidebar && !dataError && dataWarningMessages.length > 0 && (
+        {shouldShowSidebar && dataErrorMessages.length === 0 && dataWarningMessages.length > 0 && (
           <div className="border-b border-yellow-800 bg-yellow-950/80 px-4 py-3 text-sm text-yellow-100 sm:px-6 lg:px-8">
             {dataWarningMessages[0]}
           </div>
