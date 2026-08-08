@@ -26,6 +26,8 @@ export default function TrialExpired() {
   const navigate = useNavigate();
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
+  const [requestMessageType, setRequestMessageType] = useState("status");
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("studio");
   const trialEndsAt = toDate(profile?.trialEndsAt);
   const accountAccess = getAccountAccess(profile);
@@ -35,8 +37,19 @@ export default function TrialExpired() {
     : "data nao disponivel";
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login", { replace: true });
+    if (logoutLoading) return;
+
+    setLogoutLoading(true);
+    try {
+      await logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      reportError(error, { source: "trial-expired", action: "logout" });
+      setRequestMessage("Nao foi possivel sair agora. Tente novamente.");
+      setRequestMessageType("alert");
+    } finally {
+      setLogoutLoading(false);
+    }
   };
 
   const handleRenewalRequest = async () => {
@@ -45,6 +58,7 @@ export default function TrialExpired() {
 
     setRequestLoading(true);
     setRequestMessage("");
+    setRequestMessageType("status");
 
     try {
       const timestamp = new Date();
@@ -59,6 +73,7 @@ export default function TrialExpired() {
         })
       );
       setRequestMessage("Solicitacao enviada. Entraremos em contato em breve.");
+      setRequestMessageType("status");
       trackEvent("renewal_requested", { source: "trial-expired", action: "request-renewal" });
     } catch (error) {
       reportError(error, { source: "trial-expired", action: "request-renewal" });
@@ -67,6 +82,7 @@ export default function TrialExpired() {
           ? "Ja existe uma solicitacao pendente para esta conta."
           : "Nao foi possivel enviar a solicitacao. Tente novamente."
       );
+      setRequestMessageType("alert");
     } finally {
       setRequestLoading(false);
     }
@@ -159,12 +175,22 @@ export default function TrialExpired() {
               <button
                 type="button"
                 onClick={handleLogout}
+                disabled={logoutLoading}
+                aria-busy={logoutLoading ? "true" : "false"}
                 className="rounded-2xl border border-gray-700 bg-gray-950 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40"
               >
-                Sair
+                {logoutLoading ? "Saindo..." : "Sair"}
               </button>
             </div>
-            {requestMessage && <p className="mt-4 text-sm text-gray-300">{requestMessage}</p>}
+            {requestMessage && (
+              <p
+                className={`mt-4 text-sm ${requestMessageType === "alert" ? "text-red-300" : "text-gray-300"}`}
+                role={requestMessageType === "alert" ? "alert" : "status"}
+                aria-live={requestMessageType === "alert" ? "assertive" : "polite"}
+              >
+                {requestMessage}
+              </p>
+            )}
           </div>
 
           <aside className="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-sm sm:p-8">

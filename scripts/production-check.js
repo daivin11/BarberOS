@@ -342,6 +342,16 @@ const assertTrialExpiredUsesBillingDomain = () => {
   }
 
   if (
+    !trialExpired.includes("requestMessageType") ||
+    !trialExpired.includes('role={requestMessageType === "alert" ? "alert" : "status"}') ||
+    !trialExpired.includes('aria-live={requestMessageType === "alert" ? "assertive" : "polite"}') ||
+    !trialExpired.includes("if (logoutLoading) return;") ||
+    !trialExpired.includes('aria-busy={logoutLoading ? "true" : "false"}')
+  ) {
+    failures.push("blocked billing screen does not expose accessible request/logout feedback: src/pages/TrialExpired.jsx");
+  }
+
+  if (
     !billing.includes("getBlockedAccountContent") ||
     !billing.includes("createRenewalRequestPayload") ||
     !billing.includes("createRenewalRequestId")
