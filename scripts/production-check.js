@@ -1581,6 +1581,24 @@ const assertAppBootstrapIsGuarded = () => {
   });
 };
 
+const assertErrorFallbackIsAccessible = () => {
+  const errorBoundary = readFileSync(join(root, "src", "components", "AppErrorBoundary.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [errorBoundary, "src/components/AppErrorBoundary.jsx", "role=\"alert\""],
+    [errorBoundary, "src/components/AppErrorBoundary.jsx", "aria-live=\"assertive\""],
+    [errorBoundary, "src/components/AppErrorBoundary.jsx", "aria-label=\"Recarregar o BarberOS\""],
+    [errorBoundary, "src/components/AppErrorBoundary.jsx", "reportError(error"],
+    [errorBoundary, "src/components/AppErrorBoundary.jsx", "resetKey"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`app error fallback is not accessible in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 const assertTelemetryRedactsPersonalData = () => {
   const telemetry = readFileSync(join(root, "src", "utils", "telemetry.js"), "utf8");
   const telemetryTest = readFileSync(join(root, "tests", "telemetry.test.js"), "utf8");
@@ -1687,6 +1705,7 @@ assertTransientUiTimersAreCleared();
 assertWhatsAppTemplatesAreDomainDriven();
 assertLaunchMetadataIsReady();
 assertAppBootstrapIsGuarded();
+assertErrorFallbackIsAccessible();
 assertTelemetryRedactsPersonalData();
 assertDateUtilsAvoidInvalidOutput();
 

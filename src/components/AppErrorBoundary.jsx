@@ -30,7 +30,11 @@ export default class AppErrorBoundary extends Component {
 
     return (
       <main className="flex min-h-screen items-center justify-center bg-gray-950 p-6 text-white">
-        <section className="w-full max-w-xl rounded-3xl border border-red-900/60 bg-gray-900 p-8 shadow-sm" role="alert">
+        <section
+          className="w-full max-w-xl rounded-3xl border border-red-900/60 bg-gray-900 p-8 shadow-sm"
+          role="alert"
+          aria-live="assertive"
+        >
           <p className="text-sm uppercase tracking-[0.3em] text-red-300">Erro inesperado</p>
           <h1 className="mt-4 text-3xl font-black tracking-tight">Nao foi possivel carregar esta tela</h1>
           <p className="mt-4 text-gray-400">
@@ -40,6 +44,7 @@ export default class AppErrorBoundary extends Component {
             <button
               type="button"
               onClick={() => window.location.reload()}
+              aria-label="Recarregar o BarberOS"
               className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-gray-200"
             >
               Recarregar
