@@ -213,13 +213,21 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
             </label>
 
             {duplicatedClient && (
-              <div className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100">
+              <div
+                className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100"
+                role="status"
+                aria-live="polite"
+              >
                 Telefone ja usado por {duplicatedClient.name}. Evite duplicar o cadastro.
               </div>
             )}
 
             {formError && (
-              <div className="rounded-2xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200">
+              <div
+                className="rounded-2xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200"
+                role="alert"
+                aria-live="assertive"
+              >
                 {formError}
               </div>
             )}
@@ -233,6 +241,7 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
               }`}
               onClick={handleAddClient}
               disabled={Boolean(duplicatedClient) || savingClient}
+              aria-busy={savingClient ? "true" : "false"}
             >
               {savingClient ? (editingClient ? "Salvando alteracao..." : "Salvando cliente...") : editingClient ? "Salvar alteracao" : "Adicionar cliente"}
             </button>
@@ -248,7 +257,11 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
             )}
 
             {statusMessage && (
-              <div className="rounded-2xl border border-emerald-800 bg-emerald-950/50 p-3 text-sm text-emerald-200">
+              <div
+                className="rounded-2xl border border-emerald-800 bg-emerald-950/50 p-3 text-sm text-emerald-200"
+                role="status"
+                aria-live="polite"
+              >
                 {statusMessage}
               </div>
             )}
@@ -402,6 +415,7 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
                 type="button"
                 onClick={confirmDelete}
                 disabled={archivingClient}
+                aria-busy={archivingClient ? "true" : "false"}
                 className={`rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${
                   archivingClient ? "cursor-not-allowed bg-red-900 text-red-200" : "bg-red-500 hover:bg-red-600"
                 }`}

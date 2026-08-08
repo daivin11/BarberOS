@@ -1384,6 +1384,12 @@ const assertClientActionsHaveSubmitGuards = () => {
     [clientsPage, "src/pages/Clients.jsx", "Salvando cliente"],
     [clientsPage, "src/pages/Clients.jsx", "Arquivando..."],
     [clientsPage, "src/pages/Clients.jsx", "Restaurando..."],
+    [clientsPage, "src/pages/Clients.jsx", "role=\"alert\""],
+    [clientsPage, "src/pages/Clients.jsx", "aria-live=\"assertive\""],
+    [clientsPage, "src/pages/Clients.jsx", "role=\"status\""],
+    [clientsPage, "src/pages/Clients.jsx", "aria-live=\"polite\""],
+    [clientsPage, "src/pages/Clients.jsx", "aria-busy={savingClient ? \"true\" : \"false\"}"],
+    [clientsPage, "src/pages/Clients.jsx", "aria-busy={archivingClient ? \"true\" : \"false\"}"],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
