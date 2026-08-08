@@ -702,6 +702,7 @@ const assertServiceContractIsBounded = () => {
     [serviceUtils, "src/utils/services.js", "findDuplicateServiceByName"],
     [serviceUtils, "src/utils/services.js", "getServiceCatalogPrice"],
     [serviceUtils, "src/utils/services.js", "getServiceCatalogDuration"],
+    [adminApp, "src/AdminApp.jsx", "getServicePrice(appointment)"],
     [servicesPage, "src/pages/Services.jsx", "getServiceCatalogPrice(service)"],
     [servicesPage, "src/pages/Services.jsx", "getServiceCatalogDuration(service)"],
     [schedulePage, "src/pages/Schedule.jsx", "getServiceCatalogDuration(selectedServiceData"],

@@ -39,6 +39,7 @@ import {
 } from "./utils/schedule";
 import { createServiceSnapshot, findDuplicateServiceByName, getServiceCatalogDuration, normalizeServiceInput, validateServiceInput } from "./utils/services";
 import { reportError, trackEvent } from "./utils/telemetry";
+import { getServicePrice } from "./utils/finance";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Clients = lazy(() => import("./pages/Clients"));
@@ -1331,7 +1332,7 @@ export default function AdminApp() {
   const totalRevenue = appointments
     .filter(isCompletedAppointment)
     .reduce((total, appointment) => {
-      return total + (appointment?.service?.price ?? 0);
+      return total + getServicePrice(appointment);
     }, 0);
 
   const barberOptions =
