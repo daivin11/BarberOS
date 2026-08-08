@@ -332,6 +332,7 @@ export default function Barbers({
               type="button"
               onClick={handleSave}
               disabled={Boolean(duplicateBarber) || savingBarber}
+              aria-busy={savingBarber ? "true" : "false"}
               className={`w-full rounded-2xl px-4 py-4 text-sm font-semibold transition ${
                 duplicateBarber || savingBarber
                   ? "cursor-not-allowed bg-gray-700 text-gray-400"
@@ -341,11 +342,19 @@ export default function Barbers({
               {savingBarber ? (editingBarber ? "Salvando alteracoes..." : "Salvando barbeiro...") : editingBarber ? "Salvar alteracoes" : "Adicionar barbeiro"}
             </button>
             {duplicateBarber && (
-              <p className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100">
+              <p
+                className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100"
+                role="status"
+                aria-live="polite"
+              >
                 Ja existe um barbeiro ativo chamado {duplicateBarber.name}.
               </p>
             )}
-            {statusMessage && <p className="text-sm text-emerald-300">{statusMessage}</p>}
+            {statusMessage && (
+              <p className="text-sm text-emerald-300" role="status" aria-live="polite">
+                {statusMessage}
+              </p>
+            )}
           </div>
         </section>
 
@@ -458,6 +467,7 @@ export default function Barbers({
                     type="button"
                     onClick={() => restoreArchivedBarber(barber.id)}
                     disabled={Boolean(restoringBarberId)}
+                    aria-busy={restoringBarberId === barber.id ? "true" : "false"}
                     className={`mt-4 w-full rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
                       restoringBarberId
                         ? "cursor-not-allowed border-gray-700 bg-gray-900 text-gray-500"
@@ -507,6 +517,7 @@ export default function Barbers({
                 type="button"
                 onClick={handleDeleteConfirmed}
                 disabled={archivingBarber || deleteBarberActiveCount > 0}
+                aria-busy={archivingBarber ? "true" : "false"}
                 className={`rounded-3xl px-6 py-3 text-sm font-semibold text-white transition ${
                   archivingBarber || deleteBarberActiveCount > 0
                     ? "cursor-not-allowed bg-red-900 text-red-200"
