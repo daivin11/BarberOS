@@ -430,6 +430,7 @@ service cloud.firestore {
         && request.resource.data.profileComplete is bool
         && validCompleteProfile(request.resource.data)
         && request.resource.data.updatedAt is timestamp
+        && (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt)
         && request.resource.data.plan == resource.data.plan
         && request.resource.data.subscriptionStatus == resource.data.subscriptionStatus
         && (

@@ -316,6 +316,7 @@ const assertBillingRulesAreServerControlled = () => {
     "request.resource.data.trialEndsAt == resource.data.trialEndsAt",
     "request.resource.data.subscriptionEndsAt == resource.data.subscriptionEndsAt",
     "request.resource.data.billingUpdatedAt == resource.data.billingUpdatedAt",
+    "request.resource.data.createdAt == resource.data.createdAt",
     "validAccountStatus(request.resource.data.accountStatus)",
     "validPlan(request.resource.data.plan)",
     "validPlan(request.resource.data.requestedPlan)",
