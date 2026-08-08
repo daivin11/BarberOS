@@ -331,6 +331,20 @@ service cloud.firestore {
         && !existsAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId));
     }
 
+    function bookingSlotMatchesAppointment(slotId) {
+      return existsAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId))
+        && slotId in getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.slotIds
+        && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.userId == request.resource.data.userId
+        && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.barberId == request.resource.data.barberId
+        && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.barberName == request.resource.data.barberName
+        && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.date == request.resource.data.date
+        && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.time == request.resource.data.rootTime
+        && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.duration == request.resource.data.duration
+        && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.startMinutes == request.resource.data.startMinutes
+        && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.endMinutes == request.resource.data.endMinutes
+        && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.status == request.resource.data.status;
+    }
+
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
@@ -662,8 +676,11 @@ service cloud.firestore {
         && request.resource.data.userId is string
         && (
           isOwner(request.resource.data.userId)
-          || getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.barberSlug
+          || (
+            existsAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId))
+            && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.barberSlug
             == get(/databases/$(database)/documents/publicProfiles/$(request.resource.data.userId)).data.slug
+          )
         )
         && request.resource.data.appointmentId is string
         && request.resource.data.barberId is string
@@ -671,6 +688,7 @@ service cloud.firestore {
         && validDateString(request.resource.data.date)
         && validTimeString(request.resource.data.time)
         && validTimeString(request.resource.data.rootTime)
+        && bookingSlotMatchesAppointment(slotId)
         && validBookingSlotTiming()
         && request.resource.data.createdAt is timestamp
         && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp)
