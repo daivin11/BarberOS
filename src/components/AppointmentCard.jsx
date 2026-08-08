@@ -1,20 +1,29 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   APPOINTMENT_STATUS,
   getAppointmentStatus,
   getAppointmentStatusClass,
   getAppointmentStatusLabel,
+  isActiveAppointment,
   isTerminalAppointment,
 } from "../utils/appointments";
 import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "../utils/appointmentWindow";
 import { formatCurrencyBRL, formatDuration } from "../utils/format";
 import { getServiceCatalogDuration } from "../utils/services";
+import {
+  defaultBusinessHours,
+  getTimeSlots,
+  isTimeSlotAvailable,
+  normalizeBusinessHours,
+} from "../utils/schedule";
 
 export default function AppointmentCard({
   appointment,
   clients = [],
   services = [],
   barbers = [],
+  appointments = [],
+  businessHours = defaultBusinessHours,
   sendWhatsApp,
   onStatusChange,
   onUpdateAppointment,
@@ -41,6 +50,42 @@ export default function AppointmentCard({
   const appointmentTime = appointment.time || "Horario nao definido";
   const isTerminal = isTerminalAppointment(appointment);
   const isPending = currentStatus === APPOINTMENT_STATUS.pending;
+  const normalizedBusinessHours = useMemo(() => normalizeBusinessHours(businessHours), [businessHours]);
+  const editServiceData = useMemo(
+    () => services.find((service) => String(service.id) === String(editServiceId)),
+    [editServiceId, services]
+  );
+  const editServiceDuration = getServiceCatalogDuration(editServiceData, normalizedBusinessHours.slotInterval);
+  const editBookedSlots = useMemo(
+    () =>
+      editBarberId && editDate
+        ? appointments.filter(
+            (item) =>
+              String(item.id) !== String(appointment.id) &&
+              String(item.barberId) === String(editBarberId) &&
+              item.date === editDate &&
+              isActiveAppointment(item)
+          )
+        : [],
+    [appointment.id, appointments, editBarberId, editDate]
+  );
+  const editTimeOptions = useMemo(
+    () =>
+      editServiceData
+        ? getTimeSlots({
+            businessHours: normalizedBusinessHours,
+            duration: editServiceDuration,
+          }).filter((slot) =>
+            isTimeSlotAvailable({
+              time: slot,
+              duration: editServiceDuration,
+              bookedSlots: editBookedSlots,
+              interval: normalizedBusinessHours.slotInterval,
+            })
+          )
+        : [],
+    [editBookedSlots, editServiceData, editServiceDuration, normalizedBusinessHours]
+  );
   const canEdit = Boolean(onUpdateAppointment) && !isTerminal;
   const canSaveEdit =
     editClientId &&
@@ -48,6 +93,7 @@ export default function AppointmentCard({
     editBarberId &&
     editDate &&
     editTime &&
+    editTimeOptions.includes(editTime) &&
     isDateWithinAppointmentWindow(editDate, appointmentWindow);
 
   const resetEditForm = () => {
@@ -251,7 +297,10 @@ export default function AppointmentCard({
                 <span className="mb-2 block text-sm text-gray-300">Servico</span>
                 <select
                   value={editServiceId}
-                  onChange={(event) => setEditServiceId(event.target.value)}
+                  onChange={(event) => {
+                    setEditServiceId(event.target.value);
+                    setEditTime("");
+                  }}
                   className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none"
                 >
                   <option value="">Selecione</option>
@@ -266,7 +315,10 @@ export default function AppointmentCard({
                 <span className="mb-2 block text-sm text-gray-300">Barbeiro</span>
                 <select
                   value={editBarberId}
-                  onChange={(event) => setEditBarberId(event.target.value)}
+                  onChange={(event) => {
+                    setEditBarberId(event.target.value);
+                    setEditTime("");
+                  }}
                   className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none"
                 >
                   <option value="">Selecione</option>
@@ -285,18 +337,38 @@ export default function AppointmentCard({
                     min={appointmentWindow.startDate}
                     max={appointmentWindow.endDate}
                     value={editDate}
-                    onChange={(event) => setEditDate(event.target.value)}
+                    onChange={(event) => {
+                      setEditDate(event.target.value);
+                      setEditTime("");
+                    }}
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none"
                   />
                 </label>
                 <label>
                   <span className="mb-2 block text-sm text-gray-300">Horario</span>
-                  <input
-                    type="time"
+                  <select
                     value={editTime}
+                    disabled={!editServiceData || !editBarberId || !editDate || editTimeOptions.length === 0}
                     onChange={(event) => setEditTime(event.target.value)}
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none"
-                  />
+                  >
+                    <option value="">
+                      {!editServiceData
+                        ? "Escolha um servico"
+                        : !editBarberId
+                        ? "Escolha um barbeiro"
+                        : !editDate
+                        ? "Escolha uma data"
+                        : editTimeOptions.length === 0
+                        ? "Sem horarios disponiveis"
+                        : "Selecione o horario"}
+                    </option>
+                    {editTimeOptions.map((slot) => (
+                      <option key={slot} value={slot}>
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
             </div>

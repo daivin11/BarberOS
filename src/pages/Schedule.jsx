@@ -754,6 +754,8 @@ export default function Schedule({
                   clients={clients}
                   services={services}
                   barbers={barbers}
+                  appointments={appointments}
+                  businessHours={normalizedBusinessHours}
                   sendWhatsApp={sendWhatsApp}
                   onStatusChange={updateAppointmentStatus}
                   onUpdateAppointment={updateAppointment}

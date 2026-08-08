@@ -459,6 +459,14 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     failures.push("appointment card does not lock terminal appointment actions");
   }
 
+  if (
+    !appointmentCard.includes("editTimeOptions.includes(editTime)") ||
+    !appointmentCard.includes("isTimeSlotAvailable") ||
+    !appointmentCard.includes("String(item.id) !== String(appointment.id)")
+  ) {
+    failures.push("appointment edit modal does not restrict time choices to available slots");
+  }
+
   if (!adminApp.includes("isTerminalAppointment(appointment)") || !adminApp.includes("isTerminalAppointment(currentAppointment)")) {
     failures.push("admin appointment flows do not block terminal appointment mutations");
   }
