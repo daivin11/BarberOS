@@ -114,13 +114,22 @@ service cloud.firestore {
     function validServiceSnapshot(serviceData) {
       return serviceData is map
         && serviceData.keys().hasOnly(['id', 'name', 'price', 'duration', 'createdAt', 'updatedAt', 'userId'])
-        && (!('id' in serviceData) || serviceData.id is string)
+        && serviceData.id is string
         && validText(serviceData.name, 2, 80)
         && serviceData.price is number
         && serviceData.price >= 0
         && serviceData.price <= 100000
         && validServiceDuration(serviceData.duration)
         && (!('userId' in serviceData) || serviceData.userId is string);
+    }
+
+    function appointmentSnapshotsMatchFields() {
+      return request.resource.data.client.id == request.resource.data.clientId
+        && request.resource.data.client.name == request.resource.data.clientName
+        && request.resource.data.client.phone == request.resource.data.clientPhone
+        && request.resource.data['service'].duration == request.resource.data.duration
+        && (!('userId' in request.resource.data.client) || request.resource.data.client.userId == request.resource.data.userId)
+        && (!('userId' in request.resource.data['service']) || request.resource.data['service'].userId == request.resource.data.userId);
     }
 
     function validServiceDuration(durationValue) {
@@ -623,6 +632,7 @@ service cloud.firestore {
         && request.resource.data.clientPhone.size() <= 13
         && validClientSnapshot(request.resource.data.client)
         && validServiceSnapshot(request.resource.data['service'])
+        && appointmentSnapshotsMatchFields()
         && request.resource.data.barberId is string
         && validText(request.resource.data.barberName, 2, 80)
         && validDateString(request.resource.data.date)
@@ -647,6 +657,7 @@ service cloud.firestore {
         && request.resource.data.clientPhone.size() <= 13
         && validClientSnapshot(request.resource.data.client)
         && validServiceSnapshot(request.resource.data['service'])
+        && appointmentSnapshotsMatchFields()
         && validText(request.resource.data.barberName, 2, 80)
         && validDateString(request.resource.data.date)
         && validTimeString(request.resource.data.time)
