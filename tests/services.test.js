@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  SERVICE_DURATION_OPTIONS,
   SERVICE_LIMITS,
   createServiceSnapshot,
   findDuplicateServiceByName,
@@ -22,6 +23,14 @@ describe("service utils", () => {
 
   it("accepts valid service input", () => {
     assert.equal(validateServiceInput({ name: "Corte", price: 45, duration: 30 }), "");
+  });
+
+  it("exposes all duration options accepted by the service contract", () => {
+    assert.equal(SERVICE_DURATION_OPTIONS[0], SERVICE_LIMITS.durationMin);
+    assert.equal(SERVICE_DURATION_OPTIONS.at(-1), SERVICE_LIMITS.durationMax);
+    assert.equal(SERVICE_DURATION_OPTIONS.includes(75), true);
+    assert.equal(SERVICE_DURATION_OPTIONS.includes(135), true);
+    assert.equal(SERVICE_DURATION_OPTIONS.every((duration) => duration % SERVICE_LIMITS.durationStep === 0), true);
   });
 
   it("rejects unsafe service price and duration", () => {

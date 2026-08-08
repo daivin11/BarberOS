@@ -3,9 +3,14 @@ import { Link, useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import { isActiveAppointment } from "../utils/appointments";
 import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
-import { SERVICE_LIMITS, findDuplicateServiceByName, getServiceCatalogDuration, getServiceCatalogPrice, validateServiceInput } from "../utils/services";
-
-const durationOptions = [15, 30, 45, 60, 90, 120];
+import {
+  SERVICE_DURATION_OPTIONS,
+  SERVICE_LIMITS,
+  findDuplicateServiceByName,
+  getServiceCatalogDuration,
+  getServiceCatalogPrice,
+  validateServiceInput,
+} from "../utils/services";
 
 const servicePresets = [
   { name: "Corte masculino", price: 45, duration: 30 },
@@ -298,7 +303,7 @@ export default function Services({
                 value={serviceDuration}
                 onChange={(e) => setServiceDuration(e.target.value)}
               >
-                {durationOptions.map((duration) => (
+                {SERVICE_DURATION_OPTIONS.map((duration) => (
                   <option key={duration} value={duration}>
                     {formatDuration(duration)}
                   </option>
@@ -485,7 +490,7 @@ export default function Services({
                 value={editDuration}
                 onChange={(e) => setEditDuration(e.target.value)}
               >
-                {durationOptions.map((duration) => (
+                {SERVICE_DURATION_OPTIONS.map((duration) => (
                   <option key={duration} value={duration}>
                     {formatDuration(duration)}
                   </option>

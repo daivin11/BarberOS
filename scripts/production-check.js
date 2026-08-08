@@ -676,7 +676,9 @@ const assertServiceContractIsBounded = () => {
   if (
     !serviceUtils.includes("priceMax: 100000") ||
     !serviceUtils.includes("durationMax: 240") ||
-    !serviceUtils.includes("service.duration % 15 !== 0") ||
+    !serviceUtils.includes("durationStep: 15") ||
+    !serviceUtils.includes("SERVICE_DURATION_OPTIONS") ||
+    !serviceUtils.includes("service.duration % SERVICE_LIMITS.durationStep !== 0") ||
     !serviceUtils.includes("!Number.isInteger(service.duration)")
   ) {
     failures.push("service validation limits are missing: src/utils/services.js");
@@ -686,6 +688,7 @@ const assertServiceContractIsBounded = () => {
     [adminApp, "src/AdminApp.jsx", "findDuplicateServiceByName"],
     [servicesPage, "src/pages/Services.jsx", "duplicateNewService"],
     [servicesPage, "src/pages/Services.jsx", "duplicateEditedService"],
+    [servicesPage, "src/pages/Services.jsx", "SERVICE_DURATION_OPTIONS.map"],
     [servicesPage, "src/pages/Services.jsx", "savingService"],
     [servicesPage, "src/pages/Services.jsx", "editingServiceSaving"],
     [servicesPage, "src/pages/Services.jsx", "archivingService"],
@@ -706,6 +709,7 @@ const assertServiceContractIsBounded = () => {
     [serviceUtilsTest, "tests/services.test.js", "finds duplicate active services"],
     [serviceUtilsTest, "tests/services.test.js", "returns a safe catalog price"],
     [serviceUtilsTest, "tests/services.test.js", "returns a safe catalog duration"],
+    [serviceUtilsTest, "tests/services.test.js", "exposes all duration options accepted by the service contract"],
     [serviceUtilsTest, "tests/services.test.js", 'duration: "abc"'],
     [bookingConfirmationTest, "tests/bookingConfirmation.test.js", "does not leak invalid legacy service values"],
   ];
