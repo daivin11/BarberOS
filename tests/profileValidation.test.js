@@ -38,6 +38,7 @@ describe("profile validation", () => {
 
   it("rejects unsafe logo URLs", () => {
     assert.equal(isValidPublicUrl("javascript:alert(1)"), false);
+    assert.equal(isValidPublicUrl("http://example.com/logo.png"), false);
     assert.equal(isValidPublicUrl("https://example.com/logo.png"), true);
     assert.match(
       validatePublicProfileInput({

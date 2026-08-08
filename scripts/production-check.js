@@ -303,6 +303,7 @@ const assertFirestoreRulesUseBoundedPublicText = () => {
     "validText(request.resource.data.displayName, 2, 80)",
     "validText(request.resource.data.barbershopName, 2, 80)",
     "validOptionalText(request.resource.data.bio, 500)",
+    "^https://",
     "validOptionalUrl(request.resource.data.logoUrl)",
     "validOptionalUrl(request.resource.data.avatar)",
   ];

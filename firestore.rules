@@ -35,7 +35,7 @@ service cloud.firestore {
     function validOptionalUrl(url) {
       return url is string
         && url.size() <= 500
-        && (url.size() == 0 || url.matches('^https?://.{1,490}$'));
+        && (url.size() == 0 || url.matches('^https://.{1,491}$'));
     }
 
     function validPhone(phone) {
