@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import {
   APPOINTMENT_STATUS,
+  getAppointmentBarberId,
+  getAppointmentClientId,
+  getAppointmentServiceId,
   getAppointmentStatus,
   getAppointmentStatusClass,
   getAppointmentStatusLabel,
@@ -34,9 +37,9 @@ export default function AppointmentCard({
   const [statusLoading, setStatusLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
-  const [editClientId, setEditClientId] = useState(appointment.client?.id || appointment.clientId || "");
-  const [editServiceId, setEditServiceId] = useState(appointment.service?.id || "");
-  const [editBarberId, setEditBarberId] = useState(appointment.barberId || "");
+  const [editClientId, setEditClientId] = useState(getAppointmentClientId(appointment));
+  const [editServiceId, setEditServiceId] = useState(getAppointmentServiceId(appointment));
+  const [editBarberId, setEditBarberId] = useState(getAppointmentBarberId(appointment));
   const [editDate, setEditDate] = useState(appointment.date || "");
   const [editTime, setEditTime] = useState(appointment.time || "");
 
@@ -44,7 +47,7 @@ export default function AppointmentCard({
   const clientName = appointment.client?.name || appointment.clientName || "Cliente";
   const serviceName = appointment.service?.name || appointment.serviceName || "Servico";
   const servicePrice = appointment.service?.price ?? appointment.servicePrice;
-  const matchedBarber = barbers.find((barber) => barber.id === appointment.barberId);
+  const matchedBarber = barbers.find((barber) => String(barber.id) === String(getAppointmentBarberId(appointment)));
   const barberName = appointment.barberName || matchedBarber?.name || "Barbeiro nao definido";
   const appointmentDate = appointment.date || "Data nao definida";
   const appointmentTime = appointment.time || "Horario nao definido";
@@ -97,9 +100,9 @@ export default function AppointmentCard({
     isDateWithinAppointmentWindow(editDate, appointmentWindow);
 
   const resetEditForm = () => {
-    setEditClientId(appointment.client?.id || appointment.clientId || "");
-    setEditServiceId(appointment.service?.id || "");
-    setEditBarberId(appointment.barberId || "");
+    setEditClientId(getAppointmentClientId(appointment));
+    setEditServiceId(getAppointmentServiceId(appointment));
+    setEditBarberId(getAppointmentBarberId(appointment));
     setEditDate(appointment.date || "");
     setEditTime(appointment.time || "");
   };

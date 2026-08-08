@@ -40,6 +40,15 @@ export const isTerminalAppointment = (appointment) =>
 export const getAppointmentStatusLabel = (status) =>
   APPOINTMENT_STATUS_LABELS[status] || status || APPOINTMENT_STATUS_LABELS[APPOINTMENT_STATUS.pending];
 
+export const getAppointmentClientId = (appointment = {}) =>
+  appointment.client?.id || appointment.clientId || "";
+
+export const getAppointmentServiceId = (appointment = {}) =>
+  appointment.service?.id || appointment.serviceId || "";
+
+export const getAppointmentBarberId = (appointment = {}) =>
+  appointment.barberId || appointment.barber?.id || "";
+
 export const getAppointmentStatusClass = (status) => {
   switch (status) {
     case APPOINTMENT_STATUS.pending:

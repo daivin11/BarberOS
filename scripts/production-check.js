@@ -391,6 +391,7 @@ const assertAppointmentRulesValidatePayloadShape = () => {
   const adminData = readFileSync(join(root, "src", "utils", "adminData.js"), "utf8");
   const services = readFileSync(join(root, "src", "utils", "services.js"), "utf8");
   const adminDataTest = readFileSync(join(root, "tests", "adminData.test.js"), "utf8");
+  const appointmentUtilsTest = readFileSync(join(root, "tests", "appointments.test.js"), "utf8");
   const servicesTest = readFileSync(join(root, "tests", "services.test.js"), "utf8");
   const requiredSnippets = [
     "function validDateString",
@@ -474,6 +475,10 @@ const assertAppointmentRulesValidatePayloadShape = () => {
   const snapshotRuntimeSnippets = [
     [adminData, "src/utils/adminData.js", "createClientSnapshot"],
     [services, "src/utils/services.js", "createServiceSnapshot"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "getAppointmentServiceId(appointment)"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "getAppointmentClientId(appointment)"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "getAppointmentBarberId(appointment)"],
+    [appointmentUtilsTest, "tests/appointments.test.js", "reads appointment entity ids from snapshot and legacy flat fields"],
     [adminApp, "src/AdminApp.jsx", "client: createClientSnapshot(client)"],
     [adminApp, "src/AdminApp.jsx", "service: createServiceSnapshot(service)"],
     [publicBooking, "src/pages/PublicBooking.jsx", "client: createClientSnapshot"],

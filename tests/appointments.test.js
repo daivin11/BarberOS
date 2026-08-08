@@ -4,6 +4,9 @@ import {
   APPOINTMENT_STATUS,
   countActiveAppointmentsByField,
   countAppointmentsByStatus,
+  getAppointmentBarberId,
+  getAppointmentClientId,
+  getAppointmentServiceId,
   getAppointmentStatus,
   getAppointmentStatusClass,
   getAppointmentStatusLabel,
@@ -33,6 +36,15 @@ describe("appointment utils", () => {
     assert.equal(getAppointmentStatusLabel("confirmed"), "Confirmado");
     assert.equal(getAppointmentStatusLabel("unknown"), "unknown");
     assert.match(getAppointmentStatusClass("cancelled"), /red/);
+  });
+
+  it("reads appointment entity ids from snapshot and legacy flat fields", () => {
+    assert.equal(getAppointmentClientId({ client: { id: "client-snapshot" }, clientId: "client-flat" }), "client-snapshot");
+    assert.equal(getAppointmentClientId({ clientId: "client-flat" }), "client-flat");
+    assert.equal(getAppointmentServiceId({ service: { id: "service-snapshot" }, serviceId: "service-flat" }), "service-snapshot");
+    assert.equal(getAppointmentServiceId({ serviceId: "service-flat" }), "service-flat");
+    assert.equal(getAppointmentBarberId({ barberId: "barber-flat" }), "barber-flat");
+    assert.equal(getAppointmentBarberId({ barber: { id: "barber-snapshot" } }), "barber-snapshot");
   });
 
   it("counts appointments by normalized status", () => {
