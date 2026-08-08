@@ -44,6 +44,15 @@ export const getActivationItems = ({
     to: "/barbeiros?setup=barbers",
   },
   {
+    id: "clients",
+    label: "Cadastrar primeiro cliente",
+    description: "O agendamento interno precisa de um contato para guardar historico e telefone.",
+    impact: "Evita travar na agenda por falta de cliente selecionavel.",
+    actionLabel: "Adicionar cliente",
+    done: clientsCount > 0,
+    to: "/clientes?setup=clients",
+  },
+  {
     id: "first-booking",
     label: "Criar primeiro agendamento",
     description: "Um agendamento real valida cliente, servico, horario, barbeiro e status.",
@@ -51,15 +60,6 @@ export const getActivationItems = ({
     actionLabel: "Criar agendamento",
     done: appointmentsCount > 0,
     to: "/agenda?setup=first-booking",
-  },
-  {
-    id: "clients",
-    label: "Cadastrar primeiro cliente",
-    description: "A base de clientes alimenta historico, retorno e campanhas pelo WhatsApp.",
-    impact: "Ajuda a operar alem dos agendamentos publicos.",
-    actionLabel: "Adicionar cliente",
-    done: clientsCount > 0,
-    to: "/clientes?setup=clients",
   },
 ];
 

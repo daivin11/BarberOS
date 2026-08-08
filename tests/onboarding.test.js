@@ -25,6 +25,24 @@ describe("onboarding utils", () => {
     assert.equal(state.nextItem.id, "services");
   });
 
+  it("asks for the first client before the first internal appointment", () => {
+    const state = getActivationState({
+      profile: {
+        profileComplete: true,
+        slug: "barbearia-central",
+        barbershopName: "Barbearia Central",
+        businessHours: { start: "09:00", end: "18:00" },
+      },
+      servicesCount: 1,
+      barbersCount: 1,
+      clientsCount: 0,
+      appointmentsCount: 0,
+    });
+
+    assert.equal(state.nextItem.id, "clients");
+    assert.equal(state.nextItem.to, "/clientes?setup=clients");
+  });
+
   it("marks account activated when all operational steps are done", () => {
     const state = getActivationState({
       profile: {
