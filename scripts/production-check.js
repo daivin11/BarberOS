@@ -1182,6 +1182,8 @@ const assertPublicBookingSubmitRespectsAvailability = () => {
     [publicBooking, "src/pages/PublicBooking.jsx", "let isActive = true"],
     [publicBooking, "src/pages/PublicBooking.jsx", "setBookedSlots([])"],
     [publicBooking, "src/pages/PublicBooking.jsx", "!slotsLoading"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "if (submitLoading) return;"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "aria-busy={submitLoading ? \"true\" : \"false\"}"],
     [publicBooking, "src/pages/PublicBooking.jsx", "Carregando horarios"],
     [scheduleUtils, "src/utils/schedule.js", "export const isTimeSlotAvailable"],
     [scheduleUtils, "src/utils/schedule.js", "export const getSafeScheduleDuration"],

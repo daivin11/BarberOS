@@ -222,6 +222,8 @@ export default function PublicBooking() {
   }, [barber?.uid, selectedBarber?.id, date]);
 
   const bookAppointment = async () => {
+    if (submitLoading) return;
+
     if (!barber || !barber.uid) {
       setFormError("Dados do barbeiro nao disponiveis. Atualize a pagina e tente novamente.");
       return;
@@ -857,6 +859,7 @@ export default function PublicBooking() {
                   }`}
                   onClick={bookAppointment}
                   disabled={!canSubmit}
+                  aria-busy={submitLoading ? "true" : "false"}
                 >
                   {submitLoading ? "Enviando..." : slotsLoading ? "Atualizando horarios..." : "Solicitar agendamento"}
                 </button>
