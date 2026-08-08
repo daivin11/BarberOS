@@ -66,7 +66,7 @@ export default function AppointmentCard({
         ? appointments.filter(
             (item) =>
               String(item.id) !== String(appointment.id) &&
-              String(item.barberId) === String(editBarberId) &&
+              String(getAppointmentBarberId(item)) === String(editBarberId) &&
               item.date === editDate &&
               isActiveAppointment(item)
           )

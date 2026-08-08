@@ -571,6 +571,10 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     failures.push("admin appointment reschedule does not stamp recreated booking slots");
   }
 
+  if (appointmentCard.includes("String(item.barberId) === String(editBarberId)")) {
+    failures.push("appointment edit conflict detection bypasses normalized barber ids");
+  }
+
   const submitGuardSnippets = [
     [appointmentCard, "src/components/AppointmentCard.jsx", "statusLoading"],
     [appointmentCard, "src/components/AppointmentCard.jsx", "handleStatusChange"],
