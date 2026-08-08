@@ -345,6 +345,15 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/appointments/$(request.resource.data.appointmentId)).data.status == request.resource.data.status;
     }
 
+    function bookingSlotReleasedByAppointment(slotId) {
+      return existsAfter(/databases/$(database)/documents/appointments/$(resource.data.appointmentId))
+        && getAfter(/databases/$(database)/documents/appointments/$(resource.data.appointmentId)).data.userId == resource.data.userId
+        && (
+          getAfter(/databases/$(database)/documents/appointments/$(resource.data.appointmentId)).data.status == 'cancelled'
+          || !(slotId in getAfter(/databases/$(database)/documents/appointments/$(resource.data.appointmentId)).data.slotIds)
+        );
+    }
+
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
@@ -726,7 +735,8 @@ service cloud.firestore {
         && (!('rootTime' in request.resource.data) || validTimeString(request.resource.data.rootTime))
         && validBookingSlotTiming()
         && request.resource.data.status in ['pending', 'confirmed', 'completed', 'cancelled'];
-      allow delete: if isOwner(resource.data.userId);
+      allow delete: if isOwner(resource.data.userId)
+        && bookingSlotReleasedByAppointment(slotId);
     }
 
     match /auditLogs/{auditLogId} {
