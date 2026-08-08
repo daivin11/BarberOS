@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { collection, getDocs, query, where, orderBy, runTransaction, doc, limit } from "firebase/firestore";
 import { db } from "../services/firebase";
-import { createClientPhoneKeyId, normalizeClientInput, validateClientInput } from "../utils/adminData";
+import { createClientPhoneKeyId, createClientSnapshot, normalizeClientInput, validateClientInput } from "../utils/adminData";
 import { APPOINTMENT_STATUS } from "../utils/appointments";
 import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "../utils/appointmentWindow";
 import { createBookingConfirmation, getBookingConfirmationLines } from "../utils/bookingConfirmation";
@@ -20,7 +20,7 @@ import {
   isTimeSlotAvailable,
   timeToMinutes,
 } from "../utils/schedule";
-import { getServiceCatalogDuration, getServiceCatalogPrice } from "../utils/services";
+import { createServiceSnapshot, getServiceCatalogDuration, getServiceCatalogPrice } from "../utils/services";
 import { reportError, trackEvent } from "../utils/telemetry";
 
 const PUBLIC_QUERY_LIMITS = {
@@ -355,14 +355,14 @@ export default function PublicBooking() {
       };
       const appointmentData = {
         clientId: clientRef.id,
-        client: {
+        client: createClientSnapshot({
           id: clientRef.id,
           name: cleanName,
           phone: cleanPhone,
-        },
+        }),
         clientName: cleanName,
         clientPhone: cleanPhone,
-        service,
+        service: createServiceSnapshot(service),
         barberId: selectedBarber.id,
         barberName: selectedBarber.name,
         date,
@@ -388,7 +388,7 @@ export default function PublicBooking() {
             phone: cleanPhone,
           };
           appointmentData.clientId = clientRecord.id;
-          appointmentData.client = clientRecord;
+          appointmentData.client = createClientSnapshot(clientRecord);
         }
 
         for (const slotRef of slotRefs) {

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   CLIENT_LIMITS,
+  createClientSnapshot,
   createClientPhoneKeyId,
   getDateValue,
   normalizeClientInput,
@@ -41,6 +42,28 @@ describe("admin data utils", () => {
     assert.equal(
       createClientPhoneKeyId({ userId: "owner/1", phone: "+55 (11) 98888-7777" }),
       "owner_1_5511988887777"
+    );
+  });
+
+  it("creates appointment-safe client snapshots", () => {
+    assert.deepEqual(
+      createClientSnapshot({
+        id: "client-1",
+        name: "  Ana   Silva  ",
+        phone: "(11) 98888-7777",
+        phoneNormalized: "11988887777",
+        userId: "owner-1",
+        barberSlug: "barbearia",
+        isArchived: false,
+        archivedAt: new Date("2026-08-01T10:00:00.000Z"),
+      }),
+      {
+        id: "client-1",
+        name: "Ana Silva",
+        phone: "11988887777",
+        userId: "owner-1",
+        barberSlug: "barbearia",
+      }
     );
   });
 

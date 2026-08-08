@@ -36,6 +36,21 @@ export const getServiceCatalogDuration = (service = {}, fallbackDuration = 30) =
   return fallbackDuration;
 };
 
+export const createServiceSnapshot = (service = {}) => {
+  const snapshot = {
+    id: String(service.id || ""),
+    name: String(service.name || "").trim().replace(/\s+/g, " "),
+    price: getServiceCatalogPrice(service),
+    duration: getServiceCatalogDuration(service),
+  };
+
+  if (service.createdAt) snapshot.createdAt = service.createdAt;
+  if (service.updatedAt) snapshot.updatedAt = service.updatedAt;
+  if (service.userId) snapshot.userId = String(service.userId);
+
+  return snapshot;
+};
+
 export const normalizeServiceNameKey = (name = "") =>
   String(name || "")
     .trim()

@@ -369,6 +369,11 @@ const assertAppointmentRulesValidatePayloadShape = () => {
   const rules = readFileSync(join(root, "firestore.rules"), "utf8");
   const appointmentCard = readFileSync(join(root, "src", "components", "AppointmentCard.jsx"), "utf8");
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
+  const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+  const adminData = readFileSync(join(root, "src", "utils", "adminData.js"), "utf8");
+  const services = readFileSync(join(root, "src", "utils", "services.js"), "utf8");
+  const adminDataTest = readFileSync(join(root, "tests", "adminData.test.js"), "utf8");
+  const servicesTest = readFileSync(join(root, "tests", "services.test.js"), "utf8");
   const requiredSnippets = [
     "function validDateString",
     "function validTimeString",
@@ -427,6 +432,23 @@ const assertAppointmentRulesValidatePayloadShape = () => {
   if (!adminApp.includes("isTerminalAppointment(appointment)") || !adminApp.includes("isTerminalAppointment(currentAppointment)")) {
     failures.push("admin appointment flows do not block terminal appointment mutations");
   }
+
+  const snapshotRuntimeSnippets = [
+    [adminData, "src/utils/adminData.js", "createClientSnapshot"],
+    [services, "src/utils/services.js", "createServiceSnapshot"],
+    [adminApp, "src/AdminApp.jsx", "client: createClientSnapshot(client)"],
+    [adminApp, "src/AdminApp.jsx", "service: createServiceSnapshot(service)"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "client: createClientSnapshot"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "service: createServiceSnapshot(service)"],
+    [adminDataTest, "tests/adminData.test.js", "creates appointment-safe client snapshots"],
+    [servicesTest, "tests/services.test.js", "creates appointment-safe service snapshots"],
+  ];
+
+  snapshotRuntimeSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`appointment runtime snapshot sanitation is missing in ${fileName}: ${snippet}`);
+    }
+  });
 
   if (!adminApp.includes("createdAt: updatedAt")) {
     failures.push("admin appointment reschedule does not stamp recreated booking slots");

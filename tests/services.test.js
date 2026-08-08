@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   SERVICE_LIMITS,
+  createServiceSnapshot,
   findDuplicateServiceByName,
   getServiceCatalogDuration,
   getServiceCatalogPrice,
@@ -43,6 +44,27 @@ describe("service utils", () => {
     assert.equal(getServiceCatalogDuration({ duration: 30.5 }), 30);
     assert.equal(getServiceCatalogDuration({ duration: 20 }), 30);
     assert.equal(getServiceCatalogDuration({ duration: 240 }), 240);
+  });
+
+  it("creates appointment-safe service snapshots", () => {
+    assert.deepEqual(
+      createServiceSnapshot({
+        id: "service-1",
+        name: "  Corte   Masculino  ",
+        price: "45",
+        duration: "30",
+        userId: "owner-1",
+        isArchived: false,
+        archivedAt: new Date("2026-08-01T10:00:00.000Z"),
+      }),
+      {
+        id: "service-1",
+        name: "Corte Masculino",
+        price: 45,
+        duration: 30,
+        userId: "owner-1",
+      }
+    );
   });
 
   it("finds duplicate active services by normalized name", () => {

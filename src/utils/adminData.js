@@ -37,6 +37,21 @@ export const validateClientInput = ({ name = "", phone = "" } = {}) => {
 export const createClientPhoneKeyId = ({ userId, phone }) =>
   `${userId}_${normalizePhone(phone)}`.replace(/[^a-zA-Z0-9_-]/g, "_");
 
+export const createClientSnapshot = (client = {}) => {
+  const snapshot = {
+    id: String(client.id || ""),
+    name: String(client.name || "").trim().replace(/\s+/g, " "),
+    phone: normalizePhone(client.phoneNormalized || client.phone),
+  };
+
+  if (client.createdAt) snapshot.createdAt = client.createdAt;
+  if (client.updatedAt) snapshot.updatedAt = client.updatedAt;
+  if (client.userId) snapshot.userId = String(client.userId);
+  if (client.barberSlug) snapshot.barberSlug = String(client.barberSlug);
+
+  return snapshot;
+};
+
 export const getDateValue = (value) => {
   if (!value) return 0;
   if (typeof value.toMillis === "function") return value.toMillis();

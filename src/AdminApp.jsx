@@ -8,6 +8,7 @@ import { useAuth } from "./hooks/useAuth";
 import { isAccountActive } from "./utils/trial";
 import {
   createClientPhoneKeyId,
+  createClientSnapshot,
   normalizeClientInput,
   normalizePhone,
   sortAppointments,
@@ -34,7 +35,7 @@ import {
   isValidAppointmentTime,
   timeToMinutes,
 } from "./utils/schedule";
-import { findDuplicateServiceByName, getServiceCatalogDuration, normalizeServiceInput, validateServiceInput } from "./utils/services";
+import { createServiceSnapshot, findDuplicateServiceByName, getServiceCatalogDuration, normalizeServiceInput, validateServiceInput } from "./utils/services";
 import { reportError, trackEvent } from "./utils/telemetry";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -988,10 +989,10 @@ export default function AdminApp() {
       });
       const newAppointment = {
         clientId: client.id,
-        client,
+        client: createClientSnapshot(client),
         clientName: client.name,
         clientPhone: client.phone,
-        service,
+        service: createServiceSnapshot(service),
         barberId: barber.id,
         barberName: barber.name,
         date: appointmentDate,
@@ -1215,11 +1216,11 @@ export default function AdminApp() {
     const updatedAt = new Date();
     const nextAppointment = {
       ...currentAppointment,
-      client,
       clientId: client.id,
       clientName: client.name,
       clientPhone: client.phone,
-      service,
+      client: createClientSnapshot(client),
+      service: createServiceSnapshot(service),
       barberId: barber.id,
       barberName: barber.name,
       date: updates.date,
