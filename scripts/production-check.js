@@ -98,6 +98,8 @@ const requireCompositeIndex = (collectionGroup, fieldPaths, reason) => {
   }
 };
 
+const countOccurrences = (content, snippet) => content.split(snippet).length - 1;
+
 const findFirestoreQueriesWithoutLimit = (content) => {
   const queryMatches = [];
   let searchIndex = 0;
@@ -269,6 +271,29 @@ const assertPublicBookingFiltersCompleteProfiles = () => {
   }
 
   requireCompositeIndex("publicProfiles", ["slug", "profileComplete"], "public profile lookup by slug");
+};
+
+const assertPublicBookingInitialLoadIgnoresStaleResponses = () => {
+  const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+
+  const requiredSnippets = [
+    "const loadBarberAndServices = async",
+    "const usersSnapshot = await getDocs(usersQuery);",
+    "const servicesSnapshot = await getDocs(servicesQuery);",
+    "const barbersSnapshot = await getDocs(barbersQuery);",
+    "if (isActive) setLoading(false);",
+    "isActive = false;",
+  ];
+
+  requiredSnippets.forEach((snippet) => {
+    if (!publicBooking.includes(snippet)) {
+      failures.push(`public booking initial load stale-response guard is missing: ${snippet}`);
+    }
+  });
+
+  if (countOccurrences(publicBooking, "if (!isActive) return;") < 5) {
+    failures.push("public booking async loaders can still apply stale responses after route or selection changes");
+  }
 };
 
 const assertFirestoreRulesUseBoundedPublicText = () => {
@@ -1482,6 +1507,7 @@ for (const filePath of listFiles("src")) {
 assertPublicProfilesRequireCompletion();
 assertPublicPhoneKeysSupportReturningClients();
 assertPublicBookingFiltersCompleteProfiles();
+assertPublicBookingInitialLoadIgnoresStaleResponses();
 assertFirestoreRulesUseBoundedPublicText();
 assertTrialExpiredUsesBillingDomain();
 assertBillingRulesAreServerControlled();

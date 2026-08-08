@@ -99,6 +99,8 @@ export default function PublicBooking() {
 
   const routeSlug = typeof slug === "string" ? slug.trim() : "";
   useEffect(() => {
+    let isActive = true;
+
     const loadBarberAndServices = async () => {
       setLoading(true);
       setFatalError("");
@@ -124,6 +126,7 @@ export default function PublicBooking() {
           limit(1)
         );
         const usersSnapshot = await getDocs(usersQuery);
+        if (!isActive) return;
 
         if (usersSnapshot.empty) {
           setFatalError("Barbeiro nao encontrado. Verifique o link ou peca ao seu barbeiro o endereco correto.");
@@ -147,6 +150,7 @@ export default function PublicBooking() {
           limit(PUBLIC_QUERY_LIMITS.services)
         );
         const servicesSnapshot = await getDocs(servicesQuery);
+        if (!isActive) return;
         const servicesList = servicesSnapshot.docs
           .map((doc) => ({ id: doc.id, ...doc.data() }))
           .filter((service) => !service.isArchived && !service.archivedAt);
@@ -160,6 +164,7 @@ export default function PublicBooking() {
           limit(PUBLIC_QUERY_LIMITS.barbers)
         );
         const barbersSnapshot = await getDocs(barbersQuery);
+        if (!isActive) return;
         const barbersList = barbersSnapshot.docs
           .map((doc) => ({ id: doc.id, ...doc.data() }))
           .filter((barber) => !barber.isArchived && !barber.archivedAt);
@@ -168,14 +173,19 @@ export default function PublicBooking() {
         setSelectedBarber(barbersList[0] || null);
 
       } catch (err) {
+        if (!isActive) return;
         reportError(err, { source: "public-booking", action: "load-profile" });
         setFatalError("Erro ao carregar os dados da barbearia. Tente novamente mais tarde.");
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     };
 
     loadBarberAndServices();
+
+    return () => {
+      isActive = false;
+    };
   }, [routeSlug]);
 
   useEffect(() => {
