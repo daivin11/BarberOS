@@ -164,21 +164,8 @@ export default function PublicBooking() {
           .map((doc) => ({ id: doc.id, ...doc.data() }))
           .filter((barber) => !barber.isArchived && !barber.archivedAt);
 
-        const normalizedBarbers =
-          barbersList.length > 0
-            ? barbersList
-            : [
-                {
-                  id: barberData.uid,
-                  name: barberData.barbershopName || barberData.displayName || "Equipe",
-                  specialty: barberData.bio || "Especialista em cortes",
-                  avatar: barberData.avatar || "",
-                  ownerId: barberData.uid,
-                },
-              ];
-
-        setBarbers(normalizedBarbers);
-        setSelectedBarber(normalizedBarbers[0] || null);
+        setBarbers(barbersList);
+        setSelectedBarber(barbersList[0] || null);
 
       } catch (err) {
         reportError(err, { source: "public-booking", action: "load-profile" });

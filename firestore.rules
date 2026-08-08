@@ -252,6 +252,15 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/services/$(serviceId)).data.duration == request.resource.data.duration;
     }
 
+    function publicAppointmentUsesPublishedBarber(barberId) {
+      return barberId is string
+        && exists(/databases/$(database)/documents/barbers/$(barberId))
+        && get(/databases/$(database)/documents/barbers/$(barberId)).data.ownerId == request.resource.data.userId
+        && get(/databases/$(database)/documents/barbers/$(barberId)).data.isArchived == false
+        && !('archivedAt' in get(/databases/$(database)/documents/barbers/$(barberId)).data)
+        && get(/databases/$(database)/documents/barbers/$(barberId)).data.name == request.resource.data.barberName;
+    }
+
     function publicUserFields() {
       return [
         'email',
@@ -633,6 +642,7 @@ service cloud.firestore {
             matchesPublicProfile(request.resource.data.userId, request.resource.data.barberSlug)
             && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.appointmentId == appointmentId
             && publicAppointmentUsesPublishedService(request.resource.data['service'].id)
+            && publicAppointmentUsesPublishedBarber(request.resource.data.barberId)
             && request.resource.data.privacyConsent == true
             && request.resource.data.privacyConsentVersion is string
             && request.resource.data.privacyConsentVersion.size() >= 10
