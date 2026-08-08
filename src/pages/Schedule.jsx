@@ -652,6 +652,7 @@ export default function Schedule({
               }`}
               onClick={handleAddAppointment}
               disabled={!canCreateAppointment || creatingAppointment}
+              aria-busy={creatingAppointment ? "true" : "false"}
             >
               {creatingAppointment ? "Criando agendamento..." : "Criar agendamento"}
             </button>
@@ -698,6 +699,7 @@ export default function Schedule({
                     type="button"
                     onClick={handleConfirmPendingAppointment}
                     disabled={confirmingPendingId === nextPendingAppointment.id}
+                    aria-busy={confirmingPendingId === nextPendingAppointment.id ? "true" : "false"}
                     className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {confirmingPendingId === nextPendingAppointment.id ? "Confirmando..." : "Confirmar agora"}

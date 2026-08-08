@@ -711,6 +711,8 @@ const assertScheduleRendersMultiSlotOccupancy = () => {
     [schedulePage, "src/pages/Schedule.jsx", "handleAddAppointment"],
     [schedulePage, "src/pages/Schedule.jsx", "Criando agendamento..."],
     [schedulePage, "src/pages/Schedule.jsx", "Confirmando..."],
+    [schedulePage, "src/pages/Schedule.jsx", "aria-busy={creatingAppointment ? \"true\" : \"false\"}"],
+    [schedulePage, "src/pages/Schedule.jsx", "aria-busy={confirmingPendingId === nextPendingAppointment.id ? \"true\" : \"false\"}"],
   ];
 
   submitGuardSnippets.forEach(([fileContent, fileName, snippet]) => {
