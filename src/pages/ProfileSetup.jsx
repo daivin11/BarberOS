@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { PROFILE_LIMITS, normalizeSlug, validatePublicProfileInput } from "../utils/profileValidation";
@@ -19,6 +19,7 @@ export default function ProfileSetup() {
   const [loading, setLoading] = useState(false);
   const [slugChecking, setSlugChecking] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
+  const slugCheckRequestRef = useRef(0);
   const publicOrigin = typeof window !== "undefined" ? window.location.origin : "";
   const isSubmitDisabled = loading || slugChecking;
 
@@ -44,26 +45,27 @@ export default function ProfileSetup() {
       return;
     }
 
-    let mounted = true;
+    const requestId = slugCheckRequestRef.current + 1;
+    slugCheckRequestRef.current = requestId;
     const normalized = normalizeSlug(slug);
     setSlugChecking(true);
 
     const timeout = setTimeout(async () => {
       try {
         const available = await isSlugAvailable(normalized, user?.uid);
-        if (!mounted) return;
+        if (requestId !== slugCheckRequestRef.current) return;
         setSlugError(available ? "" : "Este endereco ja esta em uso.");
       } catch (err) {
-        if (!mounted) return;
+        if (requestId !== slugCheckRequestRef.current) return;
         reportError(err, { source: "profile-setup", action: "check-slug" });
         setSlugError("Erro ao verificar disponibilidade.");
       } finally {
-        if (mounted) setSlugChecking(false);
+        if (requestId === slugCheckRequestRef.current) setSlugChecking(false);
       }
     }, 600);
 
     return () => {
-      mounted = false;
+      slugCheckRequestRef.current += 1;
       clearTimeout(timeout);
     };
   }, [slug, isSlugAvailable, user]);
@@ -83,16 +85,28 @@ export default function ProfileSetup() {
 
     if (normalized !== slug) setSlug(normalized);
 
+    const requestId = slugCheckRequestRef.current + 1;
+    slugCheckRequestRef.current = requestId;
     setSlugChecking(true);
     try {
       const available = await isSlugAvailable(normalized, user?.uid);
+      if (requestId !== slugCheckRequestRef.current) return;
       setSlugError(available ? "" : "Este endereco ja esta em uso.");
     } catch (err) {
+      if (requestId !== slugCheckRequestRef.current) return;
       reportError(err, { source: "profile-setup", action: "check-slug-blur" });
       setSlugError("Erro ao verificar disponibilidade.");
     } finally {
-      setSlugChecking(false);
+      if (requestId === slugCheckRequestRef.current) setSlugChecking(false);
     }
+  };
+
+  const handleSlugChange = (event) => {
+    slugCheckRequestRef.current += 1;
+    setSlug(event.target.value);
+    setSlugError("");
+    setSaveError("");
+    setSaveSuccess("");
   };
 
   const handleSubmit = async (event) => {
@@ -253,7 +267,7 @@ export default function ProfileSetup() {
                     <input
                       value={slug}
                       maxLength={PROFILE_LIMITS.slugMax}
-                      onChange={(event) => setSlug(event.target.value)}
+                      onChange={handleSlugChange}
                       onBlur={handleSlugBlur}
                       className="flex-1 bg-transparent text-white outline-none placeholder:text-gray-500"
                       placeholder="nome-da-barbearia"

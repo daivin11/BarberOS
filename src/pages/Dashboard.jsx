@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import DashboardCards from "../components/DashboardCards";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -71,6 +71,7 @@ export default function Dashboard({
   const [saveSuccess, setSaveSuccess] = useState("");
   const [saving, setSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
+  const slugCheckRequestRef = useRef(0);
 
   const currentSlug = profile?.slug || "";
   const publicOrigin = typeof window !== "undefined" ? window.location.origin : "";
@@ -111,21 +112,35 @@ export default function Dashboard({
       return;
     }
 
+    const requestId = slugCheckRequestRef.current + 1;
+    slugCheckRequestRef.current = requestId;
     setSlugChecking(true);
     const timeout = setTimeout(async () => {
       try {
         const available = await isSlugAvailable(normalized, user?.uid);
+        if (requestId !== slugCheckRequestRef.current) return;
         setSlugError(available ? "" : "Este endereco ja esta em uso.");
       } catch (err) {
+        if (requestId !== slugCheckRequestRef.current) return;
         reportError(err, { source: "dashboard", action: "check-slug" });
         setSlugError("Erro ao verificar disponibilidade.");
       } finally {
-        setSlugChecking(false);
+        if (requestId === slugCheckRequestRef.current) setSlugChecking(false);
       }
     }, 600);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      slugCheckRequestRef.current += 1;
+      clearTimeout(timeout);
+    };
   }, [slugInput, isEditingSlug, isSlugAvailable, user]);
+
+  const handleSlugInputChange = (event) => {
+    setSlugInput(event.target.value);
+    setSlugError("");
+    setSaveError("");
+    setSaveSuccess("");
+  };
 
   const copyPublicLink = async () => {
     if (!publicUrl || !publicReadiness.isReady) {
@@ -365,7 +380,7 @@ export default function Dashboard({
                       <span className="min-w-0 break-all text-gray-500">{publicOrigin}/</span>
                       <input
                         value={slugInput}
-                        onChange={(e) => setSlugInput(e.target.value)}
+                        onChange={handleSlugInputChange}
                         className="ml-2 w-full bg-transparent text-white outline-none placeholder:text-gray-500"
                         placeholder="nome-da-barbearia"
                       />

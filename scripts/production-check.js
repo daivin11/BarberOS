@@ -869,6 +869,30 @@ const assertFirebaseAppCheckIsConfigurable = () => {
   });
 };
 
+const assertSlugAvailabilityChecksIgnoreStaleResponses = () => {
+  const dashboard = readFileSync(join(root, "src", "pages", "Dashboard.jsx"), "utf8");
+  const profileSetup = readFileSync(join(root, "src", "pages", "ProfileSetup.jsx"), "utf8");
+  const profileSettings = readFileSync(join(root, "src", "pages", "ProfileSettings.jsx"), "utf8");
+
+  const requiredSnippets = [
+    [dashboard, "src/pages/Dashboard.jsx", "slugCheckRequestRef"],
+    [dashboard, "src/pages/Dashboard.jsx", "requestId !== slugCheckRequestRef.current"],
+    [dashboard, "src/pages/Dashboard.jsx", "handleSlugInputChange"],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "slugCheckRequestRef"],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "requestId !== slugCheckRequestRef.current"],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "handleSlugChange"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "slugCheckRequestRef"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "requestId !== slugCheckRequestRef.current"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "handleSlugChange"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`slug availability checks can apply stale responses in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 const assertWorkspaceDataExportExists = () => {
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
   const profileSettings = readFileSync(join(root, "src", "pages", "ProfileSettings.jsx"), "utf8");
@@ -1323,6 +1347,7 @@ assertAppointmentsUseDateWindow();
 assertAvailabilityContractIsBounded();
 assertBarberContractIsBounded();
 assertFirebaseAppCheckIsConfigurable();
+assertSlugAvailabilityChecksIgnoreStaleResponses();
 assertWorkspaceDataExportExists();
 assertPublicLinkReadinessGuardsSharing();
 assertMobileAdminNavigationIsPersistent();

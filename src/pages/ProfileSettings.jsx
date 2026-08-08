@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { createWorkspaceExportFilename, createWorkspaceExportPayload } from "../utils/dataExport";
@@ -31,6 +31,7 @@ export default function ProfileSettings({ workspaceData = {} }) {
   const [saveSuccess, setSaveSuccess] = useState("");
   const [slugChecking, setSlugChecking] = useState(false);
   const [saving, setSaving] = useState(false);
+  const slugCheckRequestRef = useRef(0);
 
   const normalizedSlug = useMemo(() => normalizeSlug(slug || ""), [slug]);
   const previewUrl = normalizedSlug ? `${window.location.origin}/${normalizedSlug}` : "";
@@ -63,19 +64,31 @@ export default function ProfileSettings({ workspaceData = {} }) {
       return;
     }
 
+    const requestId = slugCheckRequestRef.current + 1;
+    slugCheckRequestRef.current = requestId;
     setSlug(normalizedSlug);
     setSlugChecking(true);
     setSaveError("");
 
     try {
       const available = await isSlugAvailable(normalizedSlug, user?.uid);
+      if (requestId !== slugCheckRequestRef.current) return;
       setSlugError(available ? "" : "Este slug ja esta em uso.");
     } catch (error) {
+      if (requestId !== slugCheckRequestRef.current) return;
       reportError(error, { source: "profile-settings", action: "check-slug" });
       setSlugError("Nao foi possivel verificar o slug.");
     } finally {
-      setSlugChecking(false);
+      if (requestId === slugCheckRequestRef.current) setSlugChecking(false);
     }
+  };
+
+  const handleSlugChange = (event) => {
+    slugCheckRequestRef.current += 1;
+    setSlug(event.target.value);
+    setSlugError("");
+    setSaveError("");
+    setSaveSuccess("");
   };
 
   const handleSubmit = async (event) => {
@@ -255,7 +268,7 @@ export default function ProfileSettings({ workspaceData = {} }) {
                     value={slug}
                     maxLength={PROFILE_LIMITS.slugMax}
                     onBlur={handleSlugBlur}
-                    onChange={(event) => setSlug(event.target.value)}
+                    onChange={handleSlugChange}
                     className="min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-gray-500"
                     placeholder="nome-da-barbearia"
                   />
