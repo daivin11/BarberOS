@@ -320,11 +320,16 @@ export default function Services({
               }`}
               onClick={handleAdd}
               disabled={Boolean(duplicateNewService) || savingService}
+              aria-busy={savingService ? "true" : "false"}
             >
               {savingService ? "Salvando servico..." : "Adicionar servico"}
             </button>
             {duplicateNewService && (
-              <p className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100">
+              <p
+                className="rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100"
+                role="status"
+                aria-live="polite"
+              >
                 Ja existe um servico ativo chamado {duplicateNewService.name}.
               </p>
             )}
@@ -432,6 +437,7 @@ export default function Services({
                     type="button"
                     onClick={() => restoreArchivedService(service.id)}
                     disabled={Boolean(restoringServiceId)}
+                    aria-busy={restoringServiceId === service.id ? "true" : "false"}
                     className={`mt-4 w-full rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
                       restoringServiceId
                         ? "cursor-not-allowed border-gray-700 bg-gray-900 text-gray-500"
@@ -499,7 +505,11 @@ export default function Services({
               </select>
             </div>
             {duplicateEditedService && (
-              <p className="mt-4 rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100">
+              <p
+                className="mt-4 rounded-2xl border border-yellow-700 bg-yellow-950/50 p-3 text-sm text-yellow-100"
+                role="status"
+                aria-live="polite"
+              >
                 Ja existe outro servico ativo chamado {duplicateEditedService.name}.
               </p>
             )}
@@ -516,6 +526,7 @@ export default function Services({
                 type="button"
                 onClick={handleEditSave}
                 disabled={Boolean(duplicateEditedService) || editingServiceSaving}
+                aria-busy={editingServiceSaving ? "true" : "false"}
                 className={`rounded-3xl px-6 py-3 text-sm font-semibold transition ${
                   duplicateEditedService || editingServiceSaving
                     ? "cursor-not-allowed bg-gray-700 text-gray-400"
@@ -525,7 +536,11 @@ export default function Services({
                 {editingServiceSaving ? "Salvando..." : "Salvar alteracoes"}
               </button>
             </div>
-            {statusMessage && <p className="mt-4 text-sm text-emerald-300">{statusMessage}</p>}
+            {statusMessage && (
+              <p className="mt-4 text-sm text-emerald-300" role="status" aria-live="polite">
+                {statusMessage}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -570,6 +585,7 @@ export default function Services({
                 type="button"
                 onClick={handleDeleteConfirmed}
                 disabled={deleteWarningCount > 0 || archivingService}
+                aria-busy={archivingService ? "true" : "false"}
                 className={`rounded-3xl px-6 py-3 text-sm font-semibold transition ${
                   deleteWarningCount > 0 || archivingService
                     ? "cursor-not-allowed border border-gray-700 bg-gray-900 text-gray-500"
