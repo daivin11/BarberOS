@@ -580,6 +580,10 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     failures.push("appointment edit conflict detection bypasses normalized barber ids");
   }
 
+  if (clientsPage.includes("client.phoneNormalized || client.phone")) {
+    failures.push("client page bypasses getClientPhone for legacy-safe phone usage");
+  }
+
   const submitGuardSnippets = [
     [appointmentCard, "src/components/AppointmentCard.jsx", "statusLoading"],
     [appointmentCard, "src/components/AppointmentCard.jsx", "handleStatusChange"],

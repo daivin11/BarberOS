@@ -35,7 +35,7 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
         ? clients.find(
             (client) =>
               client.id !== editingClient?.id &&
-              normalizePhone(client.phoneNormalized || client.phone) === cleanPhone
+              getClientPhone(client) === cleanPhone
           )
         : null,
     [cleanPhone, clients, editingClient?.id]
@@ -120,7 +120,7 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
 
   const createClientWhatsAppLink = (client) =>
     createWhatsAppUrl({
-      phone: normalizePhone(client.phoneNormalized || client.phone),
+      phone: getClientPhone(client),
       message: `Ola, ${client.name || "cliente"}! Aqui e da barbearia. Quer agendar um horario?`,
     });
 
