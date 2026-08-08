@@ -77,6 +77,27 @@ const listFiles = (targetPath) => {
 
 const failures = [];
 
+const readJsonFile = (targetPath) => JSON.parse(readFileSync(join(root, targetPath), "utf8"));
+
+const firestoreIndexes = readJsonFile("firestore.indexes.json");
+
+const hasCompositeIndex = (collectionGroup, fieldPaths) =>
+  firestoreIndexes.indexes.some(
+    (index) =>
+      index.collectionGroup === collectionGroup &&
+      index.queryScope === "COLLECTION" &&
+      index.fields.length === fieldPaths.length &&
+      index.fields.every((field, fieldIndex) => field.fieldPath === fieldPaths[fieldIndex])
+  );
+
+const requireCompositeIndex = (collectionGroup, fieldPaths, reason) => {
+  if (!hasCompositeIndex(collectionGroup, fieldPaths)) {
+    failures.push(
+      `Firestore composite index is missing for ${reason}: ${collectionGroup}(${fieldPaths.join(", ")})`
+    );
+  }
+};
+
 const findFirestoreQueriesWithoutLimit = (content) => {
   const queryMatches = [];
   let searchIndex = 0;
@@ -246,6 +267,8 @@ const assertPublicBookingFiltersCompleteProfiles = () => {
   ) {
     failures.push("public booking query does not filter profileComplete: src/pages/PublicBooking.jsx");
   }
+
+  requireCompositeIndex("publicProfiles", ["slug", "profileComplete"], "public profile lookup by slug");
 };
 
 const assertFirestoreRulesUseBoundedPublicText = () => {
@@ -555,7 +578,6 @@ const assertAppointmentsUseDateWindow = () => {
   const dashboardCards = readFileSync(join(root, "src", "components", "DashboardCards.jsx"), "utf8");
   const appointmentCard = readFileSync(join(root, "src", "components", "AppointmentCard.jsx"), "utf8");
   const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
-  const indexes = readFileSync(join(root, "firestore.indexes.json"), "utf8");
 
   const requiredAdminSnippets = [
     "createAppointmentDateWindow()",
@@ -595,9 +617,7 @@ const assertAppointmentsUseDateWindow = () => {
     }
   });
 
-  if (!indexes.includes('"fieldPath": "userId"') || !indexes.includes('"fieldPath": "date"') || !indexes.includes('"fieldPath": "time"')) {
-    failures.push("appointment date-window index is missing: firestore.indexes.json");
-  }
+  requireCompositeIndex("appointments", ["userId", "date", "time"], "admin appointment date-window query");
 };
 const assertScheduleRendersMultiSlotOccupancy = () => {
   const schedulePage = readFileSync(join(root, "src", "pages", "Schedule.jsx"), "utf8");
@@ -651,6 +671,10 @@ const assertDeletionGuardsQueryActiveAppointments = () => {
       failures.push(`active appointment deletion guard is missing in ${fileName}: ${snippet}`);
     }
   });
+
+  requireCompositeIndex("appointments", ["userId", "clientId", "status"], "client archive active appointment guard");
+  requireCompositeIndex("appointments", ["userId", "service.id", "status"], "service archive active appointment guard");
+  requireCompositeIndex("appointments", ["userId", "barberId", "status"], "barber archive active appointment guard");
 };
 const assertServiceContractIsBounded = () => {
   const rules = readFileSync(join(root, "firestore.rules"), "utf8");
@@ -850,6 +874,9 @@ const assertOperationalDataUsesSoftArchive = () => {
   if (barbersPage.includes("deleteDoc")) {
     failures.push("Barbers page still imports or uses deleteDoc for operational data");
   }
+
+  requireCompositeIndex("services", ["userId", "isArchived", "createdAt"], "public services query");
+  requireCompositeIndex("barbers", ["ownerId", "isArchived", "name"], "public barbers query");
 };
 const assertOperationalAuditLogsAreEnabled = () => {
   const rules = readFileSync(join(root, "firestore.rules"), "utf8");
@@ -879,6 +906,8 @@ const assertOperationalAuditLogsAreEnabled = () => {
       failures.push(`operational audit log guard is missing in ${fileName}: ${snippet}`);
     }
   });
+
+  requireCompositeIndex("auditLogs", ["userId", "createdAt"], "admin audit log feed");
 };
 const assertAvailabilityContractIsBounded = () => {
   const rules = readFileSync(join(root, "firestore.rules"), "utf8");
@@ -1265,6 +1294,8 @@ const assertPublicBookingSubmitRespectsAvailability = () => {
       failures.push(`public booking submit availability guard is missing in ${fileName}: ${snippet}`);
     }
   });
+
+  requireCompositeIndex("bookingSlots", ["userId", "barberId", "date", "time"], "public booking slot lookup");
 };
 
 const assertClientListSupportsWhatsAppContact = () => {
