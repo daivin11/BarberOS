@@ -40,6 +40,7 @@ export default function TrialExpired() {
   };
 
   const handleRenewalRequest = async () => {
+    if (requestLoading) return;
     if (!user) return;
 
     setRequestLoading(true);
@@ -150,6 +151,7 @@ export default function TrialExpired() {
                 type="button"
                 onClick={handleRenewalRequest}
                 disabled={requestLoading}
+                aria-busy={requestLoading ? "true" : "false"}
                 className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {requestLoading ? "Enviando..." : blockedContent.actionLabel}

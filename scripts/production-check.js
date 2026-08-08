@@ -283,6 +283,10 @@ const assertTrialExpiredUsesBillingDomain = () => {
     failures.push("renewal request is not idempotent per user: src/pages/TrialExpired.jsx");
   }
 
+  if (!trialExpired.includes("if (requestLoading) return;") || !trialExpired.includes('aria-busy={requestLoading ? "true" : "false"}')) {
+    failures.push("renewal request action does not guard duplicate submits or expose busy state: src/pages/TrialExpired.jsx");
+  }
+
   if (
     !billing.includes("getBlockedAccountContent") ||
     !billing.includes("createRenewalRequestPayload") ||
