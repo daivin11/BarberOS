@@ -248,7 +248,7 @@ service cloud.firestore {
         && !('archivedAt' in resource.data);
     }
 
-    function publicAppointmentUsesPublishedService(serviceId) {
+    function appointmentUsesPublishedService(serviceId) {
       return serviceId is string
         && exists(/databases/$(database)/documents/services/$(serviceId))
         && get(/databases/$(database)/documents/services/$(serviceId)).data.userId == request.resource.data.userId
@@ -259,7 +259,7 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/services/$(serviceId)).data.duration == request.resource.data.duration;
     }
 
-    function publicAppointmentUsesPublishedBarber(barberId) {
+    function appointmentUsesPublishedBarber(barberId) {
       return barberId is string
         && exists(/databases/$(database)/documents/barbers/$(barberId))
         && get(/databases/$(database)/documents/barbers/$(barberId)).data.ownerId == request.resource.data.userId
@@ -643,8 +643,6 @@ service cloud.firestore {
           || (
             matchesPublicProfile(request.resource.data.userId, request.resource.data.barberSlug)
             && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.appointmentId == appointmentId
-            && publicAppointmentUsesPublishedService(request.resource.data['service'].id)
-            && publicAppointmentUsesPublishedBarber(request.resource.data.barberId)
             && request.resource.data.privacyConsent == true
             && request.resource.data.privacyConsentVersion is string
             && request.resource.data.privacyConsentVersion.size() >= 10
@@ -662,9 +660,11 @@ service cloud.firestore {
         && validClientSnapshot(request.resource.data.client)
         && appointmentUsesActiveClient()
         && validServiceSnapshot(request.resource.data['service'])
+        && appointmentUsesPublishedService(request.resource.data['service'].id)
         && appointmentSnapshotsMatchFields()
         && request.resource.data.barberId is string
         && validText(request.resource.data.barberName, 2, 80)
+        && appointmentUsesPublishedBarber(request.resource.data.barberId)
         && validDateString(request.resource.data.date)
         && validTimeString(request.resource.data.time)
         && request.resource.data.slotId is string
@@ -687,8 +687,10 @@ service cloud.firestore {
         && request.resource.data.clientPhone.size() <= 13
         && validClientSnapshot(request.resource.data.client)
         && validServiceSnapshot(request.resource.data['service'])
+        && appointmentUsesPublishedService(request.resource.data['service'].id)
         && appointmentSnapshotsMatchFields()
         && validText(request.resource.data.barberName, 2, 80)
+        && appointmentUsesPublishedBarber(request.resource.data.barberId)
         && validDateString(request.resource.data.date)
         && validTimeString(request.resource.data.time)
         && request.resource.data.slotId is string
