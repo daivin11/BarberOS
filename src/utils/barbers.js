@@ -51,7 +51,7 @@ export const validateBarberInput = ({ name = "", specialty = "", avatar = "" } =
   }
 
   if (cleanAvatar.length > BARBER_LIMITS.avatarMax || !isValidPublicUrl(cleanAvatar)) {
-    return "Avatar precisa ser uma URL http ou https valida.";
+    return "Avatar precisa ser uma URL HTTPS valida.";
   }
 
   return "";

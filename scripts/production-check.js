@@ -55,6 +55,11 @@ const checks = [
     pattern: /sendPasswordResetEmail\(\s*auth\s*,\s*email\.trim\(\)\s*\)/,
     paths: ["src"],
   },
+  {
+    name: "public media copy still allows HTTP",
+    pattern: /URL\s+http\s+ou\s+https/i,
+    paths: ["src"],
+  },
 ];
 
 const getExtension = (filePath) => {

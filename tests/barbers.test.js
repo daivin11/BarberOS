@@ -27,6 +27,7 @@ describe("barber utils", () => {
     assert.match(validateBarberInput({ name: "A".repeat(BARBER_LIMITS.nameMax + 1) }), /maximo/);
     assert.match(validateBarberInput({ name: "Gabriel", specialty: "A".repeat(BARBER_LIMITS.specialtyMax + 1) }), /Especialidade/);
     assert.match(validateBarberInput({ name: "Gabriel", avatar: "javascript:alert(1)" }), /Avatar/);
+    assert.match(validateBarberInput({ name: "Gabriel", avatar: "http://example.com/a.png" }), /HTTPS/);
   });
 
   it("finds duplicate active barbers by normalized name", () => {
