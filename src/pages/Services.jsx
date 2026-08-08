@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import { isActiveAppointment } from "../utils/appointments";
+import { getAppointmentServiceId } from "../utils/appointments";
 import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
 import {
   SERVICE_DURATION_OPTIONS,
@@ -66,7 +67,7 @@ export default function Services({
 
   const appointmentsByService = useMemo(() => {
     return appointments.reduce((map, appointment) => {
-      const serviceId = appointment.service?.id;
+      const serviceId = getAppointmentServiceId(appointment);
       if (!serviceId) return map;
       const key = String(serviceId);
       map[key] = map[key] || { total: 0, future: 0 };
@@ -366,7 +367,7 @@ export default function Services({
                       <div>
                         <p className="font-semibold text-white">{service.name}</p>
                         <div className="mt-3 flex flex-wrap gap-2 text-sm">
-                          <span className="rounded-full bg-white/5 px-3 py-1 text-gray-300">{formatCurrencyBRL(service.price)}</span>
+                          <span className="rounded-full bg-white/5 px-3 py-1 text-gray-300">{formatCurrencyBRL(getServiceCatalogPrice(service))}</span>
                           <span className="rounded-full bg-white/5 px-3 py-1 text-gray-300">{formatDuration(getServiceCatalogDuration(service))}</span>
                           <span className="rounded-full bg-white/5 px-3 py-1 text-gray-400">{pluralize(totalUsage, "uso")}</span>
                         </div>
@@ -424,7 +425,7 @@ export default function Services({
                 <article key={service.id} className="rounded-2xl border border-dashed border-gray-700 bg-gray-950/70 p-4">
                   <p className="font-semibold text-white">{service.name}</p>
                   <div className="mt-3 flex flex-wrap gap-2 text-sm">
-                    <span className="rounded-full bg-white/5 px-3 py-1 text-gray-400">{formatCurrencyBRL(service.price)}</span>
+                    <span className="rounded-full bg-white/5 px-3 py-1 text-gray-400">{formatCurrencyBRL(getServiceCatalogPrice(service))}</span>
                     <span className="rounded-full bg-white/5 px-3 py-1 text-gray-400">{formatDuration(getServiceCatalogDuration(service))}</span>
                   </div>
                   <button

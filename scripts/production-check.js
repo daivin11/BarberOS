@@ -388,6 +388,8 @@ const assertAppointmentRulesValidatePayloadShape = () => {
   const appointmentCard = readFileSync(join(root, "src", "components", "AppointmentCard.jsx"), "utf8");
   const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
   const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
+  const schedulePage = readFileSync(join(root, "src", "pages", "Schedule.jsx"), "utf8");
+  const servicesPage = readFileSync(join(root, "src", "pages", "Services.jsx"), "utf8");
   const adminData = readFileSync(join(root, "src", "utils", "adminData.js"), "utf8");
   const services = readFileSync(join(root, "src", "utils", "services.js"), "utf8");
   const adminDataTest = readFileSync(join(root, "tests", "adminData.test.js"), "utf8");
@@ -478,6 +480,9 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     [appointmentCard, "src/components/AppointmentCard.jsx", "getAppointmentServiceId(appointment)"],
     [appointmentCard, "src/components/AppointmentCard.jsx", "getAppointmentClientId(appointment)"],
     [appointmentCard, "src/components/AppointmentCard.jsx", "getAppointmentBarberId(appointment)"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "getServicePrice(appointment)"],
+    [schedulePage, "src/pages/Schedule.jsx", "getAppointmentBarberId(appointment)"],
+    [servicesPage, "src/pages/Services.jsx", "getAppointmentServiceId(appointment)"],
     [appointmentUtilsTest, "tests/appointments.test.js", "reads appointment entity ids from snapshot and legacy flat fields"],
     [adminApp, "src/AdminApp.jsx", "client: createClientSnapshot(client)"],
     [adminApp, "src/AdminApp.jsx", "service: createServiceSnapshot(service)"],

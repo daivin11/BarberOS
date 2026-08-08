@@ -615,7 +615,7 @@ export default function PublicBooking() {
                           </div>
                           <div className="mt-6 flex items-center justify-between gap-4">
                             <span className="rounded-full bg-gray-800 px-3 py-1 text-sm text-gray-300">
-                              {formatCurrencyBRL(service.price)}
+                              {formatCurrencyBRL(getServiceCatalogPrice(service))}
                             </span>
                             {selected && <span className="rounded-full bg-indigo-500 px-3 py-1 text-sm text-white">Selecionado</span>}
                           </div>

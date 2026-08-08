@@ -22,6 +22,9 @@ import { createWhatsAppUrl } from "./utils/phone";
 import {
   ACTIVE_APPOINTMENT_STATUSES,
   APPOINTMENT_STATUS,
+  getAppointmentBarberId,
+  getAppointmentClientId,
+  getAppointmentServiceId,
   isActiveAppointment,
   isCompletedAppointment,
   isTerminalAppointment,
@@ -578,7 +581,7 @@ export default function AdminApp() {
     }
 
     const hasActiveAppointmentsInView = appointments.some((appointment) => {
-      const appointmentClientId = appointment.clientId || appointment.client?.id;
+      const appointmentClientId = getAppointmentClientId(appointment);
       return String(appointmentClientId) === String(clientId) && isActiveAppointment(appointment);
     });
 
@@ -730,7 +733,7 @@ export default function AdminApp() {
 
   const deleteService = async (serviceId) => {
     const hasActiveAppointmentInView = appointments.some((appointment) => {
-      const serviceIdFromAppointment = appointment.service?.id || appointment.serviceId;
+      const serviceIdFromAppointment = getAppointmentServiceId(appointment);
       return String(serviceIdFromAppointment) === String(serviceId) && isActiveAppointment(appointment);
     });
 
@@ -1113,7 +1116,7 @@ export default function AdminApp() {
           ? [
               createSlotId({
                 userId: appointment.userId,
-                barberId: appointment.barberId,
+                barberId: getAppointmentBarberId(appointment),
                 date: appointment.date,
                 time: appointment.time,
               }),

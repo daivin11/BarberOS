@@ -13,6 +13,7 @@ import {
 import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "../utils/appointmentWindow";
 import { formatCurrencyBRL, formatDuration } from "../utils/format";
 import { getServiceCatalogDuration } from "../utils/services";
+import { getServicePrice } from "../utils/finance";
 import {
   defaultBusinessHours,
   getTimeSlots,
@@ -46,7 +47,7 @@ export default function AppointmentCard({
   const currentStatus = getAppointmentStatus(appointment);
   const clientName = appointment.client?.name || appointment.clientName || "Cliente";
   const serviceName = appointment.service?.name || appointment.serviceName || "Servico";
-  const servicePrice = appointment.service?.price ?? appointment.servicePrice;
+  const servicePrice = getServicePrice(appointment);
   const matchedBarber = barbers.find((barber) => String(barber.id) === String(getAppointmentBarberId(appointment)));
   const barberName = appointment.barberName || matchedBarber?.name || "Barbeiro nao definido";
   const appointmentDate = appointment.date || "Data nao definida";
@@ -172,7 +173,7 @@ export default function AppointmentCard({
               <div className="rounded-2xl border border-gray-800 bg-gray-900 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Servico</p>
                 <p className="mt-2 font-semibold text-white">{serviceName}</p>
-                {servicePrice !== undefined && servicePrice !== null && (
+                {servicePrice > 0 && (
                   <p className="mt-1 text-sm text-gray-400">{formatCurrencyBRL(servicePrice)}</p>
                 )}
               </div>

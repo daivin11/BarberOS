@@ -5,6 +5,7 @@ import EmptyState from "../components/EmptyState";
 import {
   APPOINTMENT_STATUS,
   countAppointmentsByStatus,
+  getAppointmentBarberId,
   getAppointmentStatus,
   isActiveAppointment,
 } from "../utils/appointments";
@@ -114,7 +115,7 @@ export default function Schedule({
       selectedBarber && appointmentDate
         ? activeAppointments.filter(
             (appointment) =>
-              String(appointment.barberId) === String(selectedBarber) &&
+              String(getAppointmentBarberId(appointment)) === String(selectedBarber) &&
               appointment.date === appointmentDate
           )
         : [],
@@ -150,7 +151,7 @@ export default function Schedule({
     isDateWithinAppointmentWindow(appointmentDate, appointmentWindow) &&
     !needsData;
   const assignedAppointments = useMemo(
-    () => appointments.filter((appointment) => appointment.barberId || appointment.barberName).length,
+    () => appointments.filter((appointment) => getAppointmentBarberId(appointment) || appointment.barberName).length,
     [appointments]
   );
   const unassignedAppointments = appointments.length - assignedAppointments;
@@ -220,7 +221,7 @@ export default function Schedule({
     const slotEnd = slotStart + normalizedBusinessHours.slotInterval;
 
     return calendarAppointments.find((appointment) => {
-      if (String(appointment.barberId) !== String(barberId)) return false;
+      if (String(getAppointmentBarberId(appointment)) !== String(barberId)) return false;
       const appointmentStart = appointment.startMinutes ?? timeToMinutes(appointment.time);
       const appointmentEnd = appointment.endMinutes ?? appointmentStart + getServiceCatalogDuration({ duration: appointment.duration });
       return overlaps(slotStart, slotEnd, appointmentStart, appointmentEnd);
