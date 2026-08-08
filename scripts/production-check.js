@@ -428,6 +428,21 @@ const assertProfileWritesAreAtomic = () => {
     }
   });
 
+  const profileMediaSnippets = [
+    [profileSetup, "src/pages/ProfileSetup.jsx", "logoUrl"],
+    [profileSetup, "src/pages/ProfileSetup.jsx", "PROFILE_LIMITS.urlMax"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "logoUrl"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "PROFILE_LIMITS.urlMax"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "trimmedLogoUrl"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "Logo URL opcional"],
+  ];
+
+  profileMediaSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`public profile media editing is missing in ${fileName}: ${snippet}`);
+    }
+  });
+
   if (authContext.includes("writeBatch")) {
     failures.push("AuthContext still uses writeBatch for profile writes instead of slug transaction");
   }

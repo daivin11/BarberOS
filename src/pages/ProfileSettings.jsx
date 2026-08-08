@@ -23,6 +23,7 @@ export default function ProfileSettings({ workspaceData = {} }) {
   const [slug, setSlug] = useState(profile?.slug || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [bio, setBio] = useState(profile?.bio || "");
+  const [logoUrl, setLogoUrl] = useState(profile?.logoUrl || "");
   const [businessHours, setBusinessHours] = useState(profile?.businessHours || defaultBusinessHours);
   const [blockedDateInput, setBlockedDateInput] = useState("");
   const [blockedDates, setBlockedDates] = useState(profile?.blockedDates || []);
@@ -53,6 +54,7 @@ export default function ProfileSettings({ workspaceData = {} }) {
     setSlug(profile?.slug || "");
     setPhone(profile?.phone || "");
     setBio(profile?.bio || "");
+    setLogoUrl(profile?.logoUrl || "");
     setBusinessHours(profile?.businessHours || defaultBusinessHours);
     setBlockedDates(profile?.blockedDates || []);
   }, [profile]);
@@ -97,6 +99,7 @@ export default function ProfileSettings({ workspaceData = {} }) {
     const trimmedName = barbershopName.trim();
     const trimmedPhone = phone.trim();
     const trimmedBio = bio.trim();
+    const trimmedLogoUrl = logoUrl.trim();
     const normalizedBusinessHours = normalizeBusinessHours(businessHours);
     const normalizedBlockedDates = normalizeBlockedDates(blockedDates);
     const validationError = validatePublicProfileInput({
@@ -104,6 +107,7 @@ export default function ProfileSettings({ workspaceData = {} }) {
       slug: normalizedSlug,
       phone: trimmedPhone,
       bio: trimmedBio,
+      logoUrl: trimmedLogoUrl,
     });
 
     if (validationError) {
@@ -149,6 +153,7 @@ export default function ProfileSettings({ workspaceData = {} }) {
         slug: normalizedSlug,
         phone: trimmedPhone,
         bio: trimmedBio,
+        logoUrl: trimmedLogoUrl,
         businessHours: normalizedBusinessHours,
         blockedDates: normalizedBlockedDates,
         profileComplete: true,
@@ -304,6 +309,24 @@ export default function ProfileSettings({ workspaceData = {} }) {
                 />
               </label>
 
+              <label className="block">
+                <span className="text-sm text-gray-300">Logo URL opcional</span>
+                <input
+                  value={logoUrl}
+                  maxLength={PROFILE_LIMITS.urlMax}
+                  onChange={(event) => {
+                    setLogoUrl(event.target.value);
+                    setSaveError("");
+                    setSaveSuccess("");
+                  }}
+                  className="mt-2 w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  placeholder="https://..."
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Use uma imagem HTTPS para evitar bloqueios no navegador e manter sua pagina publica segura.
+                </p>
+              </label>
+
               <div className="rounded-3xl border border-gray-800 bg-gray-950 p-5">
                 <div className="mb-4">
                   <p className="text-sm font-semibold text-white">Horario de funcionamento</p>
@@ -442,6 +465,25 @@ export default function ProfileSettings({ workspaceData = {} }) {
           <aside className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6 lg:p-8">
             <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Previa</p>
             <div className="mt-5 rounded-3xl border border-gray-800 bg-gray-950 p-5">
+              <div className="mb-4 flex items-center gap-3">
+                {logoUrl.trim() ? (
+                  <img
+                    src={logoUrl.trim()}
+                    alt=""
+                    className="h-14 w-14 rounded-2xl border border-gray-800 bg-gray-900 object-cover"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-800 bg-gray-900 text-lg font-black text-indigo-200">
+                    {(barbershopName.trim() || "B").slice(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Identidade visual</p>
+                  <p className="mt-1 truncate text-sm text-gray-300">
+                    {logoUrl.trim() ? "Logo configurada" : "Logo opcional"}
+                  </p>
+                </div>
+              </div>
               <p className="text-xl font-bold text-white">{barbershopName.trim() || "Sua barbearia"}</p>
               <p className="mt-2 break-all text-sm text-indigo-300">
                 {normalizedSlug ? `/${normalizedSlug}` : "/seu-slug"}
