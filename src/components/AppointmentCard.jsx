@@ -113,8 +113,8 @@ export default function AppointmentCard({
 
     setCancelLoading(true);
     try {
-      await onStatusChange(appointment.id, APPOINTMENT_STATUS.cancelled);
-      setShowCancelModal(false);
+      const success = await onStatusChange(appointment.id, APPOINTMENT_STATUS.cancelled);
+      if (success !== false) setShowCancelModal(false);
     } finally {
       setCancelLoading(false);
     }
