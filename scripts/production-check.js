@@ -1254,6 +1254,8 @@ const assertPublicBookingShowsConfirmationSummary = () => {
     [publicBooking, "src/pages/PublicBooking.jsx", "getBookingConfirmationLines"],
     [publicBooking, "src/pages/PublicBooking.jsx", "Seu horario esta aguardando confirmacao"],
     [publicBooking, "src/pages/PublicBooking.jsx", "Proximo passo"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "aria-pressed={selected}"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "aria-pressed={isSelected}"],
     [publicBooking, "src/pages/PublicBooking.jsx", "aria-live=\"polite\""],
     [publicBooking, "src/pages/PublicBooking.jsx", "aria-live=\"assertive\""],
     [bookingConfirmation, "src/utils/bookingConfirmation.js", "createBookingConfirmation"],
@@ -1266,6 +1268,10 @@ const assertPublicBookingShowsConfirmationSummary = () => {
       failures.push(`public booking confirmation summary is missing in ${fileName}: ${snippet}`);
     }
   });
+
+  if (countOccurrences(publicBooking, "aria-pressed=") < 3) {
+    failures.push("public booking selectable controls do not expose selected state: src/pages/PublicBooking.jsx");
+  }
 };
 
 const assertPendingAppointmentsHaveResponseFlow = () => {

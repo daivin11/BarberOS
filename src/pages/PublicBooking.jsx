@@ -541,6 +541,7 @@ export default function PublicBooking() {
                         <button
                           key={barberItem.id}
                           type="button"
+                          aria-pressed={selected}
                           onClick={() => {
                             setSelectedBarber(barberItem);
                             setTime("");
@@ -606,6 +607,7 @@ export default function PublicBooking() {
                         <button
                           key={service.id}
                           type="button"
+                          aria-pressed={selected}
                           onClick={() => {
                             setSelectedService(service.id);
                             setDate("");
@@ -840,6 +842,7 @@ export default function PublicBooking() {
                             <button
                               key={slot}
                               type="button"
+                              aria-pressed={isSelected}
                               onClick={() => {
                                 if (!isAvailable) return;
                                 setTime(slot);
