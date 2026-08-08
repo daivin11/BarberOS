@@ -121,7 +121,11 @@ export default function Register() {
                 </label>
 
                 {errorMessage && (
-                  <div className="rounded-2xl border border-red-700 bg-red-950/70 p-3 text-sm text-red-200" role="alert">
+                  <div
+                    className="rounded-2xl border border-red-700 bg-red-950/70 p-3 text-sm text-red-200"
+                    role="alert"
+                    aria-live="assertive"
+                  >
                     {errorMessage}
                   </div>
                 )}

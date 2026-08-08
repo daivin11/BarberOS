@@ -100,13 +100,21 @@ export default function ForgotPassword() {
                 </label>
 
                 {successMessage && (
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-950/70 p-4 text-sm text-emerald-300" role="status">
+                  <div
+                    className="rounded-2xl border border-emerald-700 bg-emerald-950/70 p-4 text-sm text-emerald-300"
+                    role="status"
+                    aria-live="polite"
+                  >
                     {successMessage}
                   </div>
                 )}
 
                 {errorMessage && (
-                  <div className="rounded-2xl border border-red-700 bg-red-950/70 p-4 text-sm text-red-300" role="alert">
+                  <div
+                    className="rounded-2xl border border-red-700 bg-red-950/70 p-4 text-sm text-red-300"
+                    role="alert"
+                    aria-live="assertive"
+                  >
                     {errorMessage}
                   </div>
                 )}
@@ -114,6 +122,7 @@ export default function ForgotPassword() {
                 <button
                   type="submit"
                   disabled={loading}
+                  aria-busy={loading ? "true" : "false"}
                   className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 py-3 font-semibold text-white shadow transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "Enviando..." : "Enviar link de redefinicao"}

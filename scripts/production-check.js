@@ -606,6 +606,7 @@ const assertAuthActionUrlsAreSafe = () => {
   const authFormsTest = readFileSync(join(root, "tests", "authForms.test.js"), "utf8");
   const loginPage = readFileSync(join(root, "src", "pages", "Login.jsx"), "utf8");
   const registerPage = readFileSync(join(root, "src", "pages", "Register.jsx"), "utf8");
+  const forgotPasswordPage = readFileSync(join(root, "src", "pages", "ForgotPassword.jsx"), "utf8");
 
   const requiredSnippets = [
     [authActions, "src/utils/authActions.js", "getSafeBaseUrl"],
@@ -617,9 +618,18 @@ const assertAuthActionUrlsAreSafe = () => {
     [authForms, "src/utils/authForms.js", "validateRegisterForm"],
     [authFormsTest, "tests/authForms.test.js", "validates login fields before reaching Firebase"],
     [loginPage, "src/pages/Login.jsx", "validateLoginForm"],
+    [loginPage, "src/pages/Login.jsx", "role=\"alert\""],
+    [loginPage, "src/pages/Login.jsx", "aria-live=\"assertive\""],
     [loginPage, "src/pages/Login.jsx", "aria-busy={loading ? \"true\" : \"false\"}"],
     [registerPage, "src/pages/Register.jsx", "validateRegisterForm"],
+    [registerPage, "src/pages/Register.jsx", "role=\"alert\""],
+    [registerPage, "src/pages/Register.jsx", "aria-live=\"assertive\""],
     [registerPage, "src/pages/Register.jsx", "aria-busy={loading ? \"true\" : \"false\"}"],
+    [forgotPasswordPage, "src/pages/ForgotPassword.jsx", "role=\"alert\""],
+    [forgotPasswordPage, "src/pages/ForgotPassword.jsx", "role=\"status\""],
+    [forgotPasswordPage, "src/pages/ForgotPassword.jsx", "aria-live=\"assertive\""],
+    [forgotPasswordPage, "src/pages/ForgotPassword.jsx", "aria-live=\"polite\""],
+    [forgotPasswordPage, "src/pages/ForgotPassword.jsx", "aria-busy={loading ? \"true\" : \"false\"}"],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
