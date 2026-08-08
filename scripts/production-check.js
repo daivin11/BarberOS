@@ -590,6 +590,9 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     [appointmentCard, "src/components/AppointmentCard.jsx", "Confirmando..."],
     [appointmentCard, "src/components/AppointmentCard.jsx", "if (!onUpdateAppointment || !canSaveEdit || editLoading) return"],
     [appointmentCard, "src/components/AppointmentCard.jsx", "if (!onStatusChange || cancelLoading) return"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "aria-busy={statusLoading ? \"true\" : \"false\"}"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "aria-busy={editLoading ? \"true\" : \"false\"}"],
+    [appointmentCard, "src/components/AppointmentCard.jsx", "aria-busy={cancelLoading ? \"true\" : \"false\"}"],
   ];
 
   submitGuardSnippets.forEach(([fileContent, fileName, snippet]) => {

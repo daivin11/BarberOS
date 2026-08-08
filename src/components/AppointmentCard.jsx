@@ -198,6 +198,7 @@ export default function AppointmentCard({
                 type="button"
                 onClick={() => handleStatusChange(APPOINTMENT_STATUS.confirmed)}
                 disabled={statusLoading}
+                aria-busy={statusLoading ? "true" : "false"}
                 className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {statusLoading ? "Confirmando..." : "Confirmar"}
@@ -209,6 +210,7 @@ export default function AppointmentCard({
                 value={currentStatus}
                 onChange={(event) => handleStatusChange(event.target.value)}
                 disabled={isTerminal || statusLoading}
+                aria-busy={statusLoading ? "true" : "false"}
                 className="w-full rounded-2xl border border-gray-800 bg-gray-900 px-3 py-2 text-xs outline-none transition focus:border-indigo-500 sm:w-auto lg:w-full"
               >
                 <option value={APPOINTMENT_STATUS.pending}>Pendente</option>
@@ -389,6 +391,7 @@ export default function AppointmentCard({
                 type="button"
                 onClick={handleSaveEdit}
                 disabled={!canSaveEdit || editLoading}
+                aria-busy={editLoading ? "true" : "false"}
                 className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {editLoading ? "Salvando..." : "Salvar alteracoes"}
@@ -424,6 +427,7 @@ O status sera atualizado para cancelado, este horario sera liberado e a reserva 
                 type="button"
                 onClick={handleCancelAppointment}
                 disabled={cancelLoading}
+                aria-busy={cancelLoading ? "true" : "false"}
                 className="rounded-2xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {cancelLoading ? "Cancelando..." : "Cancelar"}
