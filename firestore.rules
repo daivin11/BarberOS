@@ -241,6 +241,17 @@ service cloud.firestore {
         && !('archivedAt' in resource.data);
     }
 
+    function publicAppointmentUsesPublishedService(serviceId) {
+      return serviceId is string
+        && exists(/databases/$(database)/documents/services/$(serviceId))
+        && get(/databases/$(database)/documents/services/$(serviceId)).data.userId == request.resource.data.userId
+        && get(/databases/$(database)/documents/services/$(serviceId)).data.isArchived == false
+        && !('archivedAt' in get(/databases/$(database)/documents/services/$(serviceId)).data)
+        && get(/databases/$(database)/documents/services/$(serviceId)).data.name == request.resource.data['service'].name
+        && get(/databases/$(database)/documents/services/$(serviceId)).data.price == request.resource.data['service'].price
+        && get(/databases/$(database)/documents/services/$(serviceId)).data.duration == request.resource.data.duration;
+    }
+
     function publicUserFields() {
       return [
         'email',
@@ -621,6 +632,7 @@ service cloud.firestore {
           || (
             matchesPublicProfile(request.resource.data.userId, request.resource.data.barberSlug)
             && getAfter(/databases/$(database)/documents/bookingSlots/$(request.resource.data.slotId)).data.appointmentId == appointmentId
+            && publicAppointmentUsesPublishedService(request.resource.data['service'].id)
             && request.resource.data.privacyConsent == true
             && request.resource.data.privacyConsentVersion is string
             && request.resource.data.privacyConsentVersion.size() >= 10
