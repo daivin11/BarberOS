@@ -231,6 +231,13 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient())).data.phoneNormalized == request.resource.data.phoneNormalized;
     }
 
+    function appointmentUsesActiveClient() {
+      return existsAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId))
+        && getAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId)).data.userId == request.resource.data.userId
+        && getAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId)).data.phoneNormalized == request.resource.data.clientPhone
+        && getAfter(/databases/$(database)/documents/clients/$(request.resource.data.clientId)).data.isArchived == false;
+    }
+
     function archivedClientReleasesPhoneKey() {
       return request.resource.data.isArchived == true
         && !existsAfter(/databases/$(database)/documents/clientPhoneKeys/$(clientPhoneKeyIdForClient()));
@@ -653,6 +660,7 @@ service cloud.firestore {
         && request.resource.data.clientPhone.size() >= 10
         && request.resource.data.clientPhone.size() <= 13
         && validClientSnapshot(request.resource.data.client)
+        && appointmentUsesActiveClient()
         && validServiceSnapshot(request.resource.data['service'])
         && appointmentSnapshotsMatchFields()
         && request.resource.data.barberId is string
