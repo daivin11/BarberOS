@@ -828,7 +828,7 @@ export default function AdminApp() {
     };
 
     setArchivedClients((currentClients) => currentClients.filter((client) => client.id !== clientId));
-    setClients((currentClients) => sortByName([...currentClients, restoredClient]));
+    setClients((currentClients) => sortByName(upsertById(currentClients, restoredClient)));
 
     try {
       const clientRef = doc(db, "clients", clientId);
@@ -904,7 +904,7 @@ export default function AdminApp() {
     };
 
     setArchivedServices((currentServices) => currentServices.filter((service) => service.id !== serviceId));
-    setServices((currentServices) => sortByCreatedAtDesc([...currentServices, restoredService]));
+    setServices((currentServices) => sortByCreatedAtDesc(upsertById(currentServices, restoredService)));
 
     try {
       await updateDoc(doc(db, "services", serviceId), {
@@ -953,7 +953,7 @@ export default function AdminApp() {
     };
 
     setArchivedBarbers((currentBarbers) => currentBarbers.filter((barber) => barber.id !== barberId));
-    setBarbers((currentBarbers) => sortByName([...currentBarbers, restoredBarber]));
+    setBarbers((currentBarbers) => sortByName(upsertById(currentBarbers, restoredBarber)));
 
     try {
       await updateDoc(doc(db, "barbers", barberId), {
