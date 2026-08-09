@@ -555,12 +555,20 @@ export default function PublicBooking() {
                           }`}
                         >
                           <div className="flex items-start gap-4">
-                            <div className="h-14 w-14 rounded-3xl bg-white/10 flex items-center justify-center text-2xl text-indigo-300">
+                            <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-3xl bg-white/10 text-2xl text-indigo-300">
+                              <span>
+                                {barberItem.name?.split(" ").map((word) => word[0]).join("")}
+                              </span>
                               {barberItem.avatar ? (
-                                <img src={barberItem.avatar} alt={barberItem.name} className="h-14 w-14 rounded-3xl object-cover" />
-                              ) : (
-                                barberItem.name?.split(" ").map((word) => word[0]).join("")
-                              )}
+                                <img
+                                  src={barberItem.avatar}
+                                  alt={barberItem.name}
+                                  onError={(event) => {
+                                    event.currentTarget.style.display = "none";
+                                  }}
+                                  className="absolute h-14 w-14 rounded-3xl object-cover"
+                                />
+                              ) : null}
                             </div>
                             <div>
                               <p className="text-lg font-semibold text-white">{barberItem.name}</p>

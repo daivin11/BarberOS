@@ -388,12 +388,18 @@ export default function Barbers({
               {barbers.map((barber) => (
                 <article key={barber.id} className="rounded-2xl border border-gray-800 bg-gray-950 p-4">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-white/10 text-xl font-black text-indigo-300">
+                    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-white/10 text-xl font-black text-indigo-300">
+                      <span>{getInitials(barber.name)}</span>
                       {barber.avatar ? (
-                        <img src={barber.avatar} alt={barber.name} className="h-16 w-16 rounded-3xl object-cover" />
-                      ) : (
-                        getInitials(barber.name)
-                      )}
+                        <img
+                          src={barber.avatar}
+                          alt={barber.name}
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                          }}
+                          className="absolute h-16 w-16 rounded-3xl object-cover"
+                        />
+                      ) : null}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-white">{barber.name}</p>
@@ -451,12 +457,18 @@ export default function Barbers({
               {archivedBarbers.map((barber) => (
                 <article key={barber.id} className="rounded-2xl border border-dashed border-gray-700 bg-gray-950/70 p-4">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-white/5 text-lg font-black text-gray-300">
+                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-white/5 text-lg font-black text-gray-300">
+                      <span>{getInitials(barber.name)}</span>
                       {barber.avatar ? (
-                        <img src={barber.avatar} alt={barber.name} className="h-14 w-14 rounded-3xl object-cover grayscale" />
-                      ) : (
-                        getInitials(barber.name)
-                      )}
+                        <img
+                          src={barber.avatar}
+                          alt={barber.name}
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                          }}
+                          className="absolute h-14 w-14 rounded-3xl object-cover grayscale"
+                        />
+                      ) : null}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-white">{barber.name}</p>
