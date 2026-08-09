@@ -707,6 +707,7 @@ const assertAppointmentsUseDateWindow = () => {
   requireCompositeIndex("appointments", ["userId", "date", "time"], "admin appointment date-window query");
 };
 const assertScheduleRendersMultiSlotOccupancy = () => {
+  const adminApp = readFileSync(join(root, "src", "AdminApp.jsx"), "utf8");
   const schedulePage = readFileSync(join(root, "src", "pages", "Schedule.jsx"), "utf8");
 
   if (!schedulePage.includes("overlaps(slotStart, slotEnd, appointmentStart, appointmentEnd)")) {
@@ -724,11 +725,19 @@ const assertScheduleRendersMultiSlotOccupancy = () => {
     [schedulePage, "src/pages/Schedule.jsx", "Sem horarios disponiveis"],
     [schedulePage, "src/pages/Schedule.jsx", "Escolha um servico primeiro"],
     [schedulePage, "src/pages/Schedule.jsx", "handleAddAppointment"],
+    [schedulePage, "src/pages/Schedule.jsx", "createMessage"],
+    [schedulePage, "src/pages/Schedule.jsx", "createMessageType"],
+    [schedulePage, "src/pages/Schedule.jsx", "Agendamento criado com sucesso."],
+    [schedulePage, "src/pages/Schedule.jsx", "Nao foi possivel criar o agendamento"],
+    [schedulePage, "src/pages/Schedule.jsx", "role={createMessageType}"],
+    [schedulePage, "src/pages/Schedule.jsx", "aria-live={createMessageType === \"alert\" ? \"assertive\" : \"polite\"}"],
     [schedulePage, "src/pages/Schedule.jsx", "Criando agendamento..."],
     [schedulePage, "src/pages/Schedule.jsx", "Confirmando..."],
     [schedulePage, "src/pages/Schedule.jsx", "aria-pressed={selected}"],
     [schedulePage, "src/pages/Schedule.jsx", "aria-busy={creatingAppointment ? \"true\" : \"false\"}"],
     [schedulePage, "src/pages/Schedule.jsx", "aria-busy={confirmingPendingId === nextPendingAppointment.id ? \"true\" : \"false\"}"],
+    [adminApp, "src/AdminApp.jsx", "return true;"],
+    [adminApp, "src/AdminApp.jsx", "return false;"],
   ];
 
   submitGuardSnippets.forEach(([fileContent, fileName, snippet]) => {

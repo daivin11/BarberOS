@@ -81,6 +81,8 @@ export default function Schedule({
   const [calendarDate, setCalendarDate] = useState(today);
   const [creatingAppointment, setCreatingAppointment] = useState(false);
   const [confirmingPendingId, setConfirmingPendingId] = useState("");
+  const [createMessage, setCreateMessage] = useState("");
+  const [createMessageType, setCreateMessageType] = useState("status");
   const needsData = !loading && (clients.length === 0 || services.length === 0 || barbers.length === 0);
   const isSetupMode = searchParams.get("setup") === "first-booking";
   const appointmentWindowLabel = getAppointmentWindowLabel(appointmentWindow);
@@ -232,13 +234,22 @@ export default function Schedule({
     setSelectedBarber(barberId);
     setAppointmentDate(calendarDate);
     setAppointmentTime(slot);
+    setCreateMessage("");
   };
   const handleAddAppointment = async () => {
     if (!canCreateAppointment || creatingAppointment) return;
 
     setCreatingAppointment(true);
+    setCreateMessage("");
     try {
-      await addAppointment?.();
+      const created = await addAppointment?.();
+      if (created) {
+        setCreateMessageType("status");
+        setCreateMessage("Agendamento criado com sucesso.");
+      } else {
+        setCreateMessageType("alert");
+        setCreateMessage("Nao foi possivel criar o agendamento. Revise os dados ou escolha outro horario.");
+      }
     } finally {
       setCreatingAppointment(false);
     }
@@ -541,7 +552,10 @@ export default function Schedule({
               <select
                 className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
                 value={selectedClient}
-                onChange={(e) => setSelectedClient(e.target.value)}
+                onChange={(e) => {
+                  setSelectedClient(e.target.value);
+                  setCreateMessage("");
+                }}
               >
                 <option value="">Selecione o cliente</option>
                 {clients.map((client) => (
@@ -560,6 +574,7 @@ export default function Schedule({
                 onChange={(e) => {
                   setSelectedService(e.target.value);
                   setAppointmentTime("");
+                  setCreateMessage("");
                 }}
               >
                 <option value="">Selecione o servico</option>
@@ -579,6 +594,7 @@ export default function Schedule({
                 onChange={(e) => {
                   setSelectedBarber(e.target.value);
                   setAppointmentTime("");
+                  setCreateMessage("");
                 }}
               >
                 <option value="">Selecione o barbeiro</option>
@@ -602,6 +618,7 @@ export default function Schedule({
                   onChange={(e) => {
                     setAppointmentDate(e.target.value);
                     setAppointmentTime("");
+                    setCreateMessage("");
                   }}
                 />
               </label>
@@ -612,7 +629,10 @@ export default function Schedule({
                   className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
                   value={appointmentTime}
                   disabled={!selectedServiceData || !selectedBarber || !appointmentDate || availableAppointmentTimeOptions.length === 0}
-                  onChange={(e) => setAppointmentTime(e.target.value)}
+                  onChange={(e) => {
+                    setAppointmentTime(e.target.value);
+                    setCreateMessage("");
+                  }}
                 >
                   <option value="">
                     {!selectedServiceData
@@ -657,6 +677,19 @@ export default function Schedule({
             >
               {creatingAppointment ? "Criando agendamento..." : "Criar agendamento"}
             </button>
+            {createMessage && (
+              <p
+                className={`rounded-2xl border p-3 text-sm ${
+                  createMessageType === "alert"
+                    ? "border-red-800 bg-red-950/70 text-red-200"
+                    : "border-emerald-800 bg-emerald-950/50 text-emerald-200"
+                }`}
+                role={createMessageType}
+                aria-live={createMessageType === "alert" ? "assertive" : "polite"}
+              >
+                {createMessage}
+              </p>
+            )}
           </div>
         </section>
 

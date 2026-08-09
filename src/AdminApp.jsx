@@ -982,7 +982,7 @@ export default function AdminApp() {
   const addAppointment = async () => {
     if (!selectedClient || !selectedService || !selectedBarber || !appointmentDate || !appointmentTime) {
       notify("Preencha todos os dados do agendamento");
-      return;
+      return false;
     }
 
     try {
@@ -992,7 +992,7 @@ export default function AdminApp() {
 
       if (!client || !service || !barber || !user) {
         notify("Dados do agendamento invalidos. Atualize a pagina e tente novamente.");
-        return;
+        return false;
       }
 
       const createdAt = new Date();
@@ -1008,17 +1008,17 @@ export default function AdminApp() {
         })
       ) {
         notify("Escolha um horario dentro do funcionamento configurado e em uma data futura.");
-        return;
+        return false;
       }
 
       if (!isFutureAppointmentStart({ date: appointmentDate, time: appointmentTime })) {
         notify("Escolha um horario futuro para criar o agendamento.");
-        return;
+        return false;
       }
 
       if (!isDateWithinAppointmentWindow(appointmentDate, appointmentWindow)) {
         notify("Escolha uma data dentro da janela operacional da agenda.");
-        return;
+        return false;
       }
 
       const occupiedTimes = getOccupiedTimes({
@@ -1106,6 +1106,7 @@ export default function AdminApp() {
         entityLabel: client.name,
         summary: `Agendamento criado para ${appointmentDate} as ${appointmentTime}.`,
       });
+      return true;
     } catch (error) {
       reportError(error, { source: "admin", action: "add-appointment" });
       notify(
@@ -1113,6 +1114,7 @@ export default function AdminApp() {
           ? "Este horario ja esta reservado. Escolha outro horario."
           : "Erro ao adicionar agendamento. Tente novamente."
       );
+      return false;
     }
   };
 
