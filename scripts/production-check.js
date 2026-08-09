@@ -276,6 +276,9 @@ const assertPublicBookingFiltersCompleteProfiles = () => {
   }
 
   requireCompositeIndex("publicProfiles", ["slug", "profileComplete"], "public profile lookup by slug");
+  requireCompositeIndex("services", ["userId", "isArchived", "createdAt"], "public services catalog query");
+  requireCompositeIndex("barbers", ["ownerId", "isArchived", "name"], "public barbers catalog query");
+  requireCompositeIndex("bookingSlots", ["userId", "barberId", "date", "time"], "public booked slots by day query");
 };
 
 const assertPublicBookingInitialLoadIgnoresStaleResponses = () => {
