@@ -1672,6 +1672,7 @@ const assertWhatsAppTemplatesAreDomainDriven = () => {
 };
 
 const assertLaunchMetadataIsReady = () => {
+  const landingPage = readFileSync(join(root, "src", "pages", "LandingPage.jsx"), "utf8");
   const indexHtml = readFileSync(join(root, "index.html"), "utf8");
   const manifest = readFileSync(join(root, "public", "manifest.webmanifest"), "utf8");
   const robots = readFileSync(join(root, "public", "robots.txt"), "utf8");
@@ -1688,6 +1689,8 @@ const assertLaunchMetadataIsReady = () => {
     [ogImage, "public/og-image.svg", "BarberOS"],
     [ogImage, "public/og-image.svg", "1200"],
     [ogImage, "public/og-image.svg", "630"],
+    [landingPage, "src/pages/LandingPage.jsx", "Trial gratuito de 30 dias com ativacao simples"],
+    [landingPage, "src/pages/LandingPage.jsx", "Como funciona o trial gratuito?"],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
@@ -1695,6 +1698,10 @@ const assertLaunchMetadataIsReady = () => {
       failures.push(`launch metadata is missing in ${fileName}: ${snippet}`);
     }
   });
+
+  if (/sem gateway de pagamento|Ainda nao\. O plano atual inclui trial gratuito/i.test(landingPage)) {
+    failures.push("public landing page exposes internal payment limitations: src/pages/LandingPage.jsx");
+  }
 };
 
 const assertAppBootstrapIsGuarded = () => {

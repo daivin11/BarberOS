@@ -91,7 +91,7 @@ const features = [
   "Equipe com multiplos barbeiros por barbearia",
   "Link publico para receber reservas sem depender de mensagens manuais",
   "Modelos de WhatsApp para confirmacao e retorno",
-  "Trial gratuito de 30 dias sem gateway de pagamento",
+  "Trial gratuito de 30 dias com ativacao simples",
 ];
 
 const faqs = [
@@ -108,8 +108,8 @@ const faqs = [
     answer: "Sim. Cada barbearia tem uma pagina publica personalizada para receber agendamentos online.",
   },
   {
-    question: "Ja existe pagamento integrado?",
-    answer: "Ainda nao. O plano atual inclui trial gratuito, e o gateway pode ser conectado depois.",
+    question: "Como funciona o trial gratuito?",
+    answer: "Voce cria a conta, configura a barbearia e testa o fluxo completo por 30 dias antes de decidir a continuidade.",
   },
 ];
 
