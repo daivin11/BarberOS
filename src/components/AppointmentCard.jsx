@@ -119,6 +119,7 @@ export default function AppointmentCard({
     try {
       const success = await onStatusChange(appointment.id, APPOINTMENT_STATUS.cancelled);
       if (success !== false) {
+        setCancelError("");
         setShowCancelModal(false);
       } else {
         setCancelError("Nao foi possivel cancelar este agendamento. Tente novamente.");
@@ -137,6 +138,8 @@ export default function AppointmentCard({
       const success = await onStatusChange(appointment.id, nextStatus);
       if (success === false) {
         setActionError("Nao foi possivel atualizar o status deste agendamento.");
+      } else {
+        setActionError("");
       }
     } finally {
       setStatusLoading(false);
@@ -157,6 +160,7 @@ export default function AppointmentCard({
         time: editTime,
       });
       if (success) {
+        setEditError("");
         setShowEditModal(false);
       } else {
         setEditError("Nao foi possivel salvar a alteracao. Escolha outro horario ou tente novamente.");
@@ -314,7 +318,10 @@ export default function AppointmentCard({
                 <span className="mb-2 block text-sm text-gray-300">Cliente</span>
                 <select
                   value={editClientId}
-                  onChange={(event) => setEditClientId(event.target.value)}
+                  onChange={(event) => {
+                    setEditClientId(event.target.value);
+                    setEditError("");
+                  }}
                   className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none"
                 >
                   <option value="">Selecione</option>
@@ -332,6 +339,7 @@ export default function AppointmentCard({
                   onChange={(event) => {
                     setEditServiceId(event.target.value);
                     setEditTime("");
+                    setEditError("");
                   }}
                   className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none"
                 >
@@ -350,6 +358,7 @@ export default function AppointmentCard({
                   onChange={(event) => {
                     setEditBarberId(event.target.value);
                     setEditTime("");
+                    setEditError("");
                   }}
                   className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none"
                 >
@@ -372,6 +381,7 @@ export default function AppointmentCard({
                     onChange={(event) => {
                       setEditDate(event.target.value);
                       setEditTime("");
+                      setEditError("");
                     }}
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none"
                   />
@@ -381,7 +391,10 @@ export default function AppointmentCard({
                   <select
                     value={editTime}
                     disabled={!editServiceData || !editBarberId || !editDate || editTimeOptions.length === 0}
-                    onChange={(event) => setEditTime(event.target.value)}
+                    onChange={(event) => {
+                      setEditTime(event.target.value);
+                      setEditError("");
+                    }}
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none"
                   >
                     <option value="">
@@ -454,7 +467,10 @@ O status sera atualizado para cancelado, este horario sera liberado e a reserva 
             <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
-                onClick={() => setShowCancelModal(false)}
+                onClick={() => {
+                  setCancelError("");
+                  setShowCancelModal(false);
+                }}
                 className="rounded-2xl border border-gray-700 bg-gray-950 px-4 py-3 text-sm font-semibold text-gray-300 transition hover:border-white/40"
               >
                 Manter agendamento
