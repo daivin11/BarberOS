@@ -104,7 +104,7 @@ O repositorio inclui configuracao para Vercel e Firebase Hosting:
 
 - fallback SPA para rotas como `/dashboard`, `/login` e `/:slug`;
 - cache imutavel para assets versionados em `/assets`;
-- headers basicos de seguranca: `nosniff`, `DENY` para iframe, referrer policy, permissions policy e HSTS.
+- headers basicos de seguranca: `nosniff`, `DENY` para iframe, referrer policy, permissions policy, CSP e HSTS.
 
 Antes do primeiro deploy publico, confirme o dominio final, configure `VITE_AUTH_ACTION_URL`, adicione o dominio em Firebase Auth > Authorized domains e ajuste os templates do Firebase Auth para usarem BarberOS.
 

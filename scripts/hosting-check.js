@@ -16,6 +16,9 @@ const readJson = (fileName) => {
 const getHeaderMap = (headers = []) =>
   new Map(headers.map((header) => [String(header.key || "").toLowerCase(), String(header.value || "")]));
 
+const expectedCsp =
+  "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://*.firebaseinstallations.googleapis.com https://*.gstatic.com wss://*.firebaseio.com; form-action 'self'; upgrade-insecure-requests";
+
 const assertHeader = (headers, key, expectedValue, source) => {
   const value = getHeaderMap(headers).get(key.toLowerCase());
   if (value !== expectedValue) {
@@ -46,6 +49,7 @@ const assertFirebaseHosting = () => {
   assertHeader(appHeaders, "X-Frame-Options", "DENY", "firebase app headers");
   assertHeader(appHeaders, "Referrer-Policy", "strict-origin-when-cross-origin", "firebase app headers");
   assertHeader(appHeaders, "Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()", "firebase app headers");
+  assertHeader(appHeaders, "Content-Security-Policy", expectedCsp, "firebase app headers");
   assertHeader(appHeaders, "Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload", "firebase app headers");
 };
 
@@ -67,6 +71,7 @@ const assertVercelHosting = () => {
   assertHeader(appHeaders, "X-Frame-Options", "DENY", "vercel app headers");
   assertHeader(appHeaders, "Referrer-Policy", "strict-origin-when-cross-origin", "vercel app headers");
   assertHeader(appHeaders, "Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()", "vercel app headers");
+  assertHeader(appHeaders, "Content-Security-Policy", expectedCsp, "vercel app headers");
   assertHeader(appHeaders, "Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload", "vercel app headers");
 };
 
