@@ -1127,6 +1127,7 @@ const assertFirebaseAppCheckIsConfigurable = () => {
 const assertReleaseCheckScriptExists = () => {
   const packageJson = readJsonFile("package.json");
   const readme = readFileSync(join(root, "README.md"), "utf8");
+  const ciWorkflow = readFileSync(join(root, ".github", "workflows", "ci.yml"), "utf8");
   const releaseScript = packageJson.scripts?.["check:release"] || "";
 
   const requiredCommands = [
@@ -1152,6 +1153,10 @@ const assertReleaseCheckScriptExists = () => {
       failures.push(`release check documentation is missing in README.md: ${snippet}`);
     }
   });
+
+  if (!ciWorkflow.includes("npm run check:release")) {
+    failures.push("CI workflow does not use the release check script: .github/workflows/ci.yml");
+  }
 };
 
 const assertSlugAvailabilityChecksIgnoreStaleResponses = () => {

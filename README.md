@@ -76,13 +76,7 @@ O check de bundle roda depois do build e impede crescimento excessivo de JS/CSS 
 A cada push ou pull request para a branch principal, o GitHub Actions executa automaticamente:
 
 - Instalacao reproduzivel com `npm ci`
-- Testes com `npm test`
-- Analise de codigo com `npm run lint`
-- Check de producao com `npm run check:production`
-- Validacao de hosting com `npm run check:hosting`
-- Build de producao com `npm run build`
-- Budget de bundle com `npm run check:bundle`
-- Portao local equivalente com `npm run check:release`
+- Portao de release com `npm run check:release`, incluindo lint, check de producao, testes, hosting, build e bundle budget
 
 ## Firebase
 

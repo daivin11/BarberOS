@@ -28,20 +28,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
-
-      - name: Run lint
-        run: npm run lint
-
-      - name: Run production checklist
-        run: npm run check:production
-
-      - name: Validate hosting configuration
-        run: npm run check:hosting
-
-      - name: Build application
-        run: npm run build
-
-      - name: Check bundle budget
-        run: npm run check:bundle
+      - name: Run release checks
+        run: npm run check:release
