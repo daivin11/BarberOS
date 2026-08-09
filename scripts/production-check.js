@@ -827,6 +827,10 @@ const assertServiceContractIsBounded = () => {
     [servicesPage, "src/pages/Services.jsx", "aria-busy={editingServiceSaving ? \"true\" : \"false\"}"],
     [servicesPage, "src/pages/Services.jsx", "aria-busy={archivingService ? \"true\" : \"false\"}"],
     [servicesPage, "src/pages/Services.jsx", "aria-busy={restoringServiceId === service.id ? \"true\" : \"false\"}"],
+    [servicesPage, "src/pages/Services.jsx", "inputMode=\"decimal\""],
+    [servicesPage, "src/pages/Services.jsx", "step=\"0.01\""],
+    [servicesPage, "src/pages/Services.jsx", "aria-label=\"Preco do servico\""],
+    [servicesPage, "src/pages/Services.jsx", "aria-label=\"Duracao do servico\""],
     [serviceUtils, "src/utils/services.js", "normalizeServiceNameKey"],
     [serviceUtils, "src/utils/services.js", "findDuplicateServiceByName"],
     [serviceUtils, "src/utils/services.js", "getServiceCatalogPrice"],
@@ -902,6 +906,11 @@ const assertBarberContractIsBounded = () => {
     [barbersPage, "src/pages/Barbers.jsx", "onError={(event) =>"],
     [barbersPage, "src/pages/Barbers.jsx", "event.currentTarget.style.display = \"none\""],
     [barbersPage, "src/pages/Barbers.jsx", "overflow-hidden rounded-3xl"],
+    [barbersPage, "src/pages/Barbers.jsx", "type=\"url\""],
+    [barbersPage, "src/pages/Barbers.jsx", "inputMode=\"url\""],
+    [barbersPage, "src/pages/Barbers.jsx", "autoComplete=\"url\""],
+    [barbersPage, "src/pages/Barbers.jsx", "autoCapitalize=\"none\""],
+    [barbersPage, "src/pages/Barbers.jsx", "spellCheck={false}"],
     [barberUtils, "src/utils/barbers.js", "normalizeBarberNameKey"],
     [barberUtils, "src/utils/barbers.js", "findDuplicateBarberByName"],
     [barberUtilsTest, "tests/barbers.test.js", "finds duplicate active barbers"],
@@ -1462,6 +1471,9 @@ const assertClientActionsHaveSubmitGuards = () => {
     [clientsPage, "src/pages/Clients.jsx", "aria-live=\"polite\""],
     [clientsPage, "src/pages/Clients.jsx", "aria-busy={savingClient ? \"true\" : \"false\"}"],
     [clientsPage, "src/pages/Clients.jsx", "aria-busy={archivingClient ? \"true\" : \"false\"}"],
+    [clientsPage, "src/pages/Clients.jsx", "type=\"search\""],
+    [clientsPage, "src/pages/Clients.jsx", "aria-label=\"Buscar cliente por nome ou telefone\""],
+    [clientsPage, "src/pages/Clients.jsx", "autoComplete=\"off\""],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {

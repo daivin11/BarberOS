@@ -300,8 +300,10 @@ export default function Services({
               <input
                 className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
                 type="number"
+                inputMode="decimal"
                 min="0"
                 max={SERVICE_LIMITS.priceMax}
+                step="0.01"
                 placeholder="R$"
                 value={servicePrice}
                 onChange={(e) => setServicePrice(e.target.value)}
@@ -491,21 +493,26 @@ export default function Services({
               <input
                 className="w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 outline-none"
                 value={editName}
+                aria-label="Nome do servico"
                 onChange={(e) => setEditName(e.target.value)}
                 placeholder="Nome do servico"
               />
               <input
                 className="w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 outline-none"
                 type="number"
+                inputMode="decimal"
                 min="0"
                 max={SERVICE_LIMITS.priceMax}
+                step="0.01"
                 value={editPrice}
+                aria-label="Preco do servico"
                 onChange={(e) => setEditPrice(e.target.value)}
                 placeholder="Preco"
               />
               <select
                 className="w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 outline-none"
                 value={editDuration}
+                aria-label="Duracao do servico"
                 onChange={(e) => setEditDuration(e.target.value)}
               >
                 {SERVICE_DURATION_OPTIONS.map((duration) => (

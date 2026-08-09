@@ -276,6 +276,9 @@ export default function Clients({ clients, archivedClients = [], addClient, upda
             </div>
             <input
               className="w-full rounded-2xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm outline-none transition placeholder:text-gray-500 focus:border-indigo-500 lg:max-w-xs"
+              type="search"
+              aria-label="Buscar cliente por nome ou telefone"
+              autoComplete="off"
               placeholder="Buscar cliente"
               value={search}
               onChange={(event) => setSearch(event.target.value)}

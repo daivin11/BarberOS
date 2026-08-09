@@ -322,6 +322,11 @@ export default function Barbers({
               <span className="mb-2 block text-sm font-medium text-gray-300">Avatar</span>
               <input
                 className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-4 outline-none transition focus:border-indigo-500"
+                type="url"
+                inputMode="url"
+                autoComplete="url"
+                autoCapitalize="none"
+                spellCheck={false}
                 placeholder="URL da imagem opcional"
                 value={avatar}
                 maxLength={PROFILE_LIMITS.urlMax}
