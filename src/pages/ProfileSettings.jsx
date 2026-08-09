@@ -259,6 +259,7 @@ export default function ProfileSettings({ workspaceData = {} }) {
                 <input
                   value={barbershopName}
                   maxLength={PROFILE_LIMITS.nameMax}
+                  autoComplete="organization"
                   onChange={(event) => setBarbershopName(event.target.value)}
                   className="mt-2 w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="Ex: Barbearia Central"
@@ -272,6 +273,9 @@ export default function ProfileSettings({ workspaceData = {} }) {
                   <input
                     value={slug}
                     maxLength={PROFILE_LIMITS.slugMax}
+                    inputMode="url"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     onBlur={handleSlugBlur}
                     onChange={handleSlugChange}
                     className="min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-gray-500"
@@ -302,6 +306,8 @@ export default function ProfileSettings({ workspaceData = {} }) {
                 <input
                   value={phone}
                   maxLength={PROFILE_LIMITS.phoneMax}
+                  inputMode="tel"
+                  autoComplete="tel"
                   onChange={(event) => setPhone(event.target.value)}
                   className="mt-2 w-full rounded-3xl border border-gray-800 bg-gray-950 p-4 text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                   placeholder="(11) 98765-4321"
@@ -322,8 +328,13 @@ export default function ProfileSettings({ workspaceData = {} }) {
               <label className="block">
                 <span className="text-sm text-gray-300">Logo URL opcional</span>
                 <input
+                  type="url"
                   value={logoUrl}
                   maxLength={PROFILE_LIMITS.urlMax}
+                  inputMode="url"
+                  autoComplete="url"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   onChange={(event) => {
                     setLogoUrl(event.target.value);
                     setSaveError("");
