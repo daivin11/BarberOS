@@ -11,6 +11,7 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const hasError = Boolean(errorMessage);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -83,6 +84,8 @@ export default function Login() {
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-3 outline-none transition focus:border-indigo-500"
                     type="email"
                     autoComplete="email"
+                    aria-invalid={hasError ? "true" : "false"}
+                    aria-describedby={hasError ? "login-error" : undefined}
                     placeholder="voce@barbearia.com"
                     value={email}
                     onChange={(event) => {
@@ -96,6 +99,8 @@ export default function Login() {
                   <input
                     type="password"
                     autoComplete="current-password"
+                    aria-invalid={hasError ? "true" : "false"}
+                    aria-describedby={hasError ? "login-error" : undefined}
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-3 outline-none transition focus:border-indigo-500"
                     placeholder="Sua senha"
                     value={password}
@@ -108,6 +113,7 @@ export default function Login() {
 
                 {errorMessage && (
                   <div
+                    id="login-error"
                     className="rounded-2xl border border-red-700 bg-red-950/70 p-3 text-sm text-red-200"
                     role="alert"
                     aria-live="assertive"

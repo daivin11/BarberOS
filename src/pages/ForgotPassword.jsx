@@ -24,6 +24,8 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const hasError = Boolean(errorMessage);
+  const hasStatus = Boolean(successMessage);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -93,6 +95,10 @@ export default function ForgotPassword() {
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                     type="email"
                     autoComplete="email"
+                    aria-invalid={hasError ? "true" : "false"}
+                    aria-describedby={
+                      hasError ? "forgot-password-error" : hasStatus ? "forgot-password-status" : undefined
+                    }
                     placeholder="voce@barbearia.com"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
@@ -101,6 +107,7 @@ export default function ForgotPassword() {
 
                 {successMessage && (
                   <div
+                    id="forgot-password-status"
                     className="rounded-2xl border border-emerald-700 bg-emerald-950/70 p-4 text-sm text-emerald-300"
                     role="status"
                     aria-live="polite"
@@ -111,6 +118,7 @@ export default function ForgotPassword() {
 
                 {errorMessage && (
                   <div
+                    id="forgot-password-error"
                     className="rounded-2xl border border-red-700 bg-red-950/70 p-4 text-sm text-red-300"
                     role="alert"
                     aria-live="assertive"

@@ -12,6 +12,7 @@ export default function Register() {
   const [errorMessage, setErrorMessage] = useState("");
   const { register } = useAuth();
   const navigate = useNavigate();
+  const hasError = Boolean(errorMessage);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -83,6 +84,8 @@ export default function Register() {
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-3 outline-none transition focus:border-indigo-500"
                     type="email"
                     autoComplete="email"
+                    aria-invalid={hasError ? "true" : "false"}
+                    aria-describedby={hasError ? "register-error" : undefined}
                     placeholder="voce@barbearia.com"
                     value={email}
                     onChange={(event) => {
@@ -96,6 +99,8 @@ export default function Register() {
                   <input
                     type="password"
                     autoComplete="new-password"
+                    aria-invalid={hasError ? "true" : "false"}
+                    aria-describedby={hasError ? "register-error" : undefined}
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-3 outline-none transition focus:border-indigo-500"
                     placeholder="Crie uma senha"
                     value={password}
@@ -110,6 +115,8 @@ export default function Register() {
                   <input
                     type="password"
                     autoComplete="new-password"
+                    aria-invalid={hasError ? "true" : "false"}
+                    aria-describedby={hasError ? "register-error" : undefined}
                     className="w-full rounded-2xl border border-gray-800 bg-gray-950 p-3 outline-none transition focus:border-indigo-500"
                     placeholder="Repita a senha"
                     value={confirmPassword}
@@ -122,6 +129,7 @@ export default function Register() {
 
                 {errorMessage && (
                   <div
+                    id="register-error"
                     className="rounded-2xl border border-red-700 bg-red-950/70 p-3 text-sm text-red-200"
                     role="alert"
                     aria-live="assertive"
