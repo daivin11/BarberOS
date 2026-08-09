@@ -485,17 +485,19 @@ export default function ProfileSettings({ workspaceData = {} }) {
             <p className="text-sm uppercase tracking-[0.3em] text-gray-500">Previa</p>
             <div className="mt-5 rounded-3xl border border-gray-800 bg-gray-950 p-5">
               <div className="mb-4 flex items-center gap-3">
-                {logoUrl.trim() ? (
-                  <img
-                    src={logoUrl.trim()}
-                    alt=""
-                    className="h-14 w-14 rounded-2xl border border-gray-800 bg-gray-900 object-cover"
-                  />
-                ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-800 bg-gray-900 text-lg font-black text-indigo-200">
-                    {(barbershopName.trim() || "B").slice(0, 1).toUpperCase()}
-                  </div>
-                )}
+                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 text-lg font-black text-indigo-200">
+                  <span>{(barbershopName.trim() || "B").slice(0, 1).toUpperCase()}</span>
+                  {logoUrl.trim() ? (
+                    <img
+                      src={logoUrl.trim()}
+                      alt=""
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                      className="absolute h-14 w-14 rounded-2xl object-cover"
+                    />
+                  ) : null}
+                </div>
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Identidade visual</p>
                   <p className="mt-1 truncate text-sm text-gray-300">

@@ -445,6 +445,9 @@ const assertProfileWritesAreAtomic = () => {
     [profileSettings, "src/pages/ProfileSettings.jsx", "PROFILE_LIMITS.urlMax"],
     [profileSettings, "src/pages/ProfileSettings.jsx", "trimmedLogoUrl"],
     [profileSettings, "src/pages/ProfileSettings.jsx", "Logo URL opcional"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "onError={(event) =>"],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "event.currentTarget.style.display = \"none\""],
+    [profileSettings, "src/pages/ProfileSettings.jsx", "overflow-hidden rounded-2xl"],
   ];
 
   profileMediaSnippets.forEach(([fileContent, fileName, snippet]) => {
