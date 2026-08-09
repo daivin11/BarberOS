@@ -6,7 +6,7 @@ import { createClientPhoneKeyId, createClientSnapshot, normalizeClientInput, val
 import { APPOINTMENT_STATUS } from "../utils/appointments";
 import { createAppointmentDateWindow, isDateWithinAppointmentWindow } from "../utils/appointmentWindow";
 import { createBookingConfirmation, getBookingConfirmationLines } from "../utils/bookingConfirmation";
-import { formatLocalDate } from "../utils/date";
+import { formatDateBR, formatLocalDate } from "../utils/date";
 import { formatCurrencyBRL, formatDuration, pluralize } from "../utils/format";
 import { isValidBrazilianPhone, normalizePhone } from "../utils/phone";
 import { createPrivacyConsentSnapshot, isPrivacyConsentAccepted } from "../utils/privacyConsent";
@@ -818,7 +818,7 @@ export default function PublicBooking() {
                     <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-sm uppercase tracking-[0.25em] text-gray-500">3. Escolha o horario</p>
-                        <p className="mt-2 text-base text-white">Horarios disponiveis para {new Date(date).toLocaleDateString("pt-BR")}</p>
+                        <p className="mt-2 text-base text-white">Horarios disponiveis para {formatDateBR(date)}</p>
                       </div>
                       <span className="rounded-full bg-gray-900 px-3 py-1 text-xs uppercase tracking-[0.2em] text-gray-400">
                         {availabilityLabel}

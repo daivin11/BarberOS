@@ -1785,12 +1785,16 @@ const assertTelemetryRedactsPersonalData = () => {
 const assertDateUtilsAvoidInvalidOutput = () => {
   const dateUtils = readFileSync(join(root, "src", "utils", "date.js"), "utf8");
   const dateTest = readFileSync(join(root, "tests", "date.test.js"), "utf8");
+  const publicBooking = readFileSync(join(root, "src", "pages", "PublicBooking.jsx"), "utf8");
 
   const requiredSnippets = [
     [dateUtils, "src/utils/date.js", "Number.isNaN(value.getTime())"],
     [dateUtils, "src/utils/date.js", "if (!year || !month || !day) return new Date()"],
+    [dateUtils, "src/utils/date.js", "formatDateBR"],
     [dateTest, "tests/date.test.js", "does not return NaN date strings"],
     [dateTest, "tests/date.test.js", "falls back to a valid date"],
+    [dateTest, "tests/date.test.js", "formats local date strings without UTC day shifts"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "formatDateBR(date)"],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {

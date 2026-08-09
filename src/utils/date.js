@@ -16,6 +16,9 @@ export const parseLocalDate = (date) => {
   return new Date(year, (month || 1) - 1, day || 1);
 };
 
+export const formatDateBR = (date) =>
+  parseLocalDate(date).toLocaleDateString("pt-BR");
+
 export const addLocalDays = (date, days) => {
   const nextDate = parseLocalDate(date);
   nextDate.setDate(nextDate.getDate() + days);

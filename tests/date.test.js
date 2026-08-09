@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { addLocalDays, formatLocalDate, parseLocalDate } from "../src/utils/date.js";
+import { addLocalDays, formatDateBR, formatLocalDate, parseLocalDate } from "../src/utils/date.js";
 
 describe("date utils", () => {
   it("formats valid local dates", () => {
@@ -23,5 +23,9 @@ describe("date utils", () => {
 
   it("adds days using local date strings", () => {
     assert.equal(addLocalDays("2026-08-05", 2), "2026-08-07");
+  });
+
+  it("formats local date strings without UTC day shifts", () => {
+    assert.equal(formatDateBR("2026-08-05"), "05/08/2026");
   });
 });
