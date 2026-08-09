@@ -359,6 +359,14 @@ const assertTrialExpiredUsesBillingDomain = () => {
     failures.push("billing domain helper is missing blocked copy or renewal payload creation: src/utils/billing.js");
   }
 
+  if (!billing.includes("A reativacao acontece assim que a continuidade da conta for confirmada.")) {
+    failures.push("blocked billing copy does not explain renewal without exposing internals: src/utils/billing.js");
+  }
+
+  if (/gateway de pagamento ainda nao foi implementado|liberacao continua sendo operacional/i.test(`${trialExpired}\n${billing}`)) {
+    failures.push("blocked billing screen exposes internal payment implementation details: src/pages/TrialExpired.jsx or src/utils/billing.js");
+  }
+
   const requiredPlanSnippets = [
     [trialExpired, "src/pages/TrialExpired.jsx", "BILLING_PLANS"],
     [trialExpired, "src/pages/TrialExpired.jsx", "selectedPlan"],

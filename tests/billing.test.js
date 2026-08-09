@@ -28,6 +28,8 @@ describe("billing utils", () => {
     assert.match(pastDue.title, /pendencia/);
     assert.match(cancelled.actionLabel, /reativacao/);
     assert.match(expired.actionLabel, /renovacao/);
+    assert.match(expired.nextStepDescription, /continuidade da conta/);
+    assert.doesNotMatch(expired.nextStepDescription, /gateway|nao foi implementado|operacional/);
   });
 
   it("creates the renewal request payload allowed by Firestore rules", () => {

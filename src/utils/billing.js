@@ -90,7 +90,7 @@ export const getBlockedAccountContent = (accountAccess = {}) => {
         referenceLabel: "Fim do trial",
         nextStepTitle: "Solicite a renovacao da sua conta",
         nextStepDescription:
-          "Clique em Falar no WhatsApp para conversar com o suporte ou envie uma solicitacao interna para registrarmos seu interesse. O gateway de pagamento ainda nao foi implementado, entao a liberacao continua sendo operacional.",
+          "Fale com o suporte para escolher a melhor forma de continuar ou envie uma solicitacao interna para registrarmos seu interesse. A reativacao acontece assim que a continuidade da conta for confirmada.",
         actionLabel: "Solicitar renovacao",
       };
   }
