@@ -1396,6 +1396,8 @@ export default function AdminApp() {
   const routeAuth = { user, profile, authLoading, profileLoading };
   const dataErrorMessages = Object.values(dataErrors);
   const dataWarningMessages = Object.values(dataWarnings);
+  const additionalDataErrorCount = Math.max(0, dataErrorMessages.length - 1);
+  const additionalDataWarningCount = Math.max(0, dataWarningMessages.length - 1);
 
   const renderRoute = () => {
     switch (location.pathname) {
@@ -1568,7 +1570,14 @@ export default function AdminApp() {
             aria-live="assertive"
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p>{dataErrorMessages[0]}</p>
+              <p>
+                {dataErrorMessages[0]}
+                {additionalDataErrorCount > 0 && (
+                  <span className="ml-2 font-semibold">
+                    +{additionalDataErrorCount} alerta(s) de sincronizacao.
+                  </span>
+                )}
+              </p>
               <button
                 type="button"
                 onClick={retryDataSync}
@@ -1586,7 +1595,14 @@ export default function AdminApp() {
             role="status"
             aria-live="polite"
           >
-            {dataWarningMessages[0]}
+            <p>
+              {dataWarningMessages[0]}
+              {additionalDataWarningCount > 0 && (
+                <span className="ml-2 font-semibold">
+                  +{additionalDataWarningCount} aviso(s) de limite.
+                </span>
+              )}
+            </p>
           </div>
         )}
 
