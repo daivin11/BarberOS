@@ -38,6 +38,9 @@ export default function AppointmentCard({
   const [statusLoading, setStatusLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [editError, setEditError] = useState("");
+  const [cancelError, setCancelError] = useState("");
   const [editClientId, setEditClientId] = useState(getAppointmentClientId(appointment));
   const [editServiceId, setEditServiceId] = useState(getAppointmentServiceId(appointment));
   const [editBarberId, setEditBarberId] = useState(getAppointmentBarberId(appointment));
@@ -112,9 +115,14 @@ export default function AppointmentCard({
     if (!onStatusChange || cancelLoading) return;
 
     setCancelLoading(true);
+    setCancelError("");
     try {
       const success = await onStatusChange(appointment.id, APPOINTMENT_STATUS.cancelled);
-      if (success !== false) setShowCancelModal(false);
+      if (success !== false) {
+        setShowCancelModal(false);
+      } else {
+        setCancelError("Nao foi possivel cancelar este agendamento. Tente novamente.");
+      }
     } finally {
       setCancelLoading(false);
     }
@@ -124,8 +132,12 @@ export default function AppointmentCard({
     if (!onStatusChange || statusLoading || isTerminal || nextStatus === currentStatus) return;
 
     setStatusLoading(true);
+    setActionError("");
     try {
-      await onStatusChange(appointment.id, nextStatus);
+      const success = await onStatusChange(appointment.id, nextStatus);
+      if (success === false) {
+        setActionError("Nao foi possivel atualizar o status deste agendamento.");
+      }
     } finally {
       setStatusLoading(false);
     }
@@ -135,6 +147,7 @@ export default function AppointmentCard({
     if (!onUpdateAppointment || !canSaveEdit || editLoading) return;
 
     setEditLoading(true);
+    setEditError("");
     try {
       const success = await onUpdateAppointment(appointment.id, {
         clientId: editClientId,
@@ -143,7 +156,11 @@ export default function AppointmentCard({
         date: editDate,
         time: editTime,
       });
-      if (success) setShowEditModal(false);
+      if (success) {
+        setShowEditModal(false);
+      } else {
+        setEditError("Nao foi possivel salvar a alteracao. Escolha outro horario ou tente novamente.");
+      }
     } finally {
       setEditLoading(false);
     }
@@ -225,6 +242,7 @@ export default function AppointmentCard({
                 type="button"
                 onClick={() => {
                   resetEditForm();
+                  setEditError("");
                   setShowEditModal(true);
                 }}
                 className="rounded-2xl border border-indigo-500 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-500/15"
@@ -246,7 +264,10 @@ export default function AppointmentCard({
             {onStatusChange && (
               <button
                 type="button"
-                onClick={() => setShowCancelModal(true)}
+                onClick={() => {
+                  setCancelError("");
+                  setShowCancelModal(true);
+                }}
                 disabled={isTerminal || statusLoading}
                 className="rounded-2xl border border-red-700 bg-red-950/70 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-900/80 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -255,6 +276,11 @@ export default function AppointmentCard({
             )}
           </div>
         </div>
+        {actionError && (
+          <p className="mt-4 rounded-2xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200" role="alert" aria-live="assertive">
+            {actionError}
+          </p>
+        )}
       </article>
 
       {showEditModal && (
@@ -378,6 +404,11 @@ export default function AppointmentCard({
                 </label>
               </div>
             </div>
+            {editError && (
+              <p className="mt-5 rounded-2xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200" role="alert" aria-live="assertive">
+                {editError}
+              </p>
+            )}
 
             <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
@@ -414,6 +445,11 @@ export default function AppointmentCard({
             <p className="mt-3 text-sm text-gray-400">
 O status sera atualizado para cancelado, este horario sera liberado e a reserva nao podera ser reativada pelo painel.
             </p>
+            {cancelError && (
+              <p className="mt-5 rounded-2xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200" role="alert" aria-live="assertive">
+                {cancelError}
+              </p>
+            )}
 
             <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
