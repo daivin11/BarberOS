@@ -746,8 +746,10 @@ export default function PublicBooking() {
                 </label>
                 <label className="flex items-start gap-3 rounded-3xl border border-gray-800 bg-gray-950 p-4 text-sm text-gray-300">
                   <input
+                    id="privacy-consent"
                     type="checkbox"
                     checked={privacyAccepted}
+                    aria-describedby="privacy-consent-copy"
                     onChange={(event) => {
                       setPrivacyAccepted(event.target.checked);
                       setFormError("");
@@ -755,7 +757,7 @@ export default function PublicBooking() {
                     }}
                     className="mt-1 h-4 w-4 rounded border-gray-700 bg-gray-900 text-indigo-500"
                   />
-                  <span className="leading-6">
+                  <span id="privacy-consent-copy" className="leading-6">
                     Autorizo a barbearia a usar meu nome e telefone para solicitar, confirmar e acompanhar este agendamento.
                   </span>
                 </label>
