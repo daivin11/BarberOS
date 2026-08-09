@@ -1124,6 +1124,36 @@ const assertFirebaseAppCheckIsConfigurable = () => {
   });
 };
 
+const assertReleaseCheckScriptExists = () => {
+  const packageJson = readJsonFile("package.json");
+  const readme = readFileSync(join(root, "README.md"), "utf8");
+  const releaseScript = packageJson.scripts?.["check:release"] || "";
+
+  const requiredCommands = [
+    "npm run lint",
+    "npm run check:production",
+    "npm test",
+    "npm run check:hosting",
+    "npm run build",
+    "npm run check:bundle",
+  ];
+
+  requiredCommands.forEach((command) => {
+    if (!releaseScript.includes(command)) {
+      failures.push(`release check script is missing command in package.json: ${command}`);
+    }
+  });
+
+  [
+    "npm run check:release",
+    "lint, check de producao, testes, check de hosting, build e budget de bundle",
+  ].forEach((snippet) => {
+    if (!readme.includes(snippet)) {
+      failures.push(`release check documentation is missing in README.md: ${snippet}`);
+    }
+  });
+};
+
 const assertSlugAvailabilityChecksIgnoreStaleResponses = () => {
   const dashboard = readFileSync(join(root, "src", "pages", "Dashboard.jsx"), "utf8");
   const profileSetup = readFileSync(join(root, "src", "pages", "ProfileSetup.jsx"), "utf8");
@@ -1785,6 +1815,7 @@ assertAppointmentsUseDateWindow();
 assertAvailabilityContractIsBounded();
 assertBarberContractIsBounded();
 assertFirebaseAppCheckIsConfigurable();
+assertReleaseCheckScriptExists();
 assertSlugAvailabilityChecksIgnoreStaleResponses();
 assertWorkspaceDataExportExists();
 assertPublicLinkReadinessGuardsSharing();

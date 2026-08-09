@@ -11,6 +11,7 @@
     "check:production": "node scripts/production-check.js",
     "check:hosting": "node scripts/hosting-check.js",
     "check:bundle": "node scripts/bundle-budget.js",
+    "check:release": "npm run lint && npm run check:production && npm test && npm run check:hosting && npm run build && npm run check:bundle",
     "preview": "vite preview"
   },
   "dependencies": {
