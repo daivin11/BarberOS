@@ -36,6 +36,26 @@ describe("auth action settings", () => {
     );
   });
 
+  it("rejects insecure public action URLs", () => {
+    assert.equal(
+      getPasswordResetActionCodeSettings({
+        origin: "https://barberos.app",
+        configuredActionUrl: "http://barberos.app",
+      }).url,
+      "https://barberos.app/login"
+    );
+  });
+
+  it("allows localhost action URLs for development", () => {
+    assert.equal(
+      getPasswordResetActionCodeSettings({
+        origin: "https://barberos.app",
+        configuredActionUrl: "http://localhost:5173",
+      }).url,
+      "http://localhost:5173/login"
+    );
+  });
+
   it("does not accept an absolute continue path", () => {
     assert.equal(
       getPasswordResetActionCodeSettings({

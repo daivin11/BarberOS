@@ -13,6 +13,9 @@ const getConfiguredActionUrl = () => {
   return import.meta.env?.VITE_AUTH_ACTION_URL || "";
 };
 
+const isLocalhostUrl = (url) =>
+  ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+
 const getSafeBaseUrl = (...candidates) => {
   for (const candidate of candidates) {
     const value = String(candidate || "").trim();
@@ -20,7 +23,9 @@ const getSafeBaseUrl = (...candidates) => {
 
     try {
       const url = new URL(value);
-      if (["http:", "https:"].includes(url.protocol)) return url.origin;
+      if (url.protocol === "https:" || (url.protocol === "http:" && isLocalhostUrl(url))) {
+        return url.origin;
+      }
     } catch {
       // Ignore invalid configured origins and try the next candidate.
     }

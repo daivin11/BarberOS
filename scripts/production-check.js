@@ -650,9 +650,12 @@ const assertAuthActionUrlsAreSafe = () => {
 
   const requiredSnippets = [
     [authActions, "src/utils/authActions.js", "getSafeBaseUrl"],
-    [authActions, "src/utils/authActions.js", "[\"http:\", \"https:\"].includes(url.protocol)"],
+    [authActions, "src/utils/authActions.js", "url.protocol === \"https:\""],
+    [authActions, "src/utils/authActions.js", "isLocalhostUrl"],
     [authActions, "src/utils/authActions.js", "return url.origin"],
     [authActionsTest, "tests/authActions.test.js", "ignores invalid configured action URLs"],
+    [authActionsTest, "tests/authActions.test.js", "rejects insecure public action URLs"],
+    [authActionsTest, "tests/authActions.test.js", "allows localhost action URLs for development"],
     [authActionsTest, "tests/authActions.test.js", "javascript:alert(1)"],
     [authForms, "src/utils/authForms.js", "validateLoginForm"],
     [authForms, "src/utils/authForms.js", "validateRegisterForm"],
