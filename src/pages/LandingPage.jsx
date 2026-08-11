@@ -117,23 +117,160 @@ const screenshots = [
   {
     title: "Dashboard operacional",
     description: "Resumo da barbearia, agenda ativa, clientes e faturamento em uma visao rapida.",
-    image: "/screenshots/dashboard.png",
+    type: "dashboard",
   },
   {
     title: "Agendamento publico",
     description: "Pagina para clientes escolherem barbeiro, servico, data e horario disponivel.",
-    image: "/screenshots/agendamento.png",
+    type: "booking",
   },
   {
     title: "Configuracao profissional",
     description: "Perfil publico, link personalizado e estrutura pronta para operacao multi-barbeiro.",
-    image: "/screenshots/config.png",
+    type: "setup",
   },
 ];
 
+function HeroProductPreview() {
+  return (
+    <div aria-hidden="true" className="absolute inset-y-16 right-0 hidden w-[58%] xl:block">
+      <div className="absolute right-[-7rem] top-8 h-[34rem] w-[48rem] rounded-[2rem] border border-white/10 bg-gray-900/80 p-6 shadow-2xl shadow-black/50">
+        <div className="flex items-center justify-between border-b border-white/10 pb-5">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">Agenda de hoje</p>
+            <p className="mt-2 text-2xl font-black text-white">Barbearia ativa</p>
+          </div>
+          <div className="rounded-2xl bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-200">19 horarios</div>
+        </div>
+        <div className="mt-6 grid grid-cols-[0.95fr_1.05fr] gap-5">
+          <div className="space-y-4">
+            {[
+              ["09:00", "Gabriel", "Corte + barba", "Confirmado"],
+              ["10:30", "Carlos", "Corte", "Pendente"],
+              ["14:00", "Rafael", "Barba", "Confirmado"],
+            ].map(([time, barber, service, status]) => (
+              <div key={`${time}-${barber}`} className="rounded-3xl border border-white/10 bg-gray-950/80 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-black text-white">{time}</span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${status === "Confirmado" ? "bg-emerald-400/10 text-emerald-200" : "bg-amber-400/10 text-amber-200"}`}>
+                    {status}
+                  </span>
+                </div>
+                <p className="mt-3 font-bold text-white">{barber}</p>
+                <p className="text-sm text-gray-400">{service}</p>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-[1.5rem] border border-indigo-300/20 bg-indigo-500/10 p-5">
+            <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Link publico</p>
+            <h3 className="mt-3 text-2xl font-black text-white">Agendar horario</h3>
+            <div className="mt-5 rounded-2xl border border-emerald-400/25 bg-emerald-400/10 p-4 text-sm font-semibold text-emerald-100">
+              Solicitacao recebida. Confirme pelo WhatsApp.
+            </div>
+            <div className="mt-5 space-y-3">
+              {["Seu nome", "Telefone com DDD", "Corte + barba", "Hoje, 15:30"].map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-gray-950 px-4 py-4 text-sm text-gray-400">
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 rounded-2xl bg-white px-4 py-4 text-center text-sm font-black text-gray-950">
+              Solicitar agendamento
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductPreview({ type }) {
+  if (type === "booking") {
+    return (
+      <div className="h-full bg-gray-950 p-4">
+        <div className="rounded-2xl border border-white/10 bg-gray-900 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[0.6rem] uppercase tracking-[0.28em] text-indigo-200">Agendamento online</p>
+              <h4 className="mt-2 text-lg font-black text-white">Zyron Barbearia</h4>
+            </div>
+            <span className="rounded-full bg-white px-3 py-1 text-[0.62rem] font-black text-gray-950">3 servicos</span>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {["Gabriel", "Carlos"].map((barber, index) => (
+              <div key={barber} className={`rounded-2xl border p-3 ${index === 0 ? "border-indigo-400 bg-indigo-500/20" : "border-white/10 bg-gray-950"}`}>
+                <p className="text-sm font-bold text-white">{barber}</p>
+                <p className="mt-1 text-xs text-gray-400">Corte fino</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {["09:00", "10:30", "15:30"].map((time) => (
+              <span key={time} className="rounded-xl bg-gray-950 px-3 py-2 text-center text-xs font-bold text-gray-200">{time}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "setup") {
+    return (
+      <div className="h-full bg-gray-950 p-4">
+        <div className="grid h-full grid-cols-[1.2fr_0.8fr] gap-3">
+          <div className="rounded-2xl border border-white/10 bg-gray-900 p-4">
+            <p className="text-[0.6rem] uppercase tracking-[0.28em] text-indigo-200">Perfil publico</p>
+            <div className="mt-4 space-y-3">
+              {["Nome da barbearia", "Slug publico", "Telefone"].map((label) => (
+                <div key={label} className="rounded-xl bg-gray-950 px-3 py-3 text-xs text-gray-400">{label}</div>
+              ))}
+              <div className="h-20 rounded-xl bg-gray-950 px-3 py-3 text-xs text-gray-400">Bio da barbearia</div>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-gray-900 p-4">
+            <p className="text-[0.6rem] uppercase tracking-[0.28em] text-indigo-200">Preview</p>
+            <div className="mt-4 rounded-2xl bg-gray-950 p-4">
+              <div className="h-9 w-9 rounded-xl bg-indigo-500" />
+              <p className="mt-3 text-sm font-black text-white">Zyron Barbearia</p>
+              <p className="mt-2 text-xs leading-5 text-gray-400">Link pronto para clientes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full bg-gray-950 p-4">
+      <div className="grid h-full grid-cols-[1fr_0.55fr] gap-3">
+        <div className="rounded-2xl border border-white/10 bg-gray-900 p-4">
+          <p className="text-[0.6rem] uppercase tracking-[0.28em] text-indigo-200">Dashboard</p>
+          <h4 className="mt-2 text-lg font-black text-white">Operacao do dia</h4>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            {["Agenda", "Clientes", "Servicos", "Receita"].map((label) => (
+              <div key={label} className="rounded-2xl bg-gray-950 p-3">
+                <p className="text-xl font-black text-white">{label === "Receita" ? "R$ 1.060" : "19"}</p>
+                <p className="mt-1 text-xs text-gray-400">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-3">
+          {["09:00", "10:30", "14:00"].map((time) => (
+            <div key={time} className="rounded-2xl border border-white/10 bg-gray-900 p-3">
+              <p className="font-black text-white">{time}</p>
+              <p className="text-xs text-gray-400">Confirmado</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-gray-950 text-white">
+    <main className="min-h-screen w-full overflow-x-hidden bg-[#080b12] text-white">
       <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-gray-950/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-8">
           <a href="#topo" className="flex items-center gap-3">
@@ -169,17 +306,18 @@ export default function LandingPage() {
 
       <section
         id="topo"
-        className="relative flex min-h-[84vh] items-center overflow-hidden bg-cover bg-center px-5 pb-16 pt-32 md:px-8"
-        style={{ backgroundImage: "linear-gradient(90deg, rgba(3,7,18,0.98), rgba(3,7,18,0.9), rgba(3,7,18,0.62)), url('/screenshots/agendamento.png')" }}
+        className="relative flex min-h-[84vh] items-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.16),transparent_30%),linear-gradient(135deg,#080b12_0%,#0d1320_52%,#101624_100%)] px-5 pb-16 pt-32 md:px-8"
       >
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-gray-950 to-transparent" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:72px_72px] opacity-30" />
+        <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-indigo-500/10 to-transparent" />
+        <HeroProductPreview />
         <div className="relative mx-auto w-full max-w-7xl">
-          <div className="max-w-4xl">
+          <div className="max-w-3xl">
             <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-indigo-400/30 bg-indigo-500/10 px-4 py-2 text-sm text-indigo-100 shadow-lg shadow-black/20">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
               Sistema operacional para barbearias modernas
             </div>
-            <h1 className="text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-7xl">
               Controle agenda, equipe e receita em um painel profissional
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-300">
@@ -276,7 +414,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-gray-900/50 px-5 py-20 md:px-8">
+      <section className="bg-[#0d1320] px-5 py-20 md:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
@@ -289,8 +427,10 @@ export default function LandingPage() {
           </div>
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
             {screenshots.map((item) => (
-              <article key={item.title} className="overflow-hidden rounded-3xl border border-gray-800 bg-gray-950">
-                <img src={item.image} alt={item.title} className="aspect-[4/3] w-full object-cover object-top" />
+              <article key={item.title} className="overflow-hidden rounded-3xl border border-white/10 bg-gray-950 shadow-2xl shadow-black/20 transition duration-300 hover:-translate-y-1 hover:border-indigo-400/40">
+                <div className="aspect-[4/3] border-b border-white/10">
+                  <ProductPreview type={item.type} />
+                </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold">{item.title}</h3>
                   <p className="mt-3 text-sm leading-6 text-gray-400">{item.description}</p>
