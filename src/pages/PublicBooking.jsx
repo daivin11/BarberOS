@@ -47,6 +47,7 @@ export default function PublicBooking() {
   const [time, setTime] = useState("");
   const [success, setSuccess] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [slotsRefreshToken, setSlotsRefreshToken] = useState(0);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [bookingConfirmation, setBookingConfirmation] = useState(null);
 
@@ -229,7 +230,7 @@ export default function PublicBooking() {
     return () => {
       isActive = false;
     };
-  }, [barber?.uid, selectedBarber?.id, date]);
+  }, [barber?.uid, selectedBarber?.id, date, slotsRefreshToken]);
 
   const bookAppointment = async () => {
     if (submitLoading) return;
@@ -460,11 +461,13 @@ export default function PublicBooking() {
       trackEvent("public_appointment_requested", { source: "public-booking", action: "book-appointment" });
     } catch (err) {
       reportError(err, { source: "public-booking", action: "book-appointment" });
-      setFormError(
-        err.message === "slot-unavailable"
-          ? "Este horario acabou de ser reservado. Escolha outro horario."
-          : "Erro ao enviar o agendamento. Tente novamente."
-      );
+      if (err.message === "slot-unavailable") {
+        setTime("");
+        setSlotsRefreshToken((currentToken) => currentToken + 1);
+        setFormError("Este horario acabou de ser reservado. Atualizamos a disponibilidade; escolha outro horario.");
+      } else {
+        setFormError("Erro ao enviar o agendamento. Tente novamente.");
+      }
       setBookingConfirmation(null);
     } finally {
       setSubmitLoading(false);
