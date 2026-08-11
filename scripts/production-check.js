@@ -1822,6 +1822,30 @@ const assertDateUtilsAvoidInvalidOutput = () => {
   });
 };
 
+const assertCommercialMvpDocsExist = () => {
+  const readme = readFileSync(join(root, "README.md"), "utf8");
+  const salesPlaybook = readFileSync(join(root, "docs", "mvp-venda-demo.md"), "utf8");
+  const ownerManual = readFileSync(join(root, "docs", "manual-do-dono.md"), "utf8");
+
+  const requiredSnippets = [
+    [readme, "README.md", "docs/mvp-venda-demo.md"],
+    [readme, "README.md", "docs/manual-do-dono.md"],
+    [salesPlaybook, "docs/mvp-venda-demo.md", "3 barbearias piloto"],
+    [salesPlaybook, "docs/mvp-venda-demo.md", "Roteiro de demo de 10 minutos"],
+    [salesPlaybook, "docs/mvp-venda-demo.md", "Nao implemente cobranca automatica antes de alguem topar pagar manualmente"],
+    [salesPlaybook, "docs/mvp-venda-demo.md", "O que nao construir ainda"],
+    [ownerManual, "docs/manual-do-dono.md", "npm run check:release"],
+    [ownerManual, "docs/manual-do-dono.md", "Nao e um problema voce nao saber fazer tudo que foi implementado"],
+    [ownerManual, "docs/manual-do-dono.md", "Codigo sem cliente vira hobby caro"],
+  ];
+
+  requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
+    if (!fileContent.includes(snippet)) {
+      failures.push(`commercial MVP guidance is missing in ${fileName}: ${snippet}`);
+    }
+  });
+};
+
 for (const check of checks) {
   for (const filePath of check.paths.flatMap(listFiles)) {
     if (!checkedExtensions.has(getExtension(filePath))) continue;
@@ -1893,6 +1917,7 @@ assertAppBootstrapIsGuarded();
 assertErrorFallbackIsAccessible();
 assertTelemetryRedactsPersonalData();
 assertDateUtilsAvoidInvalidOutput();
+assertCommercialMvpDocsExist();
 
 if (failures.length > 0) {
   console.error("Production check failed:");

@@ -71,6 +71,11 @@ O check de producao bloqueia regressao obvia de marca antiga, alerts, placeholde
 O check de hosting valida fallback SPA, headers de seguranca, cache imutavel de assets e assets publicos de lancamento no Firebase Hosting e Vercel.
 O check de bundle roda depois do build e impede crescimento excessivo de JS/CSS gzipado.
 
+## MVP comercial
+
+- [MVP de venda e demonstracao](docs/mvp-venda-demo.md): roteiro para validar o BarberOS com 3 barbearias piloto, demo de 10 minutos, oferta, objecoes e metricas.
+- [Manual do dono](docs/manual-do-dono.md): comandos essenciais, mapa do projeto e rotina minima para operar sem depender de conhecer todo o codigo.
+
 ## CI
 
 A cada push ou pull request para a branch principal, o GitHub Actions executa automaticamente:
