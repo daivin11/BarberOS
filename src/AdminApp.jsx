@@ -996,6 +996,7 @@ export default function AdminApp() {
       }
 
       const createdAt = new Date();
+      const updatedAt = createdAt;
       const duration = getServiceCatalogDuration(service);
       const startMinutes = timeToMinutes(appointmentTime);
       const endMinutes = startMinutes + duration;
@@ -1041,6 +1042,7 @@ export default function AdminApp() {
         endMinutes,
         status: APPOINTMENT_STATUS.pending,
         createdAt,
+        updatedAt,
         userId: user.uid,
       };
 
@@ -1085,6 +1087,7 @@ export default function AdminApp() {
             endMinutes,
             status: APPOINTMENT_STATUS.pending,
             createdAt,
+            updatedAt,
           });
         });
         transaction.set(appointmentRef, newAppointment);

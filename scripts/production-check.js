@@ -539,6 +539,7 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     "request.resource.data.endMinutes == request.resource.data.startMinutes + request.resource.data.duration",
     "validTimeString(request.resource.data.rootTime)",
     "request.resource.data.createdAt is timestamp",
+    "request.resource.data.updatedAt == request.resource.data.createdAt",
     "request.resource.data.date == resource.data.date",
     "request.resource.data.time == resource.data.time",
     "request.resource.data.startMinutes == resource.data.startMinutes",
@@ -584,8 +585,10 @@ const assertAppointmentRulesValidatePayloadShape = () => {
     [clientsPage, "src/pages/Clients.jsx", "getClientPhone(client)"],
     [adminApp, "src/AdminApp.jsx", "client: createClientSnapshot(client)"],
     [adminApp, "src/AdminApp.jsx", "service: createServiceSnapshot(service)"],
+    [adminApp, "src/AdminApp.jsx", "const updatedAt = createdAt"],
     [publicBooking, "src/pages/PublicBooking.jsx", "client: createClientSnapshot"],
     [publicBooking, "src/pages/PublicBooking.jsx", "service: createServiceSnapshot(service)"],
+    [publicBooking, "src/pages/PublicBooking.jsx", "const updatedAt = createdAt"],
     [adminDataTest, "tests/adminData.test.js", "creates appointment-safe client snapshots"],
     [servicesTest, "tests/services.test.js", "creates appointment-safe service snapshots"],
   ];

@@ -326,6 +326,7 @@ export default function PublicBooking() {
         createClientPhoneKeyId({ userId: barber.uid, phone: cleanPhone })
       );
       const createdAt = new Date();
+      const updatedAt = createdAt;
       const startMinutes = timeToMinutes(time);
       const endMinutes = startMinutes + selectedDuration;
       const occupiedTimes = getOccupiedTimes({
@@ -375,6 +376,7 @@ export default function PublicBooking() {
         slotId,
         slotIds,
         createdAt,
+        updatedAt,
         ...createPrivacyConsentSnapshot({ accepted: privacyAccepted, acceptedAt: createdAt }),
       };
 
@@ -411,6 +413,7 @@ export default function PublicBooking() {
             endMinutes,
             status: APPOINTMENT_STATUS.pending,
             createdAt,
+            updatedAt,
           });
         });
 

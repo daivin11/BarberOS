@@ -692,6 +692,9 @@ service cloud.firestore {
         && request.resource.data.slotIds[0] == request.resource.data.slotId
         && validAppointmentTiming()
         && appointmentRootSlotMatches(appointmentId)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedAt == request.resource.data.createdAt
         && request.resource.data.status == 'pending';
       allow update: if isOwner(resource.data.userId)
         && resource.data.status in ['pending', 'confirmed']
@@ -762,7 +765,8 @@ service cloud.firestore {
         && bookingSlotMatchesAppointment(slotId)
         && validBookingSlotTiming()
         && request.resource.data.createdAt is timestamp
-        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp)
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedAt == request.resource.data.createdAt
         && request.resource.data.status in ['pending', 'confirmed'];
       allow update: if isOwner(resource.data.userId)
         && hasOnly([
