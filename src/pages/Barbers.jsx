@@ -127,12 +127,14 @@ export default function Barbers({
         });
       } else {
         const createdAt = new Date();
-        const docRef = await addDoc(collection(db, "barbers"), {
+        const newBarber = {
           ...barberData,
           createdAt,
+          updatedAt: createdAt,
           isArchived: false,
-        });
-        syncBarbers(sortByName(upsertById(barbers, { id: docRef.id, ...barberData, createdAt })));
+        };
+        const docRef = await addDoc(collection(db, "barbers"), newBarber);
+        syncBarbers(sortByName(upsertById(barbers, { id: docRef.id, ...newBarber })));
         setStatusMessage("Barbeiro cadastrado com sucesso.");
         await recordAuditLog?.({
           action: "barber_created",

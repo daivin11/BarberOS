@@ -608,7 +608,8 @@ service cloud.firestore {
         && request.resource.data.price <= 100000
         && validServiceDuration(request.resource.data.duration)
         && request.resource.data.createdAt is timestamp
-        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp)
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedAt == request.resource.data.createdAt
         && request.resource.data.isArchived == false;
       allow update: if isOwner(resource.data.userId)
         && hasOnly(['name', 'price', 'duration', 'createdAt', 'updatedAt', 'userId', 'isArchived', 'archivedAt'])
@@ -639,7 +640,8 @@ service cloud.firestore {
         && (!('specialty' in request.resource.data) || validOptionalText(request.resource.data.specialty, 80))
         && (!('avatar' in request.resource.data) || validOptionalUrl(request.resource.data.avatar))
         && request.resource.data.createdAt is timestamp
-        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp)
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedAt == request.resource.data.createdAt
         && request.resource.data.isArchived == false;
       allow update: if isOwner(resource.data.ownerId)
         && hasOnly(['name', 'specialty', 'avatar', 'ownerId', 'createdAt', 'updatedAt', 'isArchived', 'archivedAt'])

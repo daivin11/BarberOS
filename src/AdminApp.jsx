@@ -676,11 +676,13 @@ export default function AdminApp() {
     }
 
     try {
+      const createdAt = new Date();
       const newService = {
         name: serviceInput.name,
         price: serviceInput.price,
         duration: serviceInput.duration,
-        createdAt: new Date(),
+        createdAt,
+        updatedAt: createdAt,
         userId: user.uid,
         isArchived: false,
       };
