@@ -1697,6 +1697,8 @@ const assertWhatsAppTemplatesAreDomainDriven = () => {
 
 const assertLaunchMetadataIsReady = () => {
   const landingPage = readFileSync(join(root, "src", "pages", "LandingPage.jsx"), "utf8");
+  const loginPage = readFileSync(join(root, "src", "pages", "Login.jsx"), "utf8");
+  const registerPage = readFileSync(join(root, "src", "pages", "Register.jsx"), "utf8");
   const indexHtml = readFileSync(join(root, "index.html"), "utf8");
   const manifest = readFileSync(join(root, "public", "manifest.webmanifest"), "utf8");
   const robots = readFileSync(join(root, "public", "robots.txt"), "utf8");
@@ -1715,6 +1717,8 @@ const assertLaunchMetadataIsReady = () => {
     [ogImage, "public/og-image.svg", "630"],
     [landingPage, "src/pages/LandingPage.jsx", "Trial gratuito de 30 dias com ativacao simples"],
     [landingPage, "src/pages/LandingPage.jsx", "Como funciona o trial gratuito?"],
+    [loginPage, "src/pages/Login.jsx", "BarberOS - Studio Suite"],
+    [registerPage, "src/pages/Register.jsx", "BarberOS - Studio Suite"],
   ];
 
   requiredSnippets.forEach(([fileContent, fileName, snippet]) => {
@@ -1725,6 +1729,10 @@ const assertLaunchMetadataIsReady = () => {
 
   if (/sem gateway de pagamento|Ainda nao\. O plano atual inclui trial gratuito/i.test(landingPage)) {
     failures.push("public landing page exposes internal payment limitations: src/pages/LandingPage.jsx");
+  }
+
+  if (/Design premium/i.test(`${landingPage}\n${loginPage}\n${registerPage}`)) {
+    failures.push("public auth or landing copy exposes placeholder product wording");
   }
 };
 

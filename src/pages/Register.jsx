@@ -157,7 +157,7 @@ export default function Register() {
             </div>
 
             <div className="mt-6 text-center text-xs text-gray-500">
-              <p>{new Date().getFullYear()} BarberOS - Design premium</p>
+              <p>{new Date().getFullYear()} BarberOS - Studio Suite</p>
             </div>
           </div>
         </section>
